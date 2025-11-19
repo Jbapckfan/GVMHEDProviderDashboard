@@ -33,26 +33,17 @@ function initializeDatabase() {
     )
   `);
 
-  // ED Status table
+  // KPI Metrics table
   db.exec(`
-    CREATE TABLE IF NOT EXISTS ed_status (
+    CREATE TABLE IF NOT EXISTS kpi_metrics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      current_patients INTEGER DEFAULT 0,
-      waiting_room INTEGER DEFAULT 0,
-      beds_available INTEGER DEFAULT 0,
-      avg_wait_time INTEGER DEFAULT 0,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Protocols table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS protocols (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
+      metric_name TEXT NOT NULL,
+      metric_value REAL NOT NULL,
+      target_value REAL,
+      unit TEXT,
       category TEXT NOT NULL,
-      description TEXT,
-      steps TEXT
+      period TEXT DEFAULT 'current',
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -93,64 +84,31 @@ function seedData() {
     insertShift.run('Dr. Michael Chen', 'Night Shift', '19:00', '07:00', today);
     insertShift.run('Dr. David Martinez', 'Day Shift', '07:00', '19:00', tomorrow);
 
-    // Seed ED Status
-    const insertStatus = db.prepare('INSERT INTO ed_status (current_patients, waiting_room, beds_available, avg_wait_time) VALUES (?, ?, ?, ?)');
-    insertStatus.run(12, 5, 8, 45);
+    // Seed KPI Metrics
+    const insertKPI = db.prepare('INSERT INTO kpi_metrics (metric_name, metric_value, target_value, unit, category) VALUES (?, ?, ?, ?, ?)');
 
-    // Seed protocols
-    const insertProtocol = db.prepare('INSERT INTO protocols (title, category, description, steps) VALUES (?, ?, ?, ?)');
-    insertProtocol.run(
-      'Chest Pain Protocol',
-      'Cardiac',
-      'Standard evaluation for chest pain patients',
-      JSON.stringify([
-        'Immediate ECG within 10 minutes',
-        'Obtain vitals and cardiac monitoring',
-        'Start IV access',
-        'Draw cardiac biomarkers (Troponin, BNP)',
-        'Aspirin 325mg if no contraindications',
-        'Notify attending physician'
-      ])
-    );
-    insertProtocol.run(
-      'Stroke Alert Protocol',
-      'Neuro',
-      'Time-sensitive stroke evaluation',
-      JSON.stringify([
-        'Note exact time of symptom onset',
-        'Activate stroke team immediately',
-        'NPO status',
-        'Obtain CT head without contrast',
-        'Check blood glucose',
-        'Establish large bore IV access'
-      ])
-    );
-    insertProtocol.run(
-      'Sepsis Protocol',
-      'Infectious Disease',
-      'Early sepsis management',
-      JSON.stringify([
-        'Obtain blood cultures x2',
-        'Lactate level',
-        'Start broad-spectrum antibiotics within 1 hour',
-        'IV fluid resuscitation 30mL/kg',
-        'Repeat lactate if initial >2',
-        'Consider ICU consultation'
-      ])
-    );
-    insertProtocol.run(
-      'Trauma Alert',
-      'Trauma',
-      'Major trauma activation criteria',
-      JSON.stringify([
-        'Activate trauma team',
-        'Ensure airway patency',
-        'C-spine precautions',
-        'Two large bore IVs',
-        'FAST exam',
-        'Trauma labs including type and cross'
-      ])
-    );
+    // Patient Flow Metrics
+    insertKPI.run('Average Length of Stay', 3.2, 3.0, 'hours', 'Patient Flow');
+    insertKPI.run('Door-to-Doctor Time', 28, 30, 'minutes', 'Patient Flow');
+    insertKPI.run('Left Without Being Seen', 2.1, 2.0, 'percent', 'Patient Flow');
+    insertKPI.run('Patient Throughput', 145, 150, 'patients/day', 'Patient Flow');
+
+    // Quality Metrics
+    insertKPI.run('Patient Satisfaction Score', 4.3, 4.5, 'out of 5', 'Quality');
+    insertKPI.run('72-Hour Return Rate', 4.8, 5.0, 'percent', 'Quality');
+    insertKPI.run('Admission Rate', 18.5, 20.0, 'percent', 'Quality');
+    insertKPI.run('Discharge Rate', 81.5, 80.0, 'percent', 'Quality');
+
+    // Operational Metrics
+    insertKPI.run('Staff Utilization', 87, 85, 'percent', 'Operational');
+    insertKPI.run('Bed Occupancy Rate', 78, 80, 'percent', 'Operational');
+    insertKPI.run('Average Wait Time', 42, 45, 'minutes', 'Operational');
+    insertKPI.run('Patient Per Provider Ratio', 8.5, 10.0, 'patients', 'Operational');
+
+    // Financial Metrics
+    insertKPI.run('Cost Per Visit', 420, 450, 'dollars', 'Financial');
+    insertKPI.run('Revenue Per Patient', 685, 650, 'dollars', 'Financial');
+    insertKPI.run('Collection Rate', 92.3, 90.0, 'percent', 'Financial');
 
     // Seed quick links
     const insertLink = db.prepare('INSERT INTO quick_links (title, url, category) VALUES (?, ?, ?)');
@@ -166,24 +124,23 @@ function seedData() {
 // API functions
 const getProviders = () => db.prepare('SELECT * FROM providers ORDER BY name').all();
 const getShifts = (date) => db.prepare('SELECT * FROM shifts WHERE date = ? ORDER BY start_time').all(date);
-const getEDStatus = () => db.prepare('SELECT * FROM ed_status ORDER BY updated_at DESC LIMIT 1').get();
-const getProtocols = () => db.prepare('SELECT * FROM protocols ORDER BY category, title').all();
+const getKPIMetrics = () => db.prepare('SELECT * FROM kpi_metrics ORDER BY category, metric_name').all();
 const getQuickLinks = () => db.prepare('SELECT * FROM quick_links ORDER BY category, title').all();
 
-const updateEDStatus = (data) => {
+const updateKPIMetric = (data) => {
   const stmt = db.prepare(`
-    INSERT INTO ed_status (current_patients, waiting_room, beds_available, avg_wait_time)
-    VALUES (?, ?, ?, ?)
+    UPDATE kpi_metrics
+    SET metric_value = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE metric_name = ?
   `);
-  return stmt.run(data.current_patients, data.waiting_room, data.beds_available, data.avg_wait_time);
+  return stmt.run(data.metric_value, data.metric_name);
 };
 
 module.exports = {
   initializeDatabase,
   getProviders,
   getShifts,
-  getEDStatus,
-  getProtocols,
+  getKPIMetrics,
   getQuickLinks,
-  updateEDStatus
+  updateKPIMetric
 };

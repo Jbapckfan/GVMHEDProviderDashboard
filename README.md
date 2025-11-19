@@ -13,11 +13,14 @@ A modern, full-stack web application designed for ED providers to access critica
 
 ### 🎯 Core Functionality
 
-- **Live ED Status Dashboard**
-  - Current patient count
-  - Waiting room status
-  - Available beds tracking
-  - Average wait times with color-coded alerts
+- **KPI Department Metrics**
+  - Patient Flow: Length of stay, door-to-doctor time, LWBS rate, throughput
+  - Quality: Patient satisfaction, return rates, admission/discharge rates
+  - Operational: Staff utilization, bed occupancy, wait times, patient ratios
+  - Financial: Cost per visit, revenue per patient, collection rates
+  - Color-coded status indicators (good/warning/critical)
+  - Target vs actual comparisons
+  - Category filtering
 
 - **Shift Schedule Management**
   - Daily shift calendar
@@ -30,12 +33,6 @@ A modern, full-stack web application designed for ED providers to access critica
   - Contact information (phone/email)
   - Role-based organization
   - Quick-dial phone links
-
-- **Clinical Protocols**
-  - Searchable protocol library
-  - Category-based organization (Cardiac, Neuro, Trauma, etc.)
-  - Step-by-step instructions
-  - Quick-access modal views
 
 - **Quick Links Hub**
   - Reference materials (UpToDate, MDCalc)
@@ -167,15 +164,13 @@ cloudflared tunnel --url http://localhost:3000
 GET /api/health
 ```
 
-### ED Status
+### KPI Metrics
 ```
-GET /api/ed-status
-POST /api/ed-status
+GET /api/kpi-metrics
+POST /api/kpi-metrics
 Body: {
-  current_patients: number,
-  waiting_room: number,
-  beds_available: number,
-  avg_wait_time: number
+  metric_name: string,
+  metric_value: number
 }
 ```
 
@@ -187,11 +182,6 @@ GET /api/providers
 ### Shifts
 ```
 GET /api/shifts?date=YYYY-MM-DD
-```
-
-### Protocols
-```
-GET /api/protocols
 ```
 
 ### Quick Links
@@ -211,11 +201,8 @@ GET /api/quick-links
 **shifts**
 - id, provider_name, shift_type, start_time, end_time, date
 
-**ed_status**
-- id, current_patients, waiting_room, beds_available, avg_wait_time, updated_at
-
-**protocols**
-- id, title, category, description, steps (JSON)
+**kpi_metrics**
+- id, metric_name, metric_value, target_value, unit, category, period, updated_at
 
 **quick_links**
 - id, title, url, category
@@ -224,10 +211,11 @@ GET /api/quick-links
 
 ## 🎨 UI Components
 
-### 1. ED Status Card
-- Real-time metrics with color-coded alerts
-- Auto-updating status badge
-- Visual icons for each metric
+### 1. KPI Department Metrics
+- Category-based filtering (Patient Flow, Quality, Operational, Financial)
+- Color-coded status indicators (good/warning/critical)
+- Target vs actual comparisons
+- Progress bars for visual tracking
 
 ### 2. Shift Schedule
 - Date picker for navigation
@@ -235,16 +223,11 @@ GET /api/quick-links
 - Day/night shift differentiation
 
 ### 3. Provider Directory
-- Searchable contact list
+- Real-time availability status
+- Contact information with click-to-call
 - Status badges (On Duty, Available, Off Duty)
-- Click-to-call phone numbers
 
-### 4. Protocols Library
-- Search functionality
-- Category filtering
-- Modal popup with detailed steps
-
-### 5. Quick Links
+### 4. Quick Links
 - Grouped by category
 - External/internal link handling
 - Hover animations
@@ -289,13 +272,14 @@ sqlite3 backend/data/dashboard.db
 INSERT INTO providers (name, role, phone, email, status) VALUES (...);
 ```
 
-### Adding Protocols
+### Adding KPI Metrics
 ```bash
-INSERT INTO protocols (title, category, description, steps) VALUES (
-  'New Protocol',
-  'Category',
-  'Description',
-  '["Step 1", "Step 2", "Step 3"]'
+INSERT INTO kpi_metrics (metric_name, metric_value, target_value, unit, category) VALUES (
+  'New Metric',
+  95.5,
+  90.0,
+  'percent',
+  'Quality'
 );
 ```
 

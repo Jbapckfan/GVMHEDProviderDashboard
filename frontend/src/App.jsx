@@ -1,19 +1,17 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
-import EDStatusCard from './components/EDStatusCard'
+import KPIMetrics from './components/KPIMetrics'
 import ShiftSchedule from './components/ShiftSchedule'
 import ProviderList from './components/ProviderList'
-import ProtocolsCard from './components/ProtocolsCard'
 import QuickLinksCard from './components/QuickLinksCard'
 
 const API_BASE = '/api'
 
 function App() {
-  const [edStatus, setEdStatus] = useState(null)
+  const [kpiMetrics, setKpiMetrics] = useState([])
   const [providers, setProviders] = useState([])
   const [shifts, setShifts] = useState([])
-  const [protocols, setProtocols] = useState([])
   const [quickLinks, setQuickLinks] = useState([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(new Date())
@@ -27,18 +25,16 @@ function App() {
 
   const fetchAllData = async () => {
     try {
-      const [statusRes, providersRes, shiftsRes, protocolsRes, linksRes] = await Promise.all([
-        axios.get(`${API_BASE}/ed-status`),
+      const [kpiRes, providersRes, shiftsRes, linksRes] = await Promise.all([
+        axios.get(`${API_BASE}/kpi-metrics`),
         axios.get(`${API_BASE}/providers`),
         axios.get(`${API_BASE}/shifts`),
-        axios.get(`${API_BASE}/protocols`),
         axios.get(`${API_BASE}/quick-links`)
       ])
 
-      setEdStatus(statusRes.data)
+      setKpiMetrics(kpiRes.data)
       setProviders(providersRes.data)
       setShifts(shiftsRes.data)
-      setProtocols(protocolsRes.data)
       setQuickLinks(linksRes.data)
       setLastUpdated(new Date())
       setLoading(false)
@@ -76,9 +72,9 @@ function App() {
 
       <main className="main-content">
         <div className="dashboard-grid">
-          {/* Top row - ED Status */}
+          {/* Top row - KPI Metrics */}
           <div className="grid-full">
-            <EDStatusCard status={edStatus} onRefresh={fetchAllData} />
+            <KPIMetrics metrics={kpiMetrics} />
           </div>
 
           {/* Second row - Shifts and Providers */}
@@ -89,11 +85,8 @@ function App() {
             <ProviderList providers={providers} />
           </div>
 
-          {/* Third row - Protocols and Quick Links */}
+          {/* Third row - Quick Links */}
           <div className="grid-col-2">
-            <ProtocolsCard protocols={protocols} />
-          </div>
-          <div className="grid-col-1">
             <QuickLinksCard links={quickLinks} />
           </div>
         </div>

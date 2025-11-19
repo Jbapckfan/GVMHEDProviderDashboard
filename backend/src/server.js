@@ -38,36 +38,21 @@ app.get('/api/shifts', (req, res) => {
   }
 });
 
-// Get current ED status
-app.get('/api/ed-status', (req, res) => {
+// Get KPI metrics
+app.get('/api/kpi-metrics', (req, res) => {
   try {
-    const status = db.getEDStatus();
-    res.json(status || {
-      current_patients: 0,
-      waiting_room: 0,
-      beds_available: 0,
-      avg_wait_time: 0
-    });
+    const metrics = db.getKPIMetrics();
+    res.json(metrics);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Update ED status
-app.post('/api/ed-status', (req, res) => {
+// Update KPI metric
+app.post('/api/kpi-metrics', (req, res) => {
   try {
-    const result = db.updateEDStatus(req.body);
-    res.json({ success: true, id: result.lastInsertRowid });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get all protocols
-app.get('/api/protocols', (req, res) => {
-  try {
-    const protocols = db.getProtocols();
-    res.json(protocols);
+    const result = db.updateKPIMetric(req.body);
+    res.json({ success: true, changes: result.changes });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

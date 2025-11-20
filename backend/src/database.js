@@ -57,6 +57,30 @@ function initializeDatabase() {
     )
   `);
 
+  // Phone directory table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS phone_directory (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      number TEXT NOT NULL,
+      extension TEXT,
+      department TEXT,
+      display_order INTEGER DEFAULT 0
+    )
+  `);
+
+  // News table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS news (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      priority TEXT DEFAULT 'low',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME
+    )
+  `);
+
   // Seed initial data if tables are empty
   seedData();
 }
@@ -118,6 +142,42 @@ function seedData() {
     insertLink.run('Radiology PACS', '#', 'Internal');
     insertLink.run('Lab Results Portal', '#', 'Internal');
     insertLink.run('Pharmacy Reference', '#', 'Reference');
+
+    // Seed phone directory
+    const insertPhone = db.prepare('INSERT INTO phone_directory (name, number, extension, department, display_order) VALUES (?, ?, ?, ?, ?)');
+    insertPhone.run('Hospital Operator', '555-1000', null, 'Main', 1);
+    insertPhone.run('Emergency Department', '555-1100', '1100', 'ED', 2);
+    insertPhone.run('Laboratory', '555-1200', '1200', 'Lab', 3);
+    insertPhone.run('Imaging/Radiology', '555-1300', '1300', 'Radiology', 4);
+    insertPhone.run('Triage Nurse', '555-1150', '1150', 'ED', 5);
+    insertPhone.run('Pharmacy', '555-1400', '1400', 'Pharmacy', 6);
+    insertPhone.run('Security', '555-1500', '1500', 'Security', 7);
+    insertPhone.run('IT Help Desk', '555-1600', '1600', 'IT', 8);
+
+    // Seed news
+    const insertNews = db.prepare('INSERT INTO news (title, content, priority, created_at) VALUES (?, ?, ?, ?)');
+    const now = new Date().toISOString();
+    const yesterday = new Date(Date.now() - 86400000).toISOString();
+    const twoDaysAgo = new Date(Date.now() - 172800000).toISOString();
+
+    insertNews.run(
+      'New CT Scanner Available',
+      'The new 256-slice CT scanner is now operational in Imaging Department. Please update patient routing accordingly.',
+      'high',
+      yesterday
+    );
+    insertNews.run(
+      'Updated Sepsis Protocol',
+      'Please review the updated sepsis screening protocol effective immediately. New guidelines emphasize earlier intervention.',
+      'medium',
+      twoDaysAgo
+    );
+    insertNews.run(
+      'Staff Appreciation Week',
+      'Thank you all for your dedication! Staff appreciation events will be held throughout next week. Check your email for the schedule.',
+      'low',
+      now
+    );
   }
 }
 
@@ -126,6 +186,8 @@ const getProviders = () => db.prepare('SELECT * FROM providers ORDER BY name').a
 const getShifts = (date) => db.prepare('SELECT * FROM shifts WHERE date = ? ORDER BY start_time').all(date);
 const getKPIMetrics = () => db.prepare('SELECT * FROM kpi_metrics ORDER BY category, metric_name').all();
 const getQuickLinks = () => db.prepare('SELECT * FROM quick_links ORDER BY category, title').all();
+const getPhoneDirectory = () => db.prepare('SELECT * FROM phone_directory ORDER BY display_order, name').all();
+const getNews = () => db.prepare('SELECT * FROM news WHERE expires_at IS NULL OR expires_at > datetime("now") ORDER BY created_at DESC').all();
 
 const updateKPIMetric = (data) => {
   const stmt = db.prepare(`
@@ -142,5 +204,7 @@ module.exports = {
   getShifts,
   getKPIMetrics,
   getQuickLinks,
+  getPhoneDirectory,
+  getNews,
   updateKPIMetric
 };

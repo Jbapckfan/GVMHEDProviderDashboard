@@ -1,0 +1,97 @@
+.phone-directory-card {
+  min-height: 300px;
+}
+
+.phone-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.phone-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--gray-100);
+  border-radius: 6px;
+  transition: all 0.2s;
+  border-left: 4px solid transparent;
+}
+
+.phone-item:hover {
+  background: white;
+  border-left-color: var(--primary-color);
+  box-shadow: var(--shadow);
+}
+
+.phone-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.phone-label {
+  font-weight: 600;
+  color: var(--gray-800);
+  font-size: 1rem;
+}
+
+.phone-extension {
+  font-size: 0.75rem;
+  color: var(--gray-700);
+  font-style: italic;
+}
+
+.phone-number {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  background: white;
+  border-radius: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.phone-number:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: scale(1.05);
+}
+
+.loading-small {
+  text-align: center;
+  padding: 2rem;
+  color: var(--gray-700);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--gray-700);
+}
+
+.empty-state p {
+  margin-bottom: 0.5rem;
+}
+
+.empty-hint {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .phone-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .phone-number {
+    width: 100%;
+    text-align: center;
+  }
+}

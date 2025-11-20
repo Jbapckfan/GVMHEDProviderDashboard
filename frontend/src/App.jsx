@@ -1,53 +1,16 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useState } from 'react'
 import './App.css'
 import KPIImageUpload from './components/KPIImageUpload'
-import ShiftSchedule from './components/ShiftSchedule'
-import ProviderList from './components/ProviderList'
-import QuickLinksCard from './components/QuickLinksCard'
-
-const API_BASE = '/api'
+import ScheduleViewer from './components/ScheduleViewer'
+import PhoneDirectory from './components/PhoneDirectory'
+import NewsUpdates from './components/NewsUpdates'
 
 function App() {
-  const [providers, setProviders] = useState([])
-  const [shifts, setShifts] = useState([])
-  const [quickLinks, setQuickLinks] = useState([])
-  const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(new Date())
 
-  useEffect(() => {
-    fetchAllData()
-    // Auto-refresh every 60 seconds
-    const interval = setInterval(fetchAllData, 60000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const fetchAllData = async () => {
-    try {
-      const [providersRes, shiftsRes, linksRes] = await Promise.all([
-        axios.get(`${API_BASE}/providers`),
-        axios.get(`${API_BASE}/shifts`),
-        axios.get(`${API_BASE}/quick-links`)
-      ])
-
-      setProviders(providersRes.data)
-      setShifts(shiftsRes.data)
-      setQuickLinks(linksRes.data)
-      setLastUpdated(new Date())
-      setLoading(false)
-    } catch (error) {
-      console.error('Error fetching data:', error)
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading dashboard...</p>
-      </div>
-    )
+  const handleRefresh = () => {
+    setLastUpdated(new Date())
+    window.location.reload()
   }
 
   return (
@@ -60,7 +23,7 @@ function App() {
             <span className="last-updated">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </span>
-            <button onClick={fetchAllData} className="refresh-btn">
+            <button onClick={handleRefresh} className="refresh-btn">
               ↻ Refresh
             </button>
           </div>
@@ -74,17 +37,17 @@ function App() {
             <KPIImageUpload />
           </div>
 
-          {/* Second row - Shifts and Providers */}
-          <div className="grid-col-2">
-            <ShiftSchedule shifts={shifts} />
-          </div>
-          <div className="grid-col-1">
-            <ProviderList providers={providers} />
+          {/* Second row - Schedule Viewer */}
+          <div className="grid-full">
+            <ScheduleViewer />
           </div>
 
-          {/* Third row - Quick Links */}
-          <div className="grid-col-2">
-            <QuickLinksCard links={quickLinks} />
+          {/* Third row - Phone Directory and News */}
+          <div className="grid-col-1">
+            <PhoneDirectory />
+          </div>
+          <div className="grid-col-1">
+            <NewsUpdates />
           </div>
         </div>
       </main>

@@ -15,7 +15,8 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
+// Storage for KPI uploads
+const kpiStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadsDir);
   },
@@ -26,8 +27,36 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({
-  storage: storage,
+// Storage for schedule uploads
+const scheduleStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    // Always use 'schedule' as filename to replace previous upload
+    const ext = path.extname(file.originalname);
+    cb(null, `schedule${ext}`);
+  }
+});
+
+const uploadKPI = multer({
+  storage: kpiStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|xlsx|xls/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (extname && mimetype) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images (JPG, PNG, GIF) and Excel files (.xlsx, .xls) are allowed'));
+    }
+  }
+});
+
+const uploadSchedule = multer({
+  storage: scheduleStorage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|xlsx|xls/;
@@ -107,7 +136,7 @@ app.get('/api/quick-links', (req, res) => {
 });
 
 // Upload KPI image/file
-app.post('/api/upload-kpi', upload.single('file'), (req, res) => {
+app.post('/api/upload-kpi', uploadKPI.single('file'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -161,6 +190,86 @@ app.delete('/api/kpi-file', (req, res) => {
     } else {
       res.status(404).json({ error: 'No file found' });
     }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Upload Schedule image/file
+app.post('/api/upload-schedule', uploadSchedule.single('file'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    res.json({
+      success: true,
+      filename: req.file.filename,
+      path: `/uploads/${req.file.filename}`,
+      uploadedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get current schedule file info
+app.get('/api/schedule-file', (req, res) => {
+  try {
+    const files = fs.readdirSync(uploadsDir);
+    const scheduleFile = files.find(f => f.startsWith('schedule'));
+
+    if (scheduleFile) {
+      const filePath = path.join(uploadsDir, scheduleFile);
+      const stats = fs.statSync(filePath);
+
+      res.json({
+        exists: true,
+        filename: scheduleFile,
+        path: `/uploads/${scheduleFile}`,
+        uploadedAt: stats.mtime.toISOString(),
+        size: stats.size
+      });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete schedule file
+app.delete('/api/schedule-file', (req, res) => {
+  try {
+    const files = fs.readdirSync(uploadsDir);
+    const scheduleFile = files.find(f => f.startsWith('schedule'));
+
+    if (scheduleFile) {
+      fs.unlinkSync(path.join(uploadsDir, scheduleFile));
+      res.json({ success: true, message: 'File deleted' });
+    } else {
+      res.status(404).json({ error: 'No file found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get phone directory
+app.get('/api/phone-directory', (req, res) => {
+  try {
+    const phoneNumbers = db.getPhoneDirectory();
+    res.json(phoneNumbers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get news
+app.get('/api/news', (req, res) => {
+  try {
+    const news = db.getNews();
+    res.json(news);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

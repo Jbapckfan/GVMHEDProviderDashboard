@@ -1,0 +1,97 @@
+.schedule-viewer-card {
+  min-height: 400px;
+}
+
+.month-navigation {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover {
+  background: #1e40af;
+  transform: scale(1.05);
+}
+
+.current-month {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--gray-800);
+  min-width: 180px;
+  text-align: center;
+}
+
+.today-btn {
+  background: var(--success-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.today-btn:hover {
+  background: #059669;
+}
+
+.schedule-note {
+  background: #fffbeb;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+}
+
+.schedule-image {
+  width: 100%;
+  height: auto;
+  max-height: 700px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  object-fit: contain;
+  background: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .month-navigation {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .current-month {
+    font-size: 1rem;
+    min-width: 140px;
+  }
+
+  .nav-btn {
+    padding: 0.4rem 0.8rem;
+  }
+
+  .schedule-image {
+    max-height: 500px;
+  }
+}

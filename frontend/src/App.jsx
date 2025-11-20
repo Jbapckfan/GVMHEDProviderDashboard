@@ -4,6 +4,7 @@ import KPIImageUpload from './components/KPIImageUpload'
 import ScheduleViewer from './components/ScheduleViewer'
 import PhoneDirectory from './components/PhoneDirectory'
 import NewsUpdates from './components/NewsUpdates'
+import OrderSetSuggestions from './components/OrderSetSuggestions'
 
 function App() {
   const [lastUpdated, setLastUpdated] = useState(new Date())
@@ -48,6 +49,11 @@ function App() {
           </div>
           <div className="grid-col-1">
             <NewsUpdates />
+          </div>
+
+          {/* Fourth row - Order Set Suggestions */}
+          <div className="grid-full">
+            <OrderSetSuggestions />
           </div>
         </div>
       </main>

@@ -275,6 +275,26 @@ app.get('/api/news', (req, res) => {
   }
 });
 
+// Get order set suggestions
+app.get('/api/order-set-suggestions', (req, res) => {
+  try {
+    const suggestions = db.getOrderSetSuggestions();
+    res.json(suggestions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create order set suggestion
+app.post('/api/order-set-suggestions', (req, res) => {
+  try {
+    const result = db.createOrderSetSuggestion(req.body);
+    res.json({ success: true, id: result.lastInsertRowid });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`ED Dashboard Backend running on port ${PORT}`);

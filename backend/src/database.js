@@ -81,6 +81,16 @@ function initializeDatabase() {
     )
   `);
 
+  // Order set suggestions table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS order_set_suggestions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      suggestion TEXT NOT NULL,
+      author TEXT DEFAULT 'Anonymous',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Seed initial data if tables are empty
   seedData();
 }
@@ -178,6 +188,21 @@ function seedData() {
       'low',
       now
     );
+
+    // Seed order set suggestions
+    const insertSuggestion = db.prepare('INSERT INTO order_set_suggestions (suggestion, author, created_at) VALUES (?, ?, ?)');
+    const threeDaysAgo = new Date(Date.now() - 259200000).toISOString();
+
+    insertSuggestion.run(
+      'Consider adding low-dose aspirin to the chest pain order set for patients without contraindications.',
+      'Dr. Chen',
+      threeDaysAgo
+    );
+    insertSuggestion.run(
+      'Update the sepsis bundle to include lactate recheck at 6 hours if initial lactate >2.',
+      'Dr. Johnson',
+      twoDaysAgo
+    );
   }
 }
 
@@ -188,6 +213,7 @@ const getKPIMetrics = () => db.prepare('SELECT * FROM kpi_metrics ORDER BY categ
 const getQuickLinks = () => db.prepare('SELECT * FROM quick_links ORDER BY category, title').all();
 const getPhoneDirectory = () => db.prepare('SELECT * FROM phone_directory ORDER BY display_order, name').all();
 const getNews = () => db.prepare('SELECT * FROM news WHERE expires_at IS NULL OR expires_at > datetime("now") ORDER BY created_at DESC').all();
+const getOrderSetSuggestions = () => db.prepare('SELECT * FROM order_set_suggestions ORDER BY created_at DESC').all();
 
 const updateKPIMetric = (data) => {
   const stmt = db.prepare(`
@@ -198,6 +224,14 @@ const updateKPIMetric = (data) => {
   return stmt.run(data.metric_value, data.metric_name);
 };
 
+const createOrderSetSuggestion = (data) => {
+  const stmt = db.prepare(`
+    INSERT INTO order_set_suggestions (suggestion, author)
+    VALUES (?, ?)
+  `);
+  return stmt.run(data.suggestion, data.author || 'Anonymous');
+};
+
 module.exports = {
   initializeDatabase,
   getProviders,
@@ -206,5 +240,7 @@ module.exports = {
   getQuickLinks,
   getPhoneDirectory,
   getNews,
-  updateKPIMetric
+  getOrderSetSuggestions,
+  updateKPIMetric,
+  createOrderSetSuggestion
 };

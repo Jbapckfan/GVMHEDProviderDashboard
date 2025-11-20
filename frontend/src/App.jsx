@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
-import KPIMetrics from './components/KPIMetrics'
+import KPIImageUpload from './components/KPIImageUpload'
 import ShiftSchedule from './components/ShiftSchedule'
 import ProviderList from './components/ProviderList'
 import QuickLinksCard from './components/QuickLinksCard'
@@ -9,7 +9,6 @@ import QuickLinksCard from './components/QuickLinksCard'
 const API_BASE = '/api'
 
 function App() {
-  const [kpiMetrics, setKpiMetrics] = useState([])
   const [providers, setProviders] = useState([])
   const [shifts, setShifts] = useState([])
   const [quickLinks, setQuickLinks] = useState([])
@@ -25,14 +24,12 @@ function App() {
 
   const fetchAllData = async () => {
     try {
-      const [kpiRes, providersRes, shiftsRes, linksRes] = await Promise.all([
-        axios.get(`${API_BASE}/kpi-metrics`),
+      const [providersRes, shiftsRes, linksRes] = await Promise.all([
         axios.get(`${API_BASE}/providers`),
         axios.get(`${API_BASE}/shifts`),
         axios.get(`${API_BASE}/quick-links`)
       ])
 
-      setKpiMetrics(kpiRes.data)
       setProviders(providersRes.data)
       setShifts(shiftsRes.data)
       setQuickLinks(linksRes.data)
@@ -72,9 +69,9 @@ function App() {
 
       <main className="main-content">
         <div className="dashboard-grid">
-          {/* Top row - KPI Metrics */}
+          {/* Top row - KPI Metrics Image Upload */}
           <div className="grid-full">
-            <KPIMetrics metrics={kpiMetrics} />
+            <KPIImageUpload />
           </div>
 
           {/* Second row - Shifts and Providers */}

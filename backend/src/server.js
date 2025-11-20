@@ -1,13 +1,51 @@
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const db = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    // Always use 'kpi-metrics' as filename to replace previous upload
+    const ext = path.extname(file.originalname);
+    cb(null, `kpi-metrics${ext}`);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|xlsx|xls/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (extname && mimetype) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images (JPG, PNG, GIF) and Excel files (.xlsx, .xls) are allowed'));
+    }
+  }
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(uploadsDir));
 
 // Initialize database
 db.initializeDatabase();
@@ -63,6 +101,66 @@ app.get('/api/quick-links', (req, res) => {
   try {
     const links = db.getQuickLinks();
     res.json(links);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Upload KPI image/file
+app.post('/api/upload-kpi', upload.single('file'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    res.json({
+      success: true,
+      filename: req.file.filename,
+      path: `/uploads/${req.file.filename}`,
+      uploadedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get current KPI file info
+app.get('/api/kpi-file', (req, res) => {
+  try {
+    const files = fs.readdirSync(uploadsDir);
+    const kpiFile = files.find(f => f.startsWith('kpi-metrics'));
+
+    if (kpiFile) {
+      const filePath = path.join(uploadsDir, kpiFile);
+      const stats = fs.statSync(filePath);
+
+      res.json({
+        exists: true,
+        filename: kpiFile,
+        path: `/uploads/${kpiFile}`,
+        uploadedAt: stats.mtime.toISOString(),
+        size: stats.size
+      });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete KPI file
+app.delete('/api/kpi-file', (req, res) => {
+  try {
+    const files = fs.readdirSync(uploadsDir);
+    const kpiFile = files.find(f => f.startsWith('kpi-metrics'));
+
+    if (kpiFile) {
+      fs.unlinkSync(path.join(uploadsDir, kpiFile));
+      res.json({ success: true, message: 'File deleted' });
+    } else {
+      res.status(404).json({ error: 'No file found' });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

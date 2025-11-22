@@ -12,6 +12,10 @@ function ScheduleViewer() {
   const [uploadedAt, setUploadedAt] = useState(null)
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth()) // 0-11
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+  const [showUrlInput, setShowUrlInput] = useState(false)
+  const [googleSheetsUrl, setGoogleSheetsUrl] = useState('')
+  const [baseSheetId] = useState('1eFtQiknDOiQSwJkYs-jC-w1_K0byKB5I9qkIE9xnnpU')
+  const [isGoogleSheets, setIsGoogleSheets] = useState(false)
   const fileInputRef = useRef(null)
 
   const monthNames = [
@@ -19,21 +23,59 @@ function ScheduleViewer() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
+  // Map of month names to Google Sheets gids (you'll need to fill in the missing ones)
+  const monthGids = {
+    'November': '14906086',
+    'December': '256218995',
+    // Add other months as needed
+  }
+
+  // Update Google Sheets URL when month changes
   useEffect(() => {
-    fetchExistingFile()
+    if (isGoogleSheets) {
+      const monthName = monthNames[currentMonth]
+      const gid = monthGids[monthName]
+
+      if (gid) {
+        const newUrl = `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?gid=${gid}#gid=${gid}`
+        console.log('Switching to month:', monthName, 'gid:', gid)
+        setPreview(newUrl)
+      } else {
+        console.warn('No gid found for month:', monthName)
+      }
+    }
+  }, [currentMonth, currentYear, isGoogleSheets, baseSheetId])
+
+  useEffect(() => {
+    const loadSchedule = async () => {
+      try {
+        const response = await axios.get(`${API_BASE}/schedule-file`)
+        if (response.data.exists) {
+          // File exists, load it
+          const filePath = `${API_BASE}${response.data.path}?t=${Date.now()}`
+          setPreview(filePath)
+          setUploadedAt(new Date(response.data.uploadedAt))
+          setIsGoogleSheets(false)
+        } else {
+          // No file uploaded, use Google Sheets with current month
+          const monthName = monthNames[currentMonth]
+          const gid = monthGids[monthName] || '14906086' // Default to November
+          const embedUrl = `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?gid=${gid}#gid=${gid}`
+          setPreview(embedUrl)
+          setUploadedAt(new Date())
+          setIsGoogleSheets(true)
+          localStorage.setItem('scheduleGoogleSheetsUrl', embedUrl)
+          localStorage.setItem('scheduleUploadedAt', new Date().toISOString())
+        }
+      } catch (error) {
+        console.error('Error loading schedule:', error)
+      }
+    }
+
+    loadSchedule()
   }, [])
 
-  const fetchExistingFile = async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/schedule-file`)
-      if (response.data.exists) {
-        setPreview(`${API_BASE}${response.data.path}?t=${Date.now()}`)
-        setUploadedAt(new Date(response.data.uploadedAt))
-      }
-    } catch (error) {
-      console.error('Error fetching existing file:', error)
-    }
-  }
+
 
   const handleDrag = (e) => {
     e.preventDefault()
@@ -153,6 +195,31 @@ function ScheduleViewer() {
     setCurrentYear(new Date().getFullYear())
   }
 
+  const handleGoogleSheetsUrl = () => {
+    if (!googleSheetsUrl.trim()) {
+      alert('Please enter a Google Sheets URL')
+      return
+    }
+    
+    // Convert Google Sheets URL to embed URL
+    let embedUrl = googleSheetsUrl
+    if (googleSheetsUrl.includes('/edit')) {
+      embedUrl = googleSheetsUrl.replace('/edit', '/preview')
+    }
+    
+    setPreview(embedUrl)
+    const now = new Date()
+    setUploadedAt(now)
+    setIsGoogleSheets(true)
+    setShowUrlInput(false)
+
+    // Save to localStorage
+    localStorage.setItem('scheduleGoogleSheetsUrl', embedUrl)
+    localStorage.setItem('scheduleUploadedAt', now.toISOString())
+
+    alert('Google Sheets schedule loaded successfully!')
+  }
+
   return (
     <div className="card schedule-viewer-card">
       <div className="card-header">
@@ -184,48 +251,89 @@ function ScheduleViewer() {
 
       <div className="upload-container">
         {!preview ? (
-          <div
-            className={`drop-zone ${dragActive ? 'drag-active' : ''}`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            onClick={onButtonClick}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleChange}
-              style={{ display: 'none' }}
-            />
+          <>
+            {!showUrlInput ? (
+              <div>
+                <div
+                  className={`drop-zone ${dragActive ? 'drag-active' : ''}`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                  onClick={onButtonClick}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleChange}
+                    style={{ display: 'none' }}
+                  />
 
-            <div className="drop-zone-content">
-              <div className="upload-icon">📁</div>
-              <p className="drop-text">
-                Drag and drop your Google Sheets schedule screenshot
-              </p>
-              <p className="drop-subtext">or click to browse</p>
-              <p className="drop-hint">
-                Supports: JPG, PNG, GIF • Max 10MB
-              </p>
-            </div>
-          </div>
+                  <div className="drop-zone-content">
+                    <div className="upload-icon">📁</div>
+                    <p className="drop-text">
+                      Drag and drop your schedule screenshot
+                    </p>
+                    <p className="drop-subtext">or click to browse</p>
+                    <p className="drop-hint">
+                      Supports: JPG, PNG, GIF • Max 10MB
+                    </p>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                  <button onClick={() => setShowUrlInput(true)} className="btn btn-secondary">
+                    📊 Or Use Google Sheets URL
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="url-input-container">
+                <h3>Enter Google Sheets URL</h3>
+                <input
+                  type="text"
+                  placeholder="https://docs.google.com/spreadsheets/d/..."
+                  value={googleSheetsUrl}
+                  onChange={(e) => setGoogleSheetsUrl(e.target.value)}
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
+                />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={handleGoogleSheetsUrl} className="btn btn-primary">
+                    Load Sheet
+                  </button>
+                  <button onClick={() => setShowUrlInput(false)} className="btn btn-secondary">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="preview-container">
             <div className="schedule-note">
-              <strong>Note:</strong> Navigation is for reference only. Upload one screenshot per month and use arrows to indicate which month you're viewing.
+              <strong>Note:</strong> Navigation is for reference only. {preview.includes('google.com') ? 'Use the Google Sheets interface to navigate.' : 'Upload one screenshot per month and use arrows to indicate which month you\'re viewing.'}
             </div>
 
-            <img
-              src={preview}
-              alt="Schedule"
-              className="schedule-image"
-            />
+            {preview.includes('google.com') ? (
+              <iframe
+                src={preview}
+                style={{ width: '100%', height: '600px', border: 'none' }}
+                title="Google Sheets Schedule"
+              />
+            ) : (
+              <img
+                src={preview}
+                alt="Schedule"
+                className="schedule-image"
+              />
+            )}
 
             <div className="preview-actions">
               <button onClick={onButtonClick} className="btn btn-primary" disabled={uploading}>
                 📤 Upload New
+              </button>
+              <button onClick={() => setShowUrlInput(true)} className="btn btn-secondary">
+                📊 Change URL
               </button>
               <button onClick={handleDelete} className="btn btn-danger">
                 🗑️ Delete

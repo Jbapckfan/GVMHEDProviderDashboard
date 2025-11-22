@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import KPIImageUpload from './components/KPIImageUpload'
 import ScheduleViewer from './components/ScheduleViewer'
@@ -8,6 +8,15 @@ import OrderSetSuggestions from './components/OrderSetSuggestions'
 
 function App() {
   const [lastUpdated, setLastUpdated] = useState(new Date())
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode')
+    return saved ? JSON.parse(saved) : false
+  })
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark-mode', darkMode)
+    localStorage.setItem('darkMode', JSON.stringify(darkMode))
+  }, [darkMode])
 
   const handleRefresh = () => {
     setLastUpdated(new Date())
@@ -24,6 +33,9 @@ function App() {
             <span className="last-updated">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </span>
+            <button onClick={() => setDarkMode(!darkMode)} className="refresh-btn">
+              {darkMode ? '☀️' : '🌙'} {darkMode ? 'Light' : 'Dark'}
+            </button>
             <button onClick={handleRefresh} className="refresh-btn">
               ↻ Refresh
             </button>

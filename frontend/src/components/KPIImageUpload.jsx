@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
+import * as XLSX from 'xlsx'
 import './KPIImageUpload.css'
 
 const API_BASE = '/api'
@@ -10,6 +11,7 @@ function KPIImageUpload() {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [uploadedAt, setUploadedAt] = useState(null)
+  const [excelData, setExcelData] = useState(null)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -17,15 +19,68 @@ function KPIImageUpload() {
     fetchExistingFile()
   }, [])
 
+  useEffect(() => {
+    // Parse Excel file whenever preview changes and it's an Excel file
+    if (preview && (preview.includes('.xlsx') || preview.includes('.xls'))) {
+      parseExcelFile(preview)
+    }
+  }, [preview])
+
   const fetchExistingFile = async () => {
     try {
       const response = await axios.get(`${API_BASE}/kpi-file`)
       if (response.data.exists) {
-        setPreview(`${API_BASE}${response.data.path}?t=${Date.now()}`)
+        const filePath = `${API_BASE}${response.data.path}?t=${Date.now()}`
+        setPreview(filePath)
+        setFile({ name: response.data.filename, path: filePath })
         setUploadedAt(new Date(response.data.uploadedAt))
+        
+        // If it's an Excel file, parse it immediately
+        if (response.data.filename.includes('.xlsx') || response.data.filename.includes('.xls')) {
+          console.log('Excel file detected, parsing:', response.data.filename)
+          setTimeout(() => parseExcelFile(filePath), 100)
+        }
       }
     } catch (error) {
       console.error('Error fetching existing file:', error)
+    }
+  }
+
+  const parseExcelFile = async (filePath) => {
+    try {
+      console.log('Parsing Excel file:', filePath)
+      const response = await fetch(filePath)
+      console.log('Fetch response:', response.status, response.ok)
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file: ${response.status}`)
+      }
+      
+      const arrayBuffer = await response.arrayBuffer()
+      console.log('ArrayBuffer size:', arrayBuffer.byteLength)
+      
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+      console.log('Workbook sheets:', workbook.SheetNames)
+      
+      // Get first sheet
+      const firstSheetName = workbook.SheetNames[0]
+      const worksheet = workbook.Sheets[firstSheetName]
+      
+      // Convert to JSON
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+      console.log('Excel data parsed, rows:', jsonData.length)
+      console.log('First 3 rows:', jsonData.slice(0, 3))
+      
+      if (jsonData.length === 0) {
+        console.error('No data in Excel file!')
+        setExcelData([['No data found in Excel file']])
+      } else {
+        setExcelData(jsonData)
+      }
+    } catch (error) {
+      console.error('Error parsing Excel file:', error)
+      console.error('Error stack:', error.stack)
+      setExcelData([['Error loading Excel file: ' + error.message]])
     }
   }
 
@@ -101,9 +156,15 @@ function KPIImageUpload() {
 
       if (response.data.success) {
         setUploadedAt(new Date(response.data.uploadedAt))
+        const filePath = `${API_BASE}${response.data.path}?t=${Date.now()}`
+        
         // For images, update preview with server path
         if (fileToUpload.type.startsWith('image/')) {
-          setPreview(`${API_BASE}${response.data.path}?t=${Date.now()}`)
+          setPreview(filePath)
+        } else {
+          // For Excel files, parse and display
+          setPreview(filePath)
+          parseExcelFile(filePath)
         }
         alert('KPI file uploaded successfully!')
       }
@@ -178,11 +239,50 @@ function KPIImageUpload() {
           </div>
         ) : (
           <div className="preview-container">
-            <img
-              src={preview}
-              alt="KPI Metrics"
-              className="kpi-image"
-            />
+            {preview && !preview.startsWith('data:image') && (preview.includes('.xlsx') || preview.includes('.xls') || (file && file.name && (file.name.includes('.xlsx') || file.name.includes('.xls')))) ? (
+              <div className="excel-preview">
+                <div className="excel-header">
+                  <div className="excel-icon">📊</div>
+                  <h3>KPI Metrics</h3>
+                  <p className="file-name">{file?.name || 'kpi-metrics.xlsx'}</p>
+                </div>
+                
+                {excelData && excelData.length > 0 ? (
+                  <div className="excel-table-container">
+                    <table className="excel-table">
+                      <thead>
+                        <tr>
+                          {excelData[0].map((header, index) => (
+                            <th key={index}>{header}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {excelData.slice(1).map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {row.map((cell, cellIndex) => (
+                              <td key={cellIndex}>{cell}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="loading-excel">Loading spreadsheet data...</div>
+                )}
+                
+                <a href={preview} download className="btn btn-success" style={{ marginTop: '1rem', display: 'inline-block', textDecoration: 'none' }}>
+                  📥 Download Excel File
+                </a>
+              </div>
+            ) : (
+              <img
+                src={preview}
+                alt="KPI Metrics"
+                className="kpi-image"
+              />
+            )}
             <div className="preview-actions">
               <button onClick={onButtonClick} className="btn btn-primary" disabled={uploading}>
                 📤 Upload New

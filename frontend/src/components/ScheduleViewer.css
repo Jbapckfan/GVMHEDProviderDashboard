@@ -95,3 +95,23 @@
     max-height: 500px;
   }
 }
+
+/* Dark Mode */
+html.dark-mode .schedule-note {
+  background: #1e293b;
+  border-color: #fbbf24;
+  color: #cbd5e1;
+}
+
+html.dark-mode .schedule-image {
+  background: #0f172a;
+}
+
+html.dark-mode iframe {
+  filter: invert(0.9) hue-rotate(180deg);
+  border-radius: 8px;
+}
+
+html.dark-mode .current-month {
+  color: #f1f5f9;
+}

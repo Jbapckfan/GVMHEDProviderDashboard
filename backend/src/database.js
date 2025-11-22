@@ -232,6 +232,28 @@ const createOrderSetSuggestion = (data) => {
   return stmt.run(data.suggestion, data.author || 'Anonymous');
 };
 
+const addPhoneNumber = (data) => {
+  const stmt = db.prepare(`
+    INSERT INTO phone_directory (name, number, extension, department, display_order)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  return stmt.run(data.name, data.number, data.extension || '', data.department, data.display_order || 0);
+};
+
+const updatePhoneNumber = (id, data) => {
+  const stmt = db.prepare(`
+    UPDATE phone_directory
+    SET name=?, number=?, extension=?, department=?, display_order=?
+    WHERE id=?
+  `);
+  return stmt.run(data.name, data.number, data.extension || '', data.department, data.display_order || 0, id);
+};
+
+const deletePhoneNumber = (id) => {
+  const stmt = db.prepare('DELETE FROM phone_directory WHERE id=?');
+  return stmt.run(id);
+};
+
 module.exports = {
   initializeDatabase,
   getProviders,
@@ -242,5 +264,8 @@ module.exports = {
   getNews,
   getOrderSetSuggestions,
   updateKPIMetric,
-  createOrderSetSuggestion
+  createOrderSetSuggestion,
+  addPhoneNumber,
+  updatePhoneNumber,
+  deletePhoneNumber
 };

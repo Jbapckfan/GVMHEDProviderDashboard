@@ -41,40 +41,19 @@ const scheduleStorage = multer.diskStorage({
 
 const uploadKPI = multer({
   storage: kpiStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|xlsx|xls/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (extname && mimetype) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only images (JPG, PNG, GIF) and Excel files (.xlsx, .xls) are allowed'));
-    }
-  }
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
 const uploadSchedule = multer({
   storage: scheduleStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|xlsx|xls/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (extname && mimetype) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only images (JPG, PNG, GIF) and Excel files (.xlsx, .xls) are allowed'));
-    }
-  }
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
+app.use('/api/uploads', express.static(uploadsDir));
 
 // Initialize database
 db.initializeDatabase();
@@ -138,10 +117,16 @@ app.get('/api/quick-links', (req, res) => {
 // Upload KPI image/file
 app.post('/api/upload-kpi', uploadKPI.single('file'), (req, res) => {
   try {
+    console.log('Upload KPI request received');
+    console.log('Request file:', req.file);
+    console.log('Request body:', req.body);
+
     if (!req.file) {
+      console.error('No file in request');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
+    console.log('File uploaded successfully:', req.file.filename);
     res.json({
       success: true,
       filename: req.file.filename,
@@ -149,6 +134,7 @@ app.post('/api/upload-kpi', uploadKPI.single('file'), (req, res) => {
       uploadedAt: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Upload KPI error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -260,6 +246,54 @@ app.get('/api/phone-directory', (req, res) => {
   try {
     const phoneNumbers = db.getPhoneDirectory();
     res.json(phoneNumbers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Add phone number
+app.post('/api/admin/phone-directory', express.json(), (req, res) => {
+  try {
+    const result = db.addPhoneNumber(req.body);
+    res.json({ success: true, id: result.lastInsertRowid });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Update phone number
+app.put('/api/admin/phone-directory/:id', express.json(), (req, res) => {
+  try {
+    const { id } = req.params;
+    db.updatePhoneNumber(id, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Delete phone number
+app.delete('/api/admin/phone-directory/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.deletePhoneNumber(id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Verify password
+app.post('/api/admin/verify', express.json(), (req, res) => {
+  try {
+    const { password } = req.body;
+    // Simple password check - you can change this password
+    const adminPassword = 'admin123';
+    if (password === adminPassword) {
+      res.json({ success: true });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid password' });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

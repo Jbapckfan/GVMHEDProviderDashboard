@@ -9,7 +9,11 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads');
+// Use /data/uploads for production (Fly.io) or ../uploads for development
+const uploadsDir = process.env.NODE_ENV === 'production'
+  ? '/data/uploads'
+  : path.join(__dirname, '../uploads');
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -309,6 +313,38 @@ app.get('/api/news', (req, res) => {
   }
 });
 
+// Admin: Add news
+app.post('/api/admin/news', express.json(), (req, res) => {
+  try {
+    const result = db.addNews(req.body);
+    res.json({ success: true, id: result.lastInsertRowid });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Update news
+app.put('/api/admin/news/:id', express.json(), (req, res) => {
+  try {
+    const { id } = req.params;
+    db.updateNews(id, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Delete news
+app.delete('/api/admin/news/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.deleteNews(id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get order set suggestions
 app.get('/api/order-set-suggestions', (req, res) => {
   try {
@@ -324,6 +360,132 @@ app.post('/api/order-set-suggestions', (req, res) => {
   try {
     const result = db.createOrderSetSuggestion(req.body);
     res.json({ success: true, id: result.lastInsertRowid });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get provider chart status
+app.get('/api/provider-charts', (req, res) => {
+  try {
+    const charts = db.getProviderCharts();
+    res.json(charts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Add provider chart status
+app.post('/api/admin/provider-charts', express.json(), (req, res) => {
+  try {
+    const result = db.addProviderChart(req.body);
+    res.json({ success: true, id: result.lastInsertRowid });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Update provider chart status
+app.put('/api/admin/provider-charts/:id', express.json(), (req, res) => {
+  try {
+    const { id } = req.params;
+    db.updateProviderChart(id, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Delete provider chart status
+app.delete('/api/admin/provider-charts/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.deleteProviderChart(id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get KPI goals
+app.get('/api/kpi-goals', (req, res) => {
+  try {
+    const goals = db.getKPIGoals();
+    res.json(goals);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Add KPI goal
+app.post('/api/admin/kpi-goals', express.json(), (req, res) => {
+  try {
+    const result = db.addKPIGoal(req.body);
+    res.json({ success: true, id: result.lastInsertRowid });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Update KPI goal
+app.put('/api/admin/kpi-goals/:id', express.json(), (req, res) => {
+  try {
+    const { id } = req.params;
+    db.updateKPIGoal(id, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Delete KPI goal
+app.delete('/api/admin/kpi-goals/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.deleteKPIGoal(id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get messages
+app.get('/api/messages', (req, res) => {
+  try {
+    const messages = db.getMessages();
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add message (no auth required - any provider can post)
+app.post('/api/messages', express.json(), (req, res) => {
+  try {
+    const result = db.addMessage(req.body);
+    res.json({ success: true, id: result.lastInsertRowid });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update message
+app.put('/api/messages/:id', express.json(), (req, res) => {
+  try {
+    const { id } = req.params;
+    db.updateMessage(id, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete message
+app.delete('/api/messages/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.deleteMessage(id);
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

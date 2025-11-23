@@ -1,7 +1,15 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-const dbPath = path.join(__dirname, '../data/dashboard.db');
+// Use /data/db for production (Fly.io) or ../data for development
+const dbDir = process.env.NODE_ENV === 'production' ? '/data/db' : path.join(__dirname, '../data');
+const dbPath = path.join(dbDir, 'dashboard.db');
+
+// Ensure directory exists
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
 const db = new Database(dbPath);
 
 // Enable foreign keys
@@ -87,6 +95,41 @@ function initializeDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       suggestion TEXT NOT NULL,
       author TEXT DEFAULT 'Anonymous',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Provider chart status table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS provider_charts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      provider_name TEXT NOT NULL,
+      outstanding_charts INTEGER DEFAULT 0,
+      delinquent_charts INTEGER DEFAULT 0,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // KPI goals table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS kpi_goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      goal_name TEXT NOT NULL,
+      current_value REAL DEFAULT 0,
+      target_value REAL NOT NULL,
+      unit TEXT,
+      deadline TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Message board table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      message TEXT NOT NULL,
+      author TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -203,6 +246,38 @@ function seedData() {
       'Dr. Johnson',
       twoDaysAgo
     );
+
+    // Seed provider chart status
+    const insertProviderChart = db.prepare('INSERT INTO provider_charts (provider_name, outstanding_charts, delinquent_charts) VALUES (?, ?, ?)');
+    insertProviderChart.run('Dr. Sarah Johnson', 8, 2);
+    insertProviderChart.run('Dr. Michael Chen', 12, 0);
+    insertProviderChart.run('Dr. Emily Rodriguez', 15, 5);
+    insertProviderChart.run('Dr. David Martinez', 6, 1);
+    insertProviderChart.run('Dr. Lisa Thompson', 20, 8);
+
+    // Seed KPI goals
+    const insertKPIGoal = db.prepare('INSERT INTO kpi_goals (goal_name, current_value, target_value, unit, deadline) VALUES (?, ?, ?, ?, ?)');
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const nextMonthStr = nextMonth.toISOString().split('T')[0];
+
+    insertKPIGoal.run('Door-to-Doctor Time', 28, 30, 'minutes', nextMonthStr);
+    insertKPIGoal.run('Patient Satisfaction', 4.3, 4.5, 'out of 5', nextMonthStr);
+    insertKPIGoal.run('Left Without Being Seen', 2.1, 2.0, 'percent', nextMonthStr);
+    insertKPIGoal.run('Average Length of Stay', 3.2, 3.0, 'hours', nextMonthStr);
+
+    // Seed message board
+    const insertMessage = db.prepare('INSERT INTO messages (message, author, created_at) VALUES (?, ?, ?)');
+    insertMessage.run(
+      'Heads up - Dr. Womack (ortho) is out of town today through Sunday Nov 30th. Dr. Stevens is covering.',
+      'Dr. Johnson',
+      now
+    );
+    insertMessage.run(
+      'Reminder: New sepsis protocol goes into effect Monday. Please review the updated order set.',
+      'Dr. Martinez',
+      yesterday
+    );
   }
 }
 
@@ -212,7 +287,7 @@ const getShifts = (date) => db.prepare('SELECT * FROM shifts WHERE date = ? ORDE
 const getKPIMetrics = () => db.prepare('SELECT * FROM kpi_metrics ORDER BY category, metric_name').all();
 const getQuickLinks = () => db.prepare('SELECT * FROM quick_links ORDER BY category, title').all();
 const getPhoneDirectory = () => db.prepare('SELECT * FROM phone_directory ORDER BY display_order, name').all();
-const getNews = () => db.prepare('SELECT * FROM news WHERE expires_at IS NULL OR expires_at > datetime("now") ORDER BY created_at DESC').all();
+const getNews = () => db.prepare('SELECT * FROM news WHERE expires_at IS NULL OR expires_at > datetime(\'now\') ORDER BY created_at DESC').all();
 const getOrderSetSuggestions = () => db.prepare('SELECT * FROM order_set_suggestions ORDER BY created_at DESC').all();
 
 const updateKPIMetric = (data) => {
@@ -254,6 +329,100 @@ const deletePhoneNumber = (id) => {
   return stmt.run(id);
 };
 
+const addNews = (data) => {
+  const stmt = db.prepare(`
+    INSERT INTO news (title, content, priority, expires_at)
+    VALUES (?, ?, ?, ?)
+  `);
+  return stmt.run(data.title, data.content, data.priority || 'low', data.expires_at || null);
+};
+
+const updateNews = (id, data) => {
+  const stmt = db.prepare(`
+    UPDATE news
+    SET title=?, content=?, priority=?, expires_at=?
+    WHERE id=?
+  `);
+  return stmt.run(data.title, data.content, data.priority || 'low', data.expires_at || null, id);
+};
+
+const deleteNews = (id) => {
+  const stmt = db.prepare('DELETE FROM news WHERE id=?');
+  return stmt.run(id);
+};
+
+const getProviderCharts = () => db.prepare('SELECT * FROM provider_charts ORDER BY provider_name').all();
+
+const addProviderChart = (data) => {
+  const stmt = db.prepare(`
+    INSERT INTO provider_charts (provider_name, outstanding_charts, delinquent_charts)
+    VALUES (?, ?, ?)
+  `);
+  return stmt.run(data.provider_name, data.outstanding_charts || 0, data.delinquent_charts || 0);
+};
+
+const updateProviderChart = (id, data) => {
+  const stmt = db.prepare(`
+    UPDATE provider_charts
+    SET provider_name=?, outstanding_charts=?, delinquent_charts=?, updated_at=CURRENT_TIMESTAMP
+    WHERE id=?
+  `);
+  return stmt.run(data.provider_name, data.outstanding_charts || 0, data.delinquent_charts || 0, id);
+};
+
+const deleteProviderChart = (id) => {
+  const stmt = db.prepare('DELETE FROM provider_charts WHERE id=?');
+  return stmt.run(id);
+};
+
+const getKPIGoals = () => db.prepare('SELECT * FROM kpi_goals ORDER BY created_at DESC').all();
+
+const addKPIGoal = (data) => {
+  const stmt = db.prepare(`
+    INSERT INTO kpi_goals (goal_name, current_value, target_value, unit, deadline)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  return stmt.run(data.goal_name, data.current_value || 0, data.target_value, data.unit || '', data.deadline || null);
+};
+
+const updateKPIGoal = (id, data) => {
+  const stmt = db.prepare(`
+    UPDATE kpi_goals
+    SET goal_name=?, current_value=?, target_value=?, unit=?, deadline=?, updated_at=CURRENT_TIMESTAMP
+    WHERE id=?
+  `);
+  return stmt.run(data.goal_name, data.current_value || 0, data.target_value, data.unit || '', data.deadline || null, id);
+};
+
+const deleteKPIGoal = (id) => {
+  const stmt = db.prepare('DELETE FROM kpi_goals WHERE id=?');
+  return stmt.run(id);
+};
+
+const getMessages = () => db.prepare('SELECT * FROM messages ORDER BY created_at DESC').all();
+
+const addMessage = (data) => {
+  const stmt = db.prepare(`
+    INSERT INTO messages (message, author)
+    VALUES (?, ?)
+  `);
+  return stmt.run(data.message, data.author || 'Anonymous');
+};
+
+const updateMessage = (id, data) => {
+  const stmt = db.prepare(`
+    UPDATE messages
+    SET message=?, author=?
+    WHERE id=?
+  `);
+  return stmt.run(data.message, data.author || 'Anonymous', id);
+};
+
+const deleteMessage = (id) => {
+  const stmt = db.prepare('DELETE FROM messages WHERE id=?');
+  return stmt.run(id);
+};
+
 module.exports = {
   initializeDatabase,
   getProviders,
@@ -267,5 +436,20 @@ module.exports = {
   createOrderSetSuggestion,
   addPhoneNumber,
   updatePhoneNumber,
-  deletePhoneNumber
+  deletePhoneNumber,
+  addNews,
+  updateNews,
+  deleteNews,
+  getProviderCharts,
+  addProviderChart,
+  updateProviderChart,
+  deleteProviderChart,
+  getKPIGoals,
+  addKPIGoal,
+  updateKPIGoal,
+  deleteKPIGoal,
+  getMessages,
+  addMessage,
+  updateMessage,
+  deleteMessage
 };

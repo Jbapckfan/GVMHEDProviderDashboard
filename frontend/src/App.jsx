@@ -5,6 +5,9 @@ import ScheduleViewer from './components/ScheduleViewer'
 import PhoneDirectory from './components/PhoneDirectory'
 import NewsUpdates from './components/NewsUpdates'
 import OrderSetSuggestions from './components/OrderSetSuggestions'
+import ProviderChartStatus from './components/ProviderChartStatus'
+import KPIGoals from './components/KPIGoals'
+import MessageBoard from './components/MessageBoard'
 
 function App() {
   const [lastUpdated, setLastUpdated] = useState(new Date())
@@ -27,7 +30,7 @@ function App() {
     <div className="app">
       <header className="header">
         <div className="header-content">
-          <h1>🏥 ED Provider Dashboard</h1>
+          <h1>🏥 GVMH ED Provider Dashboard</h1>
           <div className="header-info">
             <span className="status-dot"></span>
             <span className="last-updated">
@@ -55,15 +58,30 @@ function App() {
             <ScheduleViewer />
           </div>
 
-          {/* Third row - Phone Directory and News */}
+          {/* Third row - Provider Chart Status */}
+          <div className="grid-full">
+            <ProviderChartStatus />
+          </div>
+
+          {/* Fourth row - KPI Goals */}
+          <div className="grid-full">
+            <KPIGoals />
+          </div>
+
+          {/* Fifth row - Message Board */}
+          <div className="grid-full">
+            <MessageBoard />
+          </div>
+
+          {/* Sixth row - Phone Directory and News */}
           <div className="grid-col-1">
             <PhoneDirectory />
           </div>
-          <div className="grid-col-1">
+          <div className="grid-col-2">
             <NewsUpdates />
           </div>
 
-          {/* Fourth row - Order Set Suggestions */}
+          {/* Seventh row - Order Set Suggestions */}
           <div className="grid-full">
             <OrderSetSuggestions />
           </div>

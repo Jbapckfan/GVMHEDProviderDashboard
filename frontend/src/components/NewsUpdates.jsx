@@ -7,6 +7,8 @@ const API_BASE = '/api'
 function NewsUpdates() {
   const [news, setNews] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editingNews, setEditingNews] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     fetchNews()
@@ -20,6 +22,82 @@ function NewsUpdates() {
     } catch (error) {
       console.error('Error fetching news:', error)
       setLoading(false)
+    }
+  }
+
+  const verifyPassword = async () => {
+    const password = prompt('Enter admin password:')
+    if (!password) return false
+
+    try {
+      const response = await axios.post(`${API_BASE}/admin/verify`, { password })
+      if (response.data.success) {
+        setIsAuthenticated(true)
+        return true
+      } else {
+        alert('Invalid password')
+        return false
+      }
+    } catch (error) {
+      alert('Invalid password')
+      return false
+    }
+  }
+
+  const handleEdit = async (newsItem) => {
+    if (!isAuthenticated) {
+      const verified = await verifyPassword()
+      if (!verified) return
+    }
+    setEditingNews({ ...newsItem })
+  }
+
+  const handleAddNew = async () => {
+    if (!isAuthenticated) {
+      const verified = await verifyPassword()
+      if (!verified) return
+    }
+    setEditingNews({
+      id: null,
+      title: '',
+      content: '',
+      priority: 'low',
+      expires_at: null
+    })
+  }
+
+  const handleSave = async () => {
+    try {
+      if (editingNews.id) {
+        // Update existing
+        await axios.put(`${API_BASE}/admin/news/${editingNews.id}`, editingNews)
+        alert('News updated successfully!')
+      } else {
+        // Add new
+        await axios.post(`${API_BASE}/admin/news`, editingNews)
+        alert('News added successfully!')
+      }
+      setEditingNews(null)
+      fetchNews()
+    } catch (error) {
+      alert('Failed to save news: ' + error.message)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!editingNews.id) return
+
+    if (!window.confirm('Are you sure you want to delete this news item?')) {
+      return
+    }
+
+    try {
+      await axios.delete(`${API_BASE}/admin/news/${editingNews.id}`)
+      alert('News deleted successfully!')
+      setEditingNews(null)
+      fetchNews()
+    } catch (error) {
+      alert('Failed to delete news: ' + error.message)
     }
   }
 
@@ -61,7 +139,12 @@ function NewsUpdates() {
     <div className="card news-updates-card">
       <div className="card-header">
         <h2 className="card-title">📰 Latest Updates</h2>
-        <span className="news-count">{news.length} updates</span>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <span className="news-count">{news.length} updates</span>
+          <button onClick={handleAddNew} className="edit-news-btn">
+            ➕ Add Update
+          </button>
+        </div>
       </div>
 
       <div className="news-list">
@@ -73,9 +156,14 @@ function NewsUpdates() {
                 <span className={`priority-badge ${badge.class}`}>
                   {badge.label}
                 </span>
-                <span className="news-date">
-                  {getTimeAgo(item.created_at)}
-                </span>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span className="news-date">
+                    {getTimeAgo(item.created_at)}
+                  </span>
+                  <button onClick={() => handleEdit(item)} className="edit-news-btn-small">
+                    ✏️
+                  </button>
+                </div>
               </div>
               <h3 className="news-title">{item.title}</h3>
               <p className="news-content">{item.content}</p>
@@ -86,10 +174,66 @@ function NewsUpdates() {
         {news.length === 0 && (
           <div className="empty-state">
             <p>No news or updates to display.</p>
-            <p className="empty-hint">Check back later for announcements.</p>
+            <p className="empty-hint">Click "Add Update" to create your first announcement.</p>
           </div>
         )}
       </div>
+
+      {editingNews && (
+        <div className="news-edit-modal" onClick={() => setEditingNews(null)}>
+          <div className="news-edit-form" onClick={(e) => e.stopPropagation()}>
+            <h3>{editingNews.id ? 'Edit Update' : 'Add New Update'}</h3>
+
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+              Title
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., New CT Scanner Available"
+              value={editingNews.title}
+              onChange={(e) => setEditingNews({ ...editingNews, title: e.target.value })}
+            />
+
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+              Content
+            </label>
+            <textarea
+              placeholder="Enter the update details..."
+              value={editingNews.content}
+              onChange={(e) => setEditingNews({ ...editingNews, content: e.target.value })}
+              rows={4}
+              style={{ width: '100%', padding: '0.75rem', marginBottom: '1rem', border: '2px solid var(--gray-300)', borderRadius: '8px', fontSize: '1rem', resize: 'vertical' }}
+            />
+
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+              Priority
+            </label>
+            <select
+              value={editingNews.priority}
+              onChange={(e) => setEditingNews({ ...editingNews, priority: e.target.value })}
+              style={{ width: '100%', padding: '0.75rem', marginBottom: '1rem', border: '2px solid var(--gray-300)', borderRadius: '8px', fontSize: '1rem' }}
+            >
+              <option value="low">Info</option>
+              <option value="medium">Important</option>
+              <option value="high">URGENT</option>
+            </select>
+
+            <div className="news-edit-actions">
+              {editingNews.id && (
+                <button onClick={handleDelete} className="btn-delete">
+                  🗑️ Delete
+                </button>
+              )}
+              <button onClick={() => setEditingNews(null)} className="btn-cancel">
+                Cancel
+              </button>
+              <button onClick={handleSave} className="btn-save">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -9,8 +9,8 @@ RUN npm ci --only=production
 # Copy application files
 COPY . .
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data
+# Create data directory with subdirectories for database and uploads
+RUN mkdir -p /data/db /data/uploads
 
 EXPOSE 3001
 

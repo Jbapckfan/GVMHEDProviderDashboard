@@ -1,377 +1,232 @@
-# 🏥 GVMHEDProviderDashboard
+# GVMH ED Provider Dashboard
 
-**Real-time Emergency Department Provider Dashboard**
+A comprehensive dashboard for the GVMH Emergency Department providers to track schedules, KPI metrics, phone directory, news updates, and more.
 
-A modern, full-stack web application designed for ED providers to access critical information quickly. Built for small teams (8 or fewer users) with a focus on simplicity, performance, and reliability.
+## Live Dashboard
 
-![Dashboard Preview](https://img.shields.io/badge/status-production%20ready-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-blue)
+**Production URL:** https://gvmh-ed-frontend.fly.dev
 
----
+## Features
 
-## 📋 Features
+- **KPI Metrics Upload** - Upload and display KPI metrics images
+- **Schedule Viewer** - View provider schedules from Google Sheets (November/December 2025)
+- **Phone Directory** - Quick reference for important phone numbers (admin-editable with drag-to-reorder)
+- **News Updates** - Post and manage department news and updates (admin-protected)
+- **Provider Chart Status** - Track outstanding and delinquent charts by provider (admin-protected)
+- **KPI Goals** - Set and track progress toward KPI targets (admin-protected)
+- **Message Board** - Provider-to-provider communication (no password required)
+- **Dark Mode** - Toggle between light and dark themes
 
-### 🎯 Core Functionality
+## Admin Access
 
-- **KPI Department Metrics**
-  - Patient Flow: Length of stay, door-to-doctor time, LWBS rate, throughput
-  - Quality: Patient satisfaction, return rates, admission/discharge rates
-  - Operational: Staff utilization, bed occupancy, wait times, patient ratios
-  - Financial: Cost per visit, revenue per patient, collection rates
-  - Color-coded status indicators (good/warning/critical)
-  - Target vs actual comparisons
-  - Category filtering
+**Admin Password:** `admin123`
 
-- **Shift Schedule Management**
-  - Daily shift calendar
-  - Current shift highlighting
-  - Day/night shift identification
-  - Date navigation
+Features requiring admin password:
+- Edit Phone Directory
+- Add/Edit News Updates
+- Manage Provider Chart Status
+- Set KPI Goals
 
-- **Provider Directory**
-  - Real-time availability status
-  - Contact information (phone/email)
-  - Role-based organization
-  - Quick-dial phone links
-
-- **Quick Links Hub**
-  - Reference materials (UpToDate, MDCalc)
-  - Internal systems (EMR, PACS, Labs)
-  - Organized by category
-  - One-click access
-
-### 🚀 Technical Features
-
-- **Auto-refresh**: Data updates every 60 seconds
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **Docker Ready**: One-command deployment
-- **SQLite Database**: Zero-configuration, file-based storage
-- **REST API**: Clean, documented endpoints
-- **Production Optimized**: Built for 24/7 reliability
-
----
-
-## 🏗️ Architecture
-
-### Technology Stack
-
-**Frontend:**
-- React 18 with Hooks
-- Vite (fast build tool)
-- Axios for API calls
-- Pure CSS (no framework overhead)
-
-**Backend:**
-- Node.js 18
-- Express.js
-- better-sqlite3 (synchronous SQLite)
-- CORS enabled
-
-**Deployment:**
-- Docker & Docker Compose
-- Nginx (production web server)
-- Multi-stage builds for optimization
-
-**Database:**
-- SQLite 3
-- File-based storage
-- Automatic initialization with seed data
-
----
-
-## 📦 Installation & Setup
+## Local Development
 
 ### Prerequisites
+- Node.js 18+
+- npm or yarn
 
-- Docker & Docker Compose installed
-- OR Node.js 18+ (for local development)
+### Setup
 
-### Option 1: Docker Deployment (Recommended)
-
-1. **Clone the repository:**
+1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/Jbapckfan/GVMHEDProviderDashboard.git
 cd GVMHEDProviderDashboard
 ```
 
-2. **Build and start the application:**
+2. Install dependencies:
 ```bash
-docker-compose up -d --build
-```
-
-3. **Access the dashboard:**
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001/api
-
-4. **Stop the application:**
-```bash
-docker-compose down
-```
-
-### Option 2: Local Development
-
-**Backend:**
-```bash
+# Backend
 cd backend
 npm install
-npm start
-# Runs on http://localhost:3001
-```
 
-**Frontend:**
-```bash
-cd frontend
+# Frontend
+cd ../frontend
 npm install
+```
+
+3. Start development servers:
+```bash
+# Terminal 1 - Backend (runs on port 3001)
+cd backend
+npm start
+
+# Terminal 2 - Frontend (runs on port 3000)
+cd frontend
 npm run dev
-# Runs on http://localhost:3000
 ```
 
----
+4. Open http://localhost:3000 in your browser
 
-## 🐳 Docker on Ugreen NAS
+## Deployment
 
-### Requirements
-- Docker installed on Ugreen NAS
-- Ports 3000 and 3001 available
+### Backend Deployment
 
-### Deployment Steps
-
-1. **Upload project to NAS:**
-   - Via SSH/SFTP to a folder like `/volume1/docker/ed-dashboard`
-
-2. **Build and run:**
 ```bash
-cd /volume1/docker/ed-dashboard
-docker-compose up -d --build
+cd ~/GVMHEDProviderDashboard/backend
+fly deploy
 ```
 
-3. **Access locally:**
-   - From your network: http://[NAS-IP]:3000
+### Frontend Deployment
 
-4. **For remote access, use Cloudflare Tunnel:**
 ```bash
-# Install cloudflared on your NAS
-# Then create a tunnel pointing to localhost:3000
-cloudflared tunnel --url http://localhost:3000
+cd ~/GVMHEDProviderDashboard/frontend
+fly deploy
 ```
 
----
+## Backup & Recovery
 
-## 🔌 API Endpoints
+### Code Backup
+All code is backed up to GitHub:
+- Repository: https://github.com/Jbapckfan/GVMHEDProviderDashboard
+- Push changes: `git push origin main`
 
-### Health Check
-```
-GET /api/health
-```
+### Data Backup (Fly.io Volumes)
 
-### KPI Metrics
-```
-GET /api/kpi-metrics
-POST /api/kpi-metrics
-Body: {
-  metric_name: string,
-  metric_value: number
-}
-```
-
-### Providers
-```
-GET /api/providers
-```
-
-### Shifts
-```
-GET /api/shifts?date=YYYY-MM-DD
-```
-
-### Quick Links
-```
-GET /api/quick-links
-```
-
----
-
-## 📊 Database Schema
-
-### Tables
-
-**providers**
-- id, name, role, phone, email, status
-
-**shifts**
-- id, provider_name, shift_type, start_time, end_time, date
-
-**kpi_metrics**
-- id, metric_name, metric_value, target_value, unit, category, period, updated_at
-
-**quick_links**
-- id, title, url, category
-
----
-
-## 🎨 UI Components
-
-### 1. KPI Department Metrics
-- Category-based filtering (Patient Flow, Quality, Operational, Financial)
-- Color-coded status indicators (good/warning/critical)
-- Target vs actual comparisons
-- Progress bars for visual tracking
-
-### 2. Shift Schedule
-- Date picker for navigation
-- Current shift highlighting
-- Day/night shift differentiation
-
-### 3. Provider Directory
-- Real-time availability status
-- Contact information with click-to-call
-- Status badges (On Duty, Available, Off Duty)
-
-### 4. Quick Links
-- Grouped by category
-- External/internal link handling
-- Hover animations
-
----
-
-## 🔒 Security Considerations
-
-### Current Implementation
-- CORS enabled for API access
-- No authentication (designed for internal network use)
-
-### Recommended for Production
-1. **Add authentication:**
-   - JWT tokens
-   - Session-based auth
-   - OAuth/SSO integration
-
-2. **Use HTTPS:**
-   - Let's Encrypt SSL certificates
-   - Cloudflare Tunnel (automatic HTTPS)
-
-3. **Network security:**
-   - VPN access (Tailscale recommended)
-   - Firewall rules
-   - IP whitelisting
-
-4. **Data protection:**
-   - Regular database backups
-   - Encrypted storage for sensitive data
-   - Audit logging
-
----
-
-## 🛠️ Customization
-
-### Adding New Providers
-Edit `backend/src/database.js` in the `seedData()` function or use the API:
+**Create a snapshot:**
 ```bash
-# Add via SQLite directly
-sqlite3 backend/data/dashboard.db
-INSERT INTO providers (name, role, phone, email, status) VALUES (...);
+fly volumes snapshots create vol_r6391depxd6e6gqr --app gvmh-ed-backend
 ```
 
-### Adding KPI Metrics
+**List snapshots:**
 ```bash
-INSERT INTO kpi_metrics (metric_name, metric_value, target_value, unit, category) VALUES (
-  'New Metric',
-  95.5,
-  90.0,
-  'percent',
-  'Quality'
-);
+fly volumes snapshots list vol_r6391depxd6e6gqr --app gvmh-ed-backend
 ```
 
-### Customizing Colors
-Edit CSS variables in `frontend/src/index.css`:
-```css
-:root {
-  --primary-color: #2563eb;
-  --success-color: #10b981;
-  /* etc. */
-}
-```
+**Volume Information:**
+- Volume ID: `vol_r6391depxd6e6gqr`
+- Size: 1 GB
+- Contains: SQLite database + uploaded files
+- Retention: 5 days (automatic)
 
----
+**Recommended backup schedule:** Weekly or before major changes
 
-## 📈 Performance
+### Restore from Snapshot
+If you need to restore data from a snapshot, contact Fly.io support or see: https://fly.io/docs/volumes/volume-manage/
 
-- **Bundle Size:** < 500KB total (frontend)
-- **First Load:** < 2 seconds on LAN
-- **API Response Time:** < 50ms average
-- **Memory Usage:** ~100MB (both containers)
-- **CPU Usage:** Minimal (<1% idle)
+## Fly.io Apps
 
----
+- **Backend:** `gvmh-ed-backend` (https://gvmh-ed-backend.fly.dev)
+- **Frontend:** `gvmh-ed-frontend` (https://gvmh-ed-frontend.fly.dev)
 
-## 🐛 Troubleshooting
+### Monitoring
 
-### Container won't start
+**View logs:**
 ```bash
-# Check logs
-docker-compose logs backend
-docker-compose logs frontend
+# Backend logs
+fly logs --app gvmh-ed-backend
 
-# Rebuild from scratch
-docker-compose down -v
-docker-compose up -d --build
+# Frontend logs
+fly logs --app gvmh-ed-frontend
 ```
 
-### Database errors
+**Check status:**
 ```bash
-# Database file is in backend/data/dashboard.db
-# Delete to reset (will lose data):
-rm -f backend/data/dashboard.db
-docker-compose restart backend
+fly status --app gvmh-ed-backend
+fly status --app gvmh-ed-frontend
 ```
 
-### Port conflicts
+**View resource usage:**
 ```bash
-# Change ports in docker-compose.yml
-# Frontend: "3000:80" -> "8080:80"
-# Backend: "3001:3001" -> "8081:3001"
+fly dashboard
 ```
 
----
+## Free Tier Usage
 
-## 🚀 Future Enhancements
+Current configuration stays within Fly.io's free tier:
+- 2 VMs (backend + frontend)
+- 256MB RAM each
+- 1GB persistent storage
+- ~2GB bandwidth/month
 
-- [ ] User authentication system
-- [ ] Real-time WebSocket updates
-- [ ] Mobile app (React Native)
-- [ ] Advanced analytics dashboard
-- [ ] Integration with hospital EMR systems
-- [ ] Push notifications for critical alerts
-- [ ] Multi-facility support
-- [ ] Audit logging
-- [ ] Dark mode toggle
+**Free tier limits:**
+- 3 VMs with 256MB RAM
+- 3GB storage total
+- 160GB bandwidth/month
 
----
+## Tech Stack
 
-## 📝 License
+### Frontend
+- React 18
+- Vite
+- Axios
+- CSS3 with Dark Mode
 
-MIT License - Feel free to use and modify for your needs.
+### Backend
+- Node.js 18
+- Express.js
+- SQLite (better-sqlite3)
+- Multer (file uploads)
 
----
+### Deployment
+- Fly.io (hosting)
+- Docker (containerization)
+- Nginx (frontend web server)
 
-## 👥 Support
+## Project Structure
 
-For issues, questions, or contributions:
-- Create an issue in the repository
-- Contact your system administrator
+```
+GVMHEDProviderDashboard/
+├── backend/
+│   ├── src/
+│   │   ├── server.js          # Express server
+│   │   └── database.js        # SQLite database
+│   ├── Dockerfile
+│   ├── fly.toml
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── components/        # React components
+│   │   ├── App.jsx
+│   │   └── App.css
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   ├── fly.toml
+│   └── package.json
+└── README.md
+```
 
----
+## Troubleshooting
 
-## 📸 Screenshots
+### 502 Bad Gateway Error
+If you see 502 errors, the frontend can't reach the backend:
+1. Check backend is running: `fly status --app gvmh-ed-backend`
+2. Check backend logs: `fly logs --app gvmh-ed-backend`
+3. Verify nginx.conf has correct backend URL
 
-*Dashboard will display:*
-- Live ED metrics at a glance
-- Color-coded status indicators
-- Easy-to-read shift schedule
-- Quick access to protocols and resources
-- Responsive design for any device
+### File Upload Fails
+1. Check backend logs for errors
+2. Verify volume is mounted: `fly volumes list --app gvmh-ed-backend`
+3. Ensure uploads directory exists in volume
 
----
+### Database Not Saving Data
+1. Check volume is attached: `fly volumes list --app gvmh-ed-backend`
+2. Create a snapshot before attempting fixes
+3. Check backend logs for SQLite errors
 
-**Built with ❤️ for Emergency Department providers**
+## Support & Maintenance
+
+**Update Schedule:**
+- Deploy updates after testing locally
+- Create volume snapshot before major updates
+- Monitor Fly.io dashboard for resource usage
+
+**Security Notes:**
+- Change admin password in `backend/src/server.js` (line 291)
+- Keep dependencies updated: `npm audit`
+- Review Fly.io security settings periodically
+
+## License
+
+Private - Internal use only for GVMH Emergency Department
+
+## Contact
+
+For issues or questions, contact the development team or open an issue on GitHub.

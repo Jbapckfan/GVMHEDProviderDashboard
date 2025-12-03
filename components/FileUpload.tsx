@@ -2,6 +2,7 @@
 
 import { useState, useRef, ChangeEvent, DragEvent } from "react";
 import * as XLSX from "xlsx";
+import Button from "./Button";
 
 interface FileUploadProps {
   onUpload: (data: any) => void;
@@ -150,12 +151,12 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`
-          relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-          transition-all duration-200 ease-in-out
+          relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer
+          transition-all duration-300 ease-out
           ${
             isDragging
-              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-              : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500"
+              ? "border-[#5E6AD2] bg-[#5E6AD2]/10 shadow-[0_0_40px_rgba(94,106,210,0.2)]"
+              : "border-white/[0.10] hover:border-[#5E6AD2]/50 hover:bg-white/[0.02]"
           }
           ${isProcessing ? "opacity-50 cursor-wait" : ""}
         `}
@@ -170,44 +171,73 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
           disabled={isProcessing}
         />
 
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Icon with accent glow */}
           <div className="flex justify-center">
-            <svg
-              className="w-16 h-16 text-gray-400 dark:text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
+            <div className={`
+              relative rounded-2xl p-4
+              ${isDragging ? 'bg-[#5E6AD2]/20' : 'bg-white/[0.05]'}
+              transition-all duration-300
+            `}>
+              <svg
+                className={`
+                  w-12 h-12 transition-colors duration-300
+                  ${isDragging ? 'text-[#5E6AD2]' : 'text-white/40'}
+                `}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              {isDragging && (
+                <div className="absolute inset-0 rounded-2xl bg-[#5E6AD2]/20 blur-xl" />
+              )}
+            </div>
           </div>
 
-          <div>
-            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+          {/* Text content */}
+          <div className="space-y-2">
+            <p className="text-xl font-semibold text-[#EDEDEF]">
               {isProcessing
                 ? "Processing files..."
                 : isDragging
                 ? "Drop files here"
-                : "Click to upload or drag and drop"}
+                : "Upload your spreadsheets"}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-sm text-[#8A8F98]">
               Excel (.xlsx, .xls, .xlsm, .xlsb) or Google Sheets files
             </p>
           </div>
 
+          {/* Action button */}
           {!isProcessing && (
-            <button
-              type="button"
-              className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-              onClick={handleClick}
-            >
-              Select Files
-            </button>
+            <div className="pt-2">
+              <Button
+                variant="primary"
+                size="md"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClick();
+                }}
+              >
+                Select Files
+              </Button>
+            </div>
+          )}
+
+          {/* Processing indicator */}
+          {isProcessing && (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#5E6AD2] animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-[#5E6AD2] animate-pulse" style={{ animationDelay: '0.2s' }} />
+              <div className="w-2 h-2 rounded-full bg-[#5E6AD2] animate-pulse" style={{ animationDelay: '0.4s' }} />
+            </div>
           )}
         </div>
       </div>

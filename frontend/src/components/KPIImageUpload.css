@@ -1,11 +1,15 @@
 .kpi-upload-card {
-  min-height: 400px;
+  animation: scaleIn 0.4s ease-out;
 }
 
 .upload-time {
   font-size: 0.875rem;
-  color: var(--gray-700);
-  font-style: italic;
+  color: var(--text-secondary);
+  font-weight: 500;
+  background: var(--bg-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
 }
 
 .upload-container {
@@ -14,27 +18,48 @@
 
 .drop-zone {
   border: 3px dashed var(--gray-300);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 3rem 2rem;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  background: var(--gray-100);
+  transition: all var(--transition-base);
+  background: var(--bg-secondary);
   min-height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.drop-zone::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+  opacity: 0;
+  transition: opacity var(--transition-base);
 }
 
 .drop-zone:hover {
-  border-color: var(--primary-color);
-  background: #f0f7ff;
+  border-color: var(--primary);
+  background: var(--bg-tertiary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.drop-zone:hover::before {
+  opacity: 1;
 }
 
 .drop-zone.drag-active {
-  border-color: var(--primary-color);
-  background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
   transform: scale(1.02);
+  box-shadow: var(--shadow-xl), 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
 .drop-zone-content {
@@ -48,22 +73,26 @@
 }
 
 .drop-text {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
-  color: var(--gray-800);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .drop-subtext {
-  font-size: 1rem;
-  color: var(--gray-700);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 
 .drop-hint {
-  font-size: 0.875rem;
-  color: var(--gray-700);
-  opacity: 0.8;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
 }
 
 .preview-container {

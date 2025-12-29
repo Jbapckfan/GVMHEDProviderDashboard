@@ -4,13 +4,60 @@ import { useState } from "react";
 import FileUpload from "@/components/FileUpload";
 import BackgroundBlobs from "@/components/BackgroundBlobs";
 import Card from "@/components/Card";
+import InsightsPanel from "@/components/InsightsPanel";
+import DataVisualization from "@/components/DataVisualization";
+import SearchBar from "@/components/SearchBar";
+import { DataAnalyzer, DataSummary } from "@/lib/dataAnalyzer";
+
+interface UploadedFile {
+  fileName: string;
+  fileSize: string;
+  fileType: string;
+  sheets: any[];
+  uploadedAt: string;
+  analysis?: DataSummary;
+  chartData?: any[];
+}
 
 export default function Home() {
-  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredData, setFilteredData] = useState<any>(null);
 
   const handleFileUpload = (data: any) => {
-    setUploadedFiles((prev) => [...prev, data]);
+    // Analyze each sheet for insights
+    const filesWithAnalysis = {
+      ...data,
+      analysis: data.sheets[0] ? DataAnalyzer.analyzeData(data.sheets[0].preview, data.sheets[0].name) : undefined,
+      chartData: data.sheets[0] ? DataAnalyzer.prepareChartData(
+        DataAnalyzer.analyzeData(data.sheets[0].preview, data.sheets[0].name).columns,
+        data.sheets[0].preview.slice(1)
+      ) : [],
+    };
+
+    setUploadedFiles((prev) => [...prev, filesWithAnalysis]);
   };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query) {
+      setFilteredData(null);
+      return;
+    }
+
+    // Search across all uploaded files
+    const results = uploadedFiles.map(file => ({
+      ...file,
+      sheets: file.sheets.map(sheet => ({
+        ...sheet,
+        preview: DataAnalyzer.searchData(sheet.preview, query),
+      })),
+    }));
+
+    setFilteredData(results);
+  };
+
+  const displayFiles = filteredData || uploadedFiles;
 
   return (
     <div className="min-h-screen relative">
@@ -38,7 +85,7 @@ export default function Home() {
           </header>
 
           {/* Main content grid */}
-          <div className="grid gap-6 lg:gap-8 max-w-5xl mx-auto">
+          <div className="grid gap-6 lg:gap-8 max-w-6xl mx-auto">
             {/* Upload section */}
             <Card variant="gradient" hover={false} spotlight={false} className="p-8 sm:p-10">
               <div className="mb-6">
@@ -46,26 +93,59 @@ export default function Home() {
                   Upload Files
                 </h2>
                 <p className="text-[#8A8F98]">
-                  Drag and drop or click to upload spreadsheet files for instant preview
+                  Drag and drop or click to upload spreadsheet files for instant AI-powered analysis
                 </p>
               </div>
               <FileUpload onUpload={handleFileUpload} />
             </Card>
 
-            {/* Uploaded files section */}
+            {/* Search bar - Only show when files are uploaded */}
             {uploadedFiles.length > 0 && (
+              <Card variant="glass" className="p-6">
+                <SearchBar onSearch={handleSearch} />
+              </Card>
+            )}
+
+            {/* AI Insights and Healthcare Metrics */}
+            {uploadedFiles.length > 0 && uploadedFiles.some(f => f.analysis) && (
+              <InsightsPanel
+                insights={uploadedFiles.flatMap(f => f.analysis?.insights || [])}
+                healthcareMetrics={uploadedFiles[0]?.analysis?.healthcareMetrics}
+              />
+            )}
+
+            {/* Data Visualizations */}
+            {uploadedFiles.length > 0 && uploadedFiles.some(f => f.chartData && f.chartData.length > 0) && (
+              <div className="grid gap-6 lg:grid-cols-2">
+                {uploadedFiles
+                  .filter(f => f.chartData && f.chartData.length > 0)
+                  .slice(0, 2)
+                  .map((file, index) => (
+                    <DataVisualization
+                      key={index}
+                      data={file.chartData!}
+                      title={`Data from ${file.fileName}`}
+                      description="Auto-generated visualization"
+                    />
+                  ))}
+              </div>
+            )}
+
+            {/* Uploaded files section */}
+            {displayFiles.length > 0 && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl sm:text-3xl font-semibold text-[#EDEDEF]">
                     Uploaded Files
                   </h2>
                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-[#5E6AD2]/20 text-[#5E6AD2] border border-[#5E6AD2]/30">
-                    {uploadedFiles.length} {uploadedFiles.length === 1 ? 'file' : 'files'}
+                    {displayFiles.length} {displayFiles.length === 1 ? 'file' : 'files'}
+                    {searchQuery && <span className="ml-1 text-xs">• filtered</span>}
                   </span>
                 </div>
 
                 <div className="space-y-4">
-                  {uploadedFiles.map((file, index) => (
+                  {displayFiles.map((file, index) => (
                     <Card key={index} variant="default" className="p-6">
                       {/* File header */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">

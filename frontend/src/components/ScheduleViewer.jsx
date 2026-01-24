@@ -41,6 +41,7 @@ function ScheduleViewer() {
       const newUrl = getSheetUrl(currentMonth, currentYear)
       console.log('Switching to month:', monthNames[currentMonth], currentYear)
       setPreview(newUrl)
+      setRefreshKey(Date.now()) // Force iframe to reload
     }
   }, [currentMonth, currentYear, isGoogleSheets, baseSheetId])
 

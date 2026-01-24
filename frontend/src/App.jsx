@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import KPIImageUpload from './components/KPIImageUpload'
-import ScheduleViewer from './components/ScheduleViewer'
+import ScheduleCalendar from './components/ScheduleCalendar'
 import PhoneDirectory from './components/PhoneDirectory'
 import NewsUpdates from './components/NewsUpdates'
 import OrderSetSuggestions from './components/OrderSetSuggestions'
@@ -53,9 +53,9 @@ function App() {
             <KPIImageUpload />
           </div>
 
-          {/* Second row - Schedule Viewer */}
+          {/* Second row - Schedule Calendar */}
           <div className="grid-full">
-            <ScheduleViewer />
+            <ScheduleCalendar />
           </div>
 
           {/* Third row - Provider Chart Status */}

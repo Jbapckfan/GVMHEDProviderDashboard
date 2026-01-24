@@ -3,6 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 const db = require('./database');
 
 const app = express();
@@ -460,6 +461,212 @@ app.delete('/api/messages/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Google Sheets configuration
+const SHEET_ID = '1eFtQiknDOiQSwJkYs-jC-w1_K0byKB5I9qkIE9xnnpU';
+const SHEET_GIDS = {
+  'December 2025': '256218995',
+  'January 2026': '1997148602',
+  'February 2026': '1342065365',
+  'March 2026': '94782258',
+};
+
+// Cache for schedule data
+const scheduleCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Fetch Google Sheet as CSV and parse into calendar data
+async function fetchSheetData(gid) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+
+  return new Promise((resolve, reject) => {
+    https.get(url, (response) => {
+      // Handle redirects
+      if (response.statusCode === 302 || response.statusCode === 301) {
+        https.get(response.headers.location, (redirectResponse) => {
+          let data = '';
+          redirectResponse.on('data', chunk => data += chunk);
+          redirectResponse.on('end', () => resolve(data));
+          redirectResponse.on('error', reject);
+        }).on('error', reject);
+        return;
+      }
+
+      let data = '';
+      response.on('data', chunk => data += chunk);
+      response.on('end', () => resolve(data));
+      response.on('error', reject);
+    }).on('error', reject);
+  });
+}
+
+// Parse CSV into calendar structure
+function parseScheduleCSV(csv, monthName, year) {
+  const lines = csv.split('\n').map(line => {
+    // Parse CSV properly handling quoted fields
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  });
+
+  // Find the header row with days of week
+  let headerRowIndex = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const row = lines[i];
+    if (row.some(cell => cell.toLowerCase().includes('sunday') || cell.toLowerCase().includes('monday'))) {
+      headerRowIndex = i;
+      break;
+    }
+  }
+
+  if (headerRowIndex === -1) {
+    console.error('Could not find header row');
+    return null;
+  }
+
+  // Map column indices to days of week (0=Sunday through 6=Saturday)
+  const dayColumns = {};
+  const headerRow = lines[headerRowIndex];
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+  headerRow.forEach((cell, index) => {
+    const cellLower = cell.toLowerCase();
+    dayNames.forEach((day, dayIndex) => {
+      if (cellLower.includes(day)) {
+        dayColumns[index] = { name: day, dayIndex };
+      }
+    });
+  });
+
+  // Parse calendar data - track current day numbers for each column
+  const calendar = {};
+  const currentDayByColumn = {}; // Track which day number each column is currently showing
+
+  for (let i = headerRowIndex + 1; i < lines.length; i++) {
+    const row = lines[i];
+
+    // First pass: find day numbers in this row
+    Object.keys(dayColumns).forEach(colIndex => {
+      const cell = (row[colIndex] || '').replace(/["\r]/g, '').trim();
+      const dayMatch = cell.match(/^(\d{1,2})$/);
+      if (dayMatch) {
+        const dayNum = parseInt(dayMatch[1]);
+        if (dayNum >= 1 && dayNum <= 31) {
+          currentDayByColumn[colIndex] = dayNum;
+          if (!calendar[dayNum]) {
+            const dayInfo = dayColumns[colIndex];
+            calendar[dayNum] = { dayOfWeek: dayInfo.name, dayIndex: dayInfo.dayIndex, providers: [] };
+          }
+        }
+      }
+    });
+
+    // Second pass: find provider names (non-numeric text)
+    Object.keys(dayColumns).forEach(colIndex => {
+      const cell = (row[colIndex] || '').replace(/["\r]/g, '').trim();
+
+      // Skip if empty, is a number, or is a known non-provider string
+      if (!cell || cell.match(/^\d+$/) || cell.length < 2) return;
+      if (cell.match(/^(7A-7P|10A-10P|7P-7A|Revised|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i)) return;
+
+      // This looks like a provider name - assign to current day in this column
+      const dayNum = currentDayByColumn[colIndex];
+      if (dayNum && calendar[dayNum]) {
+        // Avoid duplicates
+        if (!calendar[dayNum].providers.includes(cell)) {
+          calendar[dayNum].providers.push(cell);
+        }
+      }
+    });
+  }
+
+  // Generate verification data for debugging
+  const verification = {
+    totalDays: Object.keys(calendar).length,
+    daysWithProviders: Object.keys(calendar).filter(d => calendar[d].providers.length > 0).length,
+    sampleData: {}
+  };
+
+  // Include sample of first 5 days with providers for verification
+  const daysWithData = Object.keys(calendar).filter(d => calendar[d].providers.length > 0).slice(0, 5);
+  daysWithData.forEach(d => {
+    verification.sampleData[d] = calendar[d].providers;
+  });
+
+  return {
+    month: monthName,
+    year: year,
+    calendar: calendar,
+    verification: verification
+  };
+}
+
+// Debug endpoint to get raw CSV (for verification)
+app.get('/api/schedule-debug', async (req, res) => {
+  const { month, year } = req.query;
+  const key = `${month} ${year}`;
+  const gid = SHEET_GIDS[key];
+
+  if (!gid) {
+    return res.status(404).json({ error: 'Month not available' });
+  }
+
+  try {
+    const csv = await fetchSheetData(gid);
+    res.type('text/plain').send(csv);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API endpoint to get schedule data
+app.get('/api/schedule-data', async (req, res) => {
+  const { month, year } = req.query;
+  const key = `${month} ${year}`;
+  const gid = SHEET_GIDS[key];
+
+  if (!gid) {
+    return res.status(404).json({ error: 'Month not available', availableMonths: Object.keys(SHEET_GIDS) });
+  }
+
+  // Check cache
+  const cached = scheduleCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return res.json(cached.data);
+  }
+
+  try {
+    console.log(`Fetching schedule data for ${key}...`);
+    const csv = await fetchSheetData(gid);
+    const data = parseScheduleCSV(csv, month, parseInt(year));
+
+    if (!data) {
+      return res.status(500).json({ error: 'Failed to parse schedule data' });
+    }
+
+    // Cache the result
+    scheduleCache.set(key, { data, timestamp: Date.now() });
+
+    console.log(`Schedule data fetched for ${key}`);
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching schedule:', error);
+    res.status(500).json({ error: 'Failed to fetch schedule data' });
   }
 });
 

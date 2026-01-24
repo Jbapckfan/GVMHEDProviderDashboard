@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import * as XLSX from 'xlsx'
 import './KPIImageUpload.css'
-
-const API_BASE = '/api'
+import { API_BASE } from '../utils/api'
 
 function KPIImageUpload() {
   const [file, setFile] = useState(null)

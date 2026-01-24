@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  // Base path for GitHub Pages
+  base: process.env.GITHUB_ACTIONS ? '/GVMHEDProviderDashboard/' : '/',
   server: {
     port: 3000,
     proxy: {

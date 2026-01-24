@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import './ScheduleViewer.css'
-
-const API_BASE = '/api'
+import { API_BASE } from '../utils/api'
 
 function ScheduleViewer() {
   const [file, setFile] = useState(null)

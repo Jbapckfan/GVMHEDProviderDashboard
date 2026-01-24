@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './ProviderChartStatus.css'
-
-const API_BASE = '/api'
+import { API_BASE } from '../utils/api'
 
 function ProviderChartStatus() {
   const [providers, setProviders] = useState([])

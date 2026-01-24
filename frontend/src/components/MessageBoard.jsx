@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './MessageBoard.css'
-
-const API_BASE = '/api'
+import { API_BASE } from '../utils/api'
 
 function MessageBoard() {
   const [messages, setMessages] = useState([])

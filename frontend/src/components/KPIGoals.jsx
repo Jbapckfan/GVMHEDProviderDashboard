@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './KPIGoals.css'
-
-const API_BASE = '/api'
+import { API_BASE } from '../utils/api'
 
 function KPIGoals() {
   const [goals, setGoals] = useState([])

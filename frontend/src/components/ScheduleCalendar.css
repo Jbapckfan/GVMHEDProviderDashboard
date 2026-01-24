@@ -128,8 +128,43 @@ html.dark-mode .schedule-calendar-card .live-indicator {
   font-weight: 500;
 }
 
+.selected-provider-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%);
+  color: white !important;
+  padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.clear-selection {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.clear-selection:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
 html.dark-mode .data-stats {
   color: #94a3b8;
+}
+
+html.dark-mode .selected-provider-stats {
+  background: linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%);
+  color: white !important;
 }
 
 .refresh-btn {

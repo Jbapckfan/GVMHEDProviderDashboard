@@ -98,10 +98,12 @@ function ScheduleCalendar() {
     return month === today.getMonth() && year === today.getFullYear()
   }
 
-  // Count total providers scheduled
-  const getTotalProviderShifts = () => {
-    if (!scheduleData?.calendar) return 0
-    return Object.values(scheduleData.calendar).reduce((sum, day) => sum + (day.providers?.length || 0), 0)
+  // Count shifts for a specific provider
+  const getProviderShiftCount = (providerName) => {
+    if (!scheduleData?.calendar || !providerName) return 0
+    return Object.values(scheduleData.calendar).filter(day =>
+      day.providers?.includes(providerName)
+    ).length
   }
 
   // Get all unique providers for the legend
@@ -152,9 +154,10 @@ function ScheduleCalendar() {
         <div className="calendar-header">
           <div className="calendar-header-left">
             <h3 className="calendar-title">{monthNames[currentMonth]} {currentYear}</h3>
-            {scheduleData?.verification && (
-              <span className="data-stats">
-                {scheduleData.verification.daysWithProviders} days scheduled • {getTotalProviderShifts()} shifts
+            {selectedProvider && (
+              <span className="data-stats selected-provider-stats">
+                {selectedProvider}: {getProviderShiftCount(selectedProvider)} shifts
+                <button className="clear-selection" onClick={() => setSelectedProvider(null)}>✕</button>
               </span>
             )}
           </div>

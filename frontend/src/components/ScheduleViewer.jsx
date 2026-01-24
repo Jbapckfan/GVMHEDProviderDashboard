@@ -301,7 +301,7 @@ function ScheduleViewer() {
       </div>
 
       <div className="upload-container">
-        {!preview ? (
+        {!preview && !isGoogleSheets ? (
           <>
             {!showUrlInput ? (
               <div>
@@ -362,7 +362,7 @@ function ScheduleViewer() {
         ) : (
           <div className="preview-container">
             <div className="schedule-note">
-              {preview.includes('google.com') ? (
+              {preview && preview.includes('google.com') ? (
                 <>
                   <strong>Live Data:</strong> This schedule loads directly from Google Sheets.
                   Click <strong>Refresh</strong> to ensure you're seeing the latest version.
@@ -374,7 +374,7 @@ function ScheduleViewer() {
               )}
             </div>
 
-            {preview.includes('google.com') ? (
+            {isGoogleSheets ? (
               <>
                 <div className="month-tabs">
                   {getVisibleMonths().map(({ month, year, label, isCurrent }) => (
@@ -407,13 +407,13 @@ function ScheduleViewer() {
                   )}
                 </div>
               </>
-            ) : (
+            ) : preview ? (
               <img
                 src={preview}
                 alt="Schedule"
                 className="schedule-image"
               />
-            )}
+            ) : null}
 
             <div className="preview-actions">
               {isGoogleSheets && (

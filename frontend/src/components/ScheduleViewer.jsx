@@ -73,10 +73,9 @@ function ScheduleViewer() {
           setUploadedAt(new Date(response.data.uploadedAt))
           setIsGoogleSheets(false)
         } else {
-          // No file uploaded, use Google Sheets with current month
-          const embedUrl = getSheetUrl(currentMonth, currentYear)
-          setPreview(embedUrl)
-          setIsGoogleSheets(true)
+          // No file uploaded, show upload prompt
+          setPreview(null)
+          setIsGoogleSheets(false)
         }
       } catch (error) {
         console.error('Error loading schedule:', error)
@@ -269,29 +268,7 @@ function ScheduleViewer() {
     <div className="card schedule-viewer-card">
       <div className="card-header">
         <h2 className="card-title">📅 Schedule</h2>
-
-        {preview && (
-          <div className="month-navigation">
-            <button onClick={goToPreviousMonth} className="nav-btn" title="Previous Month">
-              ◀
-            </button>
-            <span className="current-month">
-              {monthNames[currentMonth]} {currentYear}
-            </span>
-            <button onClick={goToNextMonth} className="nav-btn" title="Next Month">
-              ▶
-            </button>
-            <button onClick={goToCurrentMonth} className="today-btn" title="Go to Current Month">
-              Today
-            </button>
-          </div>
-        )}
-
-        {isGoogleSheets ? (
-          <span className="live-indicator" title="Data loads directly from Google Sheets">
-            🟢 LIVE
-          </span>
-        ) : uploadedAt && (
+        {uploadedAt && (
           <span className="upload-time">
             Updated: {uploadedAt.toLocaleDateString()}
           </span>
@@ -299,131 +276,45 @@ function ScheduleViewer() {
       </div>
 
       <div className="upload-container">
-        {!preview && !isGoogleSheets ? (
-          <>
-            {!showUrlInput ? (
-              <div>
-                <div
-                  className={`drop-zone ${dragActive ? 'drag-active' : ''}`}
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                  onClick={onButtonClick}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleChange}
-                    style={{ display: 'none' }}
-                  />
+        {!preview ? (
+          <div
+            className={`drop-zone ${dragActive ? 'drag-active' : ''}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={onButtonClick}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleChange}
+              style={{ display: 'none' }}
+            />
 
-                  <div className="drop-zone-content">
-                    <div className="upload-icon">📁</div>
-                    <p className="drop-text">
-                      Drag and drop your schedule screenshot
-                    </p>
-                    <p className="drop-subtext">or click to browse</p>
-                    <p className="drop-hint">
-                      Supports: JPG, PNG, GIF • Max 10MB
-                    </p>
-                  </div>
-                </div>
-                <div style={{ textAlign: 'center', marginTop: '10px' }}>
-                  <button onClick={() => setShowUrlInput(true)} className="btn btn-secondary">
-                    📊 Or Use Google Sheets URL
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="url-input-container">
-                <h3>Enter Google Sheets URL</h3>
-                <input
-                  type="text"
-                  placeholder="https://docs.google.com/spreadsheets/d/..."
-                  value={googleSheetsUrl}
-                  onChange={(e) => setGoogleSheetsUrl(e.target.value)}
-                  style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-                />
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={handleGoogleSheetsUrl} className="btn btn-primary">
-                    Load Sheet
-                  </button>
-                  <button onClick={() => setShowUrlInput(false)} className="btn btn-secondary">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
+            <div className="drop-zone-content">
+              <div className="upload-icon">📁</div>
+              <p className="drop-text">
+                Drag and drop your schedule screenshot
+              </p>
+              <p className="drop-subtext">or click to browse</p>
+              <p className="drop-hint">
+                Supports: JPG, PNG, GIF • Max 10MB
+              </p>
+            </div>
+          </div>
         ) : (
           <div className="preview-container">
-            <div className="schedule-note">
-              {isGoogleSheets ? (
-                <>
-                  <strong>Live Data:</strong> This schedule loads directly from Google Sheets.
-                  Click <strong>Refresh</strong> to ensure you're seeing the latest version.
-                </>
-              ) : (
-                <>
-                  <strong>Note:</strong> Upload one screenshot per month and use arrows to indicate which month you're viewing.
-                </>
-              )}
-            </div>
-
-            {isGoogleSheets ? (
-              <>
-                <div className="month-tabs">
-                  {getVisibleMonths().map(({ month, year, label, isCurrent }) => (
-                    <button
-                      key={`${year}-${month}`}
-                      className={`month-tab ${month === currentMonth && year === currentYear ? 'active' : ''} ${isCurrent ? 'current-month-tab' : ''}`}
-                      onClick={() => {
-                        setCurrentMonth(month)
-                        setCurrentYear(year)
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <div className="iframe-wrapper">
-                  {preview ? (
-                    <iframe
-                      key={`${currentMonth}-${currentYear}-${refreshKey}`}
-                      src={preview}
-                      title="Google Sheets Schedule"
-                    />
-                  ) : (
-                    <div className="no-schedule-message">
-                      <div className="no-schedule-icon">📅</div>
-                      <h3>Schedule Not Yet Available</h3>
-                      <p>{monthNames[currentMonth]} {currentYear} schedule has not been added yet.</p>
-                      <p className="no-schedule-hint">Check back later or select a different month.</p>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <img
-                src={preview}
-                alt="Schedule"
-                className="schedule-image"
-              />
-            )}
+            <img
+              src={preview}
+              alt="Schedule"
+              className="schedule-image"
+            />
 
             <div className="preview-actions">
-              {isGoogleSheets && (
-                <button onClick={refreshSheet} className="btn btn-success">
-                  🔄 Refresh
-                </button>
-              )}
               <button onClick={onButtonClick} className="btn btn-primary" disabled={uploading}>
                 📤 Upload New
-              </button>
-              <button onClick={() => setShowUrlInput(true)} className="btn btn-secondary">
-                📊 Change URL
               </button>
               <button onClick={handleDelete} className="btn btn-danger">
                 🗑️ Delete

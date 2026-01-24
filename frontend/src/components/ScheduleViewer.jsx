@@ -24,7 +24,6 @@ function ScheduleViewer() {
     'January 2026': '1997148602',
     'February 2026': '1342065365',
     'March 2026': '94782258',
-    'April 2026': '94782258', // Fallback to March until April exists
   }
 
   // Refresh the Google Sheets iframe
@@ -37,12 +36,20 @@ function ScheduleViewer() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
-  // Build Google Sheets URL using gid - use hash format which works better with preview
+  // Build Google Sheets URL using gid - returns null if month not available
   const getSheetUrl = (monthIndex, year) => {
     const monthName = monthNames[monthIndex]
     const key = `${monthName} ${year}`
-    const gid = sheetGids[key] || sheetGids['January 2026'] // Fallback to Jan 2026
+    const gid = sheetGids[key]
+    if (!gid) return null
     return `https://docs.google.com/spreadsheets/d/${baseSheetId}/htmlembed?gid=${gid}&single=true`
+  }
+
+  // Check if current month has a sheet available
+  const hasSheetForMonth = (monthIndex, year) => {
+    const monthName = monthNames[monthIndex]
+    const key = `${monthName} ${year}`
+    return !!sheetGids[key]
   }
 
   // Update Google Sheets URL when month changes
@@ -382,11 +389,20 @@ function ScheduleViewer() {
                   ))}
                 </div>
                 <div className="iframe-wrapper">
-                  <iframe
-                    key={`${currentMonth}-${currentYear}-${refreshKey}`}
-                    src={preview}
-                    title="Google Sheets Schedule"
-                  />
+                  {preview ? (
+                    <iframe
+                      key={`${currentMonth}-${currentYear}-${refreshKey}`}
+                      src={preview}
+                      title="Google Sheets Schedule"
+                    />
+                  ) : (
+                    <div className="no-schedule-message">
+                      <div className="no-schedule-icon">📅</div>
+                      <h3>Schedule Not Yet Available</h3>
+                      <p>{monthNames[currentMonth]} {currentYear} schedule has not been added yet.</p>
+                      <p className="no-schedule-hint">Check back later or select a different month.</p>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (

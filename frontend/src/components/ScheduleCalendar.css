@@ -78,22 +78,6 @@ html.dark-mode .schedule-calendar-card .live-indicator {
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
-.schedule-calendar-card .month-tab.current {
-  position: relative;
-}
-
-.schedule-calendar-card .month-tab.current::after {
-  content: '';
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 8px;
-  height: 8px;
-  background: var(--success-color);
-  border-radius: 50%;
-  border: 2px solid white;
-}
 
 /* Calendar Container */
 .calendar-container {
@@ -485,9 +469,6 @@ html.dark-mode .schedule-calendar-card .month-tab.active {
   color: white;
 }
 
-html.dark-mode .schedule-calendar-card .month-tab.current::after {
-  border-color: #1e293b;
-}
 
 html.dark-mode .calendar-container {
   background: #0f172a;

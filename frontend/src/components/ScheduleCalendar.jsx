@@ -9,6 +9,7 @@ function ScheduleCalendar() {
   const [error, setError] = useState(null)
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+  const [selectedProvider, setSelectedProvider] = useState(null)
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -103,6 +104,27 @@ function ScheduleCalendar() {
     return Object.values(scheduleData.calendar).reduce((sum, day) => sum + (day.providers?.length || 0), 0)
   }
 
+  // Get all unique providers for the legend
+  const getUniqueProviders = () => {
+    if (!scheduleData?.calendar) return []
+    const providers = new Set()
+    Object.values(scheduleData.calendar).forEach(day => {
+      day.providers?.forEach(p => providers.add(p))
+    })
+    return Array.from(providers).sort()
+  }
+
+  // Toggle provider selection
+  const handleProviderClick = (providerName) => {
+    setSelectedProvider(prev => prev === providerName ? null : providerName)
+  }
+
+  // Check if a cell should be highlighted
+  const isCellHighlighted = (providers) => {
+    if (!selectedProvider) return false
+    return providers.includes(selectedProvider)
+  }
+
   return (
     <div className="card schedule-calendar-card">
       <div className="card-header">
@@ -156,7 +178,30 @@ function ScheduleCalendar() {
         )}
 
         {!loading && !error && scheduleData && (
-          <div className="calendar-grid">
+          <>
+            <div className="provider-legend">
+              <span className="legend-label">Filter by provider:</span>
+              <div className="legend-providers">
+                {getUniqueProviders().map(provider => (
+                  <button
+                    key={provider}
+                    className={`legend-provider ${selectedProvider === provider ? 'selected' : ''}`}
+                    onClick={() => handleProviderClick(provider)}
+                  >
+                    {provider}
+                  </button>
+                ))}
+                {selectedProvider && (
+                  <button
+                    className="legend-clear"
+                    onClick={() => setSelectedProvider(null)}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="calendar-grid">
             <div className="calendar-day-headers">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                 <div key={day} className="day-header">{day}</div>
@@ -169,14 +214,21 @@ function ScheduleCalendar() {
                   {week.map((cell, dayIndex) => (
                     <div
                       key={dayIndex}
-                      className={`calendar-cell ${cell.day ? '' : 'empty'} ${cell.isWeekend ? 'weekend' : ''} ${cell.isToday ? 'today' : ''}`}
+                      className={`calendar-cell ${cell.day ? '' : 'empty'} ${cell.isWeekend ? 'weekend' : ''} ${cell.isToday ? 'today' : ''} ${isCellHighlighted(cell.providers) ? 'highlighted' : ''}`}
                     >
                       {cell.day && (
                         <>
                           <div className="cell-day">{cell.day}</div>
                           <div className="cell-providers">
                             {cell.providers.map((provider, idx) => (
-                              <div key={idx} className="provider-name">{provider}</div>
+                              <div
+                                key={idx}
+                                className={`provider-name ${selectedProvider === provider ? 'selected' : ''} ${selectedProvider && selectedProvider !== provider ? 'dimmed' : ''}`}
+                                onClick={() => handleProviderClick(provider)}
+                                title={`Click to highlight all ${provider}'s shifts`}
+                              >
+                                {provider}
+                              </div>
                             ))}
                           </div>
                         </>
@@ -187,6 +239,7 @@ function ScheduleCalendar() {
               ))}
             </div>
           </div>
+          </>
         )}
       </div>
     </div>

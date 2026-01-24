@@ -538,7 +538,8 @@ function parseScheduleCSV(csv, monthName, year) {
   let headerRowIndex = -1;
   for (let i = 0; i < lines.length; i++) {
     const row = lines[i];
-    if (row.some(cell => cell.toLowerCase().includes('sunday') || cell.toLowerCase().includes('monday'))) {
+    const rowText = row.join(' ').toLowerCase();
+    if (rowText.includes('sunday') && rowText.includes('monday')) {
       headerRowIndex = i;
       break;
     }
@@ -549,19 +550,27 @@ function parseScheduleCSV(csv, monthName, year) {
     return null;
   }
 
-  // Map column indices to days of week (0=Sunday through 6=Saturday)
+  console.log('Found header row at index:', headerRowIndex);
+  console.log('Header row:', lines[headerRowIndex]);
+
+  // Map column indices to days of week
+  // The CSV has format: Sunday,,Monday,,Tuesday,,Wednesday,,Thursday,,Friday,,,,,,,,Saturday
+  // Days are at columns 0, 2, 4, 6, 8, 10, and Saturday around 18
   const dayColumns = {};
   const headerRow = lines[headerRowIndex];
   const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
   headerRow.forEach((cell, index) => {
-    const cellLower = cell.toLowerCase();
+    const cellLower = cell.toLowerCase().trim();
     dayNames.forEach((day, dayIndex) => {
-      if (cellLower.includes(day)) {
+      if (cellLower === day) {
         dayColumns[index] = { name: day, dayIndex };
+        console.log(`Found ${day} at column ${index}`);
       }
     });
   });
+
+  console.log('Day columns:', dayColumns);
 
   // Parse calendar data - track current day numbers for each column
   const calendar = {};
@@ -570,7 +579,7 @@ function parseScheduleCSV(csv, monthName, year) {
   for (let i = headerRowIndex + 1; i < lines.length; i++) {
     const row = lines[i];
 
-    // First pass: find day numbers in this row
+    // First pass: find day numbers in this row (they appear in the day columns)
     Object.keys(dayColumns).forEach(colIndex => {
       const cell = (row[colIndex] || '').replace(/["\r]/g, '').trim();
       const dayMatch = cell.match(/^(\d{1,2})$/);
@@ -586,13 +595,13 @@ function parseScheduleCSV(csv, monthName, year) {
       }
     });
 
-    // Second pass: find provider names (non-numeric text)
+    // Second pass: find provider names in the same columns (non-numeric text)
     Object.keys(dayColumns).forEach(colIndex => {
       const cell = (row[colIndex] || '').replace(/["\r]/g, '').trim();
 
       // Skip if empty, is a number, or is a known non-provider string
       if (!cell || cell.match(/^\d+$/) || cell.length < 2) return;
-      if (cell.match(/^(7A-7P|10A-10P|7P-7A|Revised|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i)) return;
+      if (cell.match(/^(7A-7P|10A-10P|7P-7A|Revised|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|January|February|March|April|May|June|July|August|September|October|November|December)/i)) return;
 
       // This looks like a provider name - assign to current day in this column
       const dayNum = currentDayByColumn[colIndex];
@@ -613,10 +622,17 @@ function parseScheduleCSV(csv, monthName, year) {
   };
 
   // Include sample of first 5 days with providers for verification
-  const daysWithData = Object.keys(calendar).filter(d => calendar[d].providers.length > 0).slice(0, 5);
+  const daysWithData = Object.keys(calendar)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .filter(d => calendar[d].providers.length > 0)
+    .slice(0, 5);
   daysWithData.forEach(d => {
     verification.sampleData[d] = calendar[d].providers;
   });
+
+  console.log('Parsed calendar days:', Object.keys(calendar).length);
+  console.log('Sample verification:', verification.sampleData);
 
   return {
     month: monthName,

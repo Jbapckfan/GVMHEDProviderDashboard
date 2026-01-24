@@ -214,7 +214,7 @@ function ScheduleCalendar() {
                   {week.map((cell, dayIndex) => (
                     <div
                       key={dayIndex}
-                      className={`calendar-cell ${cell.day ? '' : 'empty'} ${cell.isWeekend ? 'weekend' : ''} ${cell.isToday ? 'today' : ''} ${isCellHighlighted(cell.providers) ? 'highlighted' : ''}`}
+                      className={`calendar-cell ${cell.day ? '' : 'empty'} ${cell.isWeekend ? 'weekend' : ''} ${cell.isToday ? 'today' : ''}`}
                     >
                       {cell.day && (
                         <>

@@ -14,7 +14,6 @@ function ScheduleViewer() {
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [googleSheetsUrl, setGoogleSheetsUrl] = useState('')
   const [baseSheetId] = useState('1eFtQiknDOiQSwJkYs-jC-w1_K0byKB5I9qkIE9xnnpU')
-  const [publishedSheetId] = useState('2PACX-1vT7ADDc3-u6oNQzWMl8pS0Joz7zLuGUc5FuoZY8VVEtjmLoJxXeZnEBjwUKmAXmZ9gtSECi2kQXQ5EA')
   const [isGoogleSheets, setIsGoogleSheets] = useState(false)
   const [refreshKey, setRefreshKey] = useState(Date.now()) // Force iframe refresh
   const fileInputRef = useRef(null)
@@ -43,8 +42,7 @@ function ScheduleViewer() {
     const key = `${monthName} ${year}`
     const gid = sheetGids[key]
     if (!gid) return null
-    // Use published web URL - works better on restricted networks
-    return `https://docs.google.com/spreadsheets/d/e/${publishedSheetId}/pubhtml?gid=${gid}&single=true`
+    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/htmlembed?gid=${gid}&single=true`
   }
 
   // Check if current month has a sheet available
@@ -362,7 +360,7 @@ function ScheduleViewer() {
         ) : (
           <div className="preview-container">
             <div className="schedule-note">
-              {preview && preview.includes('google.com') ? (
+              {isGoogleSheets ? (
                 <>
                   <strong>Live Data:</strong> This schedule loads directly from Google Sheets.
                   Click <strong>Refresh</strong> to ensure you're seeing the latest version.
@@ -407,13 +405,13 @@ function ScheduleViewer() {
                   )}
                 </div>
               </>
-            ) : preview ? (
+            ) : (
               <img
                 src={preview}
                 alt="Schedule"
                 className="schedule-image"
               />
-            ) : null}
+            )}
 
             <div className="preview-actions">
               {isGoogleSheets && (

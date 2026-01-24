@@ -179,28 +179,6 @@ function ScheduleCalendar() {
 
         {!loading && !error && scheduleData && (
           <>
-            <div className="provider-legend">
-              <span className="legend-label">Filter by provider:</span>
-              <div className="legend-providers">
-                {getUniqueProviders().map(provider => (
-                  <button
-                    key={provider}
-                    className={`legend-provider ${selectedProvider === provider ? 'selected' : ''}`}
-                    onClick={() => handleProviderClick(provider)}
-                  >
-                    {provider}
-                  </button>
-                ))}
-                {selectedProvider && (
-                  <button
-                    className="legend-clear"
-                    onClick={() => setSelectedProvider(null)}
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-            </div>
             <div className="calendar-grid">
             <div className="calendar-day-headers">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (

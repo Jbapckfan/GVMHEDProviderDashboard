@@ -411,11 +411,11 @@ html.dark-mode .data-stats {
 }
 
 .provider-name.selected {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
-  border-left-color: #f59e0b !important;
-  color: #92400e !important;
+  background: linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%) !important;
+  border-left-color: #ff5500 !important;
+  color: white !important;
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.4);
 }
 
 .provider-name.dimmed {
@@ -562,9 +562,10 @@ html.dark-mode .calendar-cell.weekend .provider-name {
 }
 
 html.dark-mode .provider-name.selected {
-  background: linear-gradient(135deg, #78350f 0%, #92400e 100%) !important;
-  border-left-color: #fbbf24 !important;
-  color: #fef3c7 !important;
+  background: linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%) !important;
+  border-left-color: #ff5500 !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.5);
 }
 
 /* Provider Legend - Dark Mode */

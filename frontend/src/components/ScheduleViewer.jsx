@@ -18,6 +18,15 @@ function ScheduleViewer() {
   const [refreshKey, setRefreshKey] = useState(Date.now()) // Force iframe refresh
   const fileInputRef = useRef(null)
 
+  // Mapping of "Month Year" to Google Sheets gid
+  const sheetGids = {
+    'December 2025': '256218995',
+    'January 2026': '1997148602',
+    'February 2026': '1342065365',
+    'March 2026': '94782258',
+    'April 2026': '94782258', // Fallback to March until April exists
+  }
+
   // Refresh the Google Sheets iframe
   const refreshSheet = () => {
     setRefreshKey(Date.now())
@@ -28,11 +37,12 @@ function ScheduleViewer() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
-  // Build Google Sheets URL using sheet name (tabs are named "Month Year" like "January 2026")
+  // Build Google Sheets URL using gid
   const getSheetUrl = (monthIndex, year) => {
     const monthName = monthNames[monthIndex]
-    const sheetName = `${monthName} ${year}`
-    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?sheet=${encodeURIComponent(sheetName)}`
+    const key = `${monthName} ${year}`
+    const gid = sheetGids[key] || sheetGids['January 2026'] // Fallback to Jan 2026
+    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?gid=${gid}`
   }
 
   // Update Google Sheets URL when month changes
@@ -57,9 +67,7 @@ function ScheduleViewer() {
           setIsGoogleSheets(false)
         } else {
           // No file uploaded, use Google Sheets with current month
-          const monthName = monthNames[currentMonth]
-          const sheetName = `${monthName} ${currentYear}`
-          const embedUrl = `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?sheet=${encodeURIComponent(sheetName)}`
+          const embedUrl = getSheetUrl(currentMonth, currentYear)
           setPreview(embedUrl)
           setIsGoogleSheets(true)
         }

@@ -42,7 +42,8 @@ function ScheduleViewer() {
     const key = `${monthName} ${year}`
     const gid = sheetGids[key]
     if (!gid) return null
-    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/htmlembed?gid=${gid}&single=true`
+    // Use edit URL with gid - displays as view-only for non-editors
+    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/edit?gid=${gid}&single=true&rm=minimal`
   }
 
   // Check if current month has a sheet available

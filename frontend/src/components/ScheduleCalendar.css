@@ -380,12 +380,24 @@ html.dark-mode .selected-provider-stats {
 }
 
 .calendar-cell.today {
-  background: #eff6ff;
-  box-shadow: inset 0 0 0 2px var(--primary-color);
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  box-shadow: inset 0 0 0 3px #2563eb;
+  position: relative;
+}
+
+.calendar-cell.today::before {
+  content: 'TODAY';
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.05em;
 }
 
 .calendar-cell.today:hover {
-  background: #dbeafe;
+  background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
 }
 
 .cell-day {
@@ -396,7 +408,9 @@ html.dark-mode .selected-provider-stats {
 }
 
 .calendar-cell.today .cell-day {
-  color: var(--primary-color);
+  color: #1d4ed8;
+  font-size: 1.125rem;
+  font-weight: 800;
 }
 
 .calendar-cell.weekend .cell-day {
@@ -545,12 +559,16 @@ html.dark-mode .calendar-cell.highlighted.weekend {
 }
 
 html.dark-mode .calendar-cell.today {
-  background: #172554;
-  box-shadow: inset 0 0 0 2px #3b82f6;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  box-shadow: inset 0 0 0 3px #3b82f6;
+}
+
+html.dark-mode .calendar-cell.today::before {
+  color: #60a5fa;
 }
 
 html.dark-mode .calendar-cell.today:hover {
-  background: #1e3a8a;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
 }
 
 html.dark-mode .cell-day {
@@ -559,6 +577,8 @@ html.dark-mode .cell-day {
 
 html.dark-mode .calendar-cell.today .cell-day {
   color: #60a5fa;
+  font-size: 1.125rem;
+  font-weight: 800;
 }
 
 html.dark-mode .calendar-cell.weekend .cell-day {

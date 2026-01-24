@@ -36,13 +36,13 @@ function ScheduleViewer() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
-  // Build Google Sheets URL - direct embed (works on networks that allow Google)
+  // Build schedule image URL - backend captures screenshot and serves as image
   const getSheetUrl = (monthIndex, year) => {
     const monthName = monthNames[monthIndex]
     const key = `${monthName} ${year}`
     const gid = sheetGids[key]
     if (!gid) return null
-    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/htmlembed?gid=${gid}&single=true`
+    return `${API_BASE}/schedule-image?month=${encodeURIComponent(monthName)}&year=${year}`
   }
 
   // Check if current month has a sheet available
@@ -389,21 +389,25 @@ function ScheduleViewer() {
                     </button>
                   ))}
                 </div>
-                <div className="iframe-wrapper">
+                <div className="schedule-image-wrapper">
                   {preview ? (
-                    <iframe
+                    <img
                       key={`${currentMonth}-${currentYear}-${refreshKey}`}
                       src={preview}
-                      title="Google Sheets Schedule"
+                      alt={`${monthNames[currentMonth]} ${currentYear} Schedule`}
+                      className="schedule-image"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
                     />
-                  ) : (
-                    <div className="no-schedule-message">
-                      <div className="no-schedule-icon">📅</div>
-                      <h3>Schedule Not Yet Available</h3>
-                      <p>{monthNames[currentMonth]} {currentYear} schedule has not been added yet.</p>
-                      <p className="no-schedule-hint">Check back later or select a different month.</p>
-                    </div>
-                  )}
+                  ) : null}
+                  <div className="no-schedule-message" style={{ display: preview ? 'none' : 'flex' }}>
+                    <div className="no-schedule-icon">📅</div>
+                    <h3>Schedule Not Yet Available</h3>
+                    <p>{monthNames[currentMonth]} {currentYear} schedule has not been added yet.</p>
+                    <p className="no-schedule-hint">Check back later or select a different month.</p>
+                  </div>
                 </div>
               </>
             ) : (

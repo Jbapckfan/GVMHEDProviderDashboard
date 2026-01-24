@@ -15,6 +15,10 @@ function App() {
     const saved = localStorage.getItem('darkMode')
     return saved ? JSON.parse(saved) : false
   })
+  const [showQR, setShowQR] = useState(false)
+
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(siteUrl)}`
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark-mode', darkMode)
@@ -89,7 +93,19 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>GVM Health ED Provider Dashboard v1.0 | For authorized use only</p>
+        <div className="footer-content">
+          <p>GVM Health ED Provider Dashboard v1.0 | For authorized use only</p>
+          <button className="qr-toggle" onClick={() => setShowQR(!showQR)}>
+            {showQR ? '✕ Hide QR' : '📱 Share'}
+          </button>
+        </div>
+        {showQR && (
+          <div className="qr-container">
+            <img src={qrCodeUrl} alt="QR Code to access dashboard" className="qr-code" />
+            <p className="qr-text">Scan to access dashboard on your phone</p>
+            <p className="qr-url">{siteUrl}</p>
+          </div>
+        )}
       </footer>
     </div>
   )

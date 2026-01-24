@@ -37,12 +37,12 @@ function ScheduleViewer() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
-  // Build Google Sheets URL using gid
+  // Build Google Sheets URL using gid - use hash format which works better with preview
   const getSheetUrl = (monthIndex, year) => {
     const monthName = monthNames[monthIndex]
     const key = `${monthName} ${year}`
     const gid = sheetGids[key] || sheetGids['January 2026'] // Fallback to Jan 2026
-    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?gid=${gid}`
+    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/htmlembed?gid=${gid}&single=true`
   }
 
   // Update Google Sheets URL when month changes
@@ -383,8 +383,8 @@ function ScheduleViewer() {
                 </div>
                 <div className="iframe-wrapper">
                   <iframe
-                    key={refreshKey}
-                    src={`${preview}${preview.includes('?') ? '&' : '?'}_t=${refreshKey}`}
+                    key={`${currentMonth}-${currentYear}-${refreshKey}`}
+                    src={preview}
                     title="Google Sheets Schedule"
                   />
                 </div>

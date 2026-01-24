@@ -28,18 +28,18 @@ function ScheduleViewer() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
-  // Build Google Sheets URL using sheet name (assumes tabs are named by month)
-  const getSheetUrl = (monthIndex) => {
+  // Build Google Sheets URL using sheet name (tabs are named "Month Year" like "January 2026")
+  const getSheetUrl = (monthIndex, year) => {
     const monthName = monthNames[monthIndex]
-    // Use the sheet parameter to select by tab name - more reliable than gid
-    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?sheet=${encodeURIComponent(monthName)}`
+    const sheetName = `${monthName} ${year}`
+    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?sheet=${encodeURIComponent(sheetName)}`
   }
 
   // Update Google Sheets URL when month changes
   useEffect(() => {
     if (isGoogleSheets) {
-      const newUrl = getSheetUrl(currentMonth)
-      console.log('Switching to month:', monthNames[currentMonth])
+      const newUrl = getSheetUrl(currentMonth, currentYear)
+      console.log('Switching to month:', monthNames[currentMonth], currentYear)
       setPreview(newUrl)
     }
   }, [currentMonth, currentYear, isGoogleSheets, baseSheetId])
@@ -57,7 +57,8 @@ function ScheduleViewer() {
         } else {
           // No file uploaded, use Google Sheets with current month
           const monthName = monthNames[currentMonth]
-          const embedUrl = `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?sheet=${encodeURIComponent(monthName)}`
+          const sheetName = `${monthName} ${currentYear}`
+          const embedUrl = `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?sheet=${encodeURIComponent(sheetName)}`
           setPreview(embedUrl)
           setIsGoogleSheets(true)
         }

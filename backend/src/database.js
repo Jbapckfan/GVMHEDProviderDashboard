@@ -1,24 +1,15 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
+const { createClient } = require('@libsql/client');
 
-// Use /data/db for production (Fly.io) or ../data for development
-const dbDir = process.env.NODE_ENV === 'production' ? '/data/db' : path.join(__dirname, '../data');
-const dbPath = path.join(dbDir, 'dashboard.db');
-
-// Ensure directory exists
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
-const db = new Database(dbPath);
-
-// Enable foreign keys
-db.pragma('foreign_keys = ON');
+// Create Turso client
+const db = createClient({
+  url: process.env.TURSO_DATABASE_URL || 'file:local.db',
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
 
 // Initialize database schema
-function initializeDatabase() {
+async function initializeDatabase() {
   // Providers table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS providers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -30,7 +21,7 @@ function initializeDatabase() {
   `);
 
   // Shifts table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS shifts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       provider_name TEXT NOT NULL,
@@ -42,7 +33,7 @@ function initializeDatabase() {
   `);
 
   // KPI Metrics table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS kpi_metrics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       metric_name TEXT NOT NULL,
@@ -56,7 +47,7 @@ function initializeDatabase() {
   `);
 
   // Quick links table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS quick_links (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -66,7 +57,7 @@ function initializeDatabase() {
   `);
 
   // Phone directory table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS phone_directory (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -78,7 +69,7 @@ function initializeDatabase() {
   `);
 
   // News table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS news (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -90,7 +81,7 @@ function initializeDatabase() {
   `);
 
   // Order set suggestions table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS order_set_suggestions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       suggestion TEXT NOT NULL,
@@ -100,7 +91,7 @@ function initializeDatabase() {
   `);
 
   // Provider chart status table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS provider_charts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       provider_name TEXT NOT NULL,
@@ -111,7 +102,7 @@ function initializeDatabase() {
   `);
 
   // KPI goals table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS kpi_goals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       goal_name TEXT NOT NULL,
@@ -125,7 +116,7 @@ function initializeDatabase() {
   `);
 
   // Message board table
-  db.exec(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       message TEXT NOT NULL,
@@ -135,292 +126,220 @@ function initializeDatabase() {
   `);
 
   // Seed initial data if tables are empty
-  seedData();
+  await seedData();
 }
 
-function seedData() {
-  const providerCount = db.prepare('SELECT COUNT(*) as count FROM providers').get();
+async function seedData() {
+  const result = await db.execute('SELECT COUNT(*) as count FROM providers');
+  const providerCount = result.rows[0].count;
 
-  if (providerCount.count === 0) {
+  if (providerCount === 0) {
     // Seed providers
-    const insertProvider = db.prepare('INSERT INTO providers (name, role, phone, email, status) VALUES (?, ?, ?, ?, ?)');
-    insertProvider.run('Dr. Sarah Johnson', 'Attending Physician', '555-0101', 'sjohnson@hospital.com', 'on-duty');
-    insertProvider.run('Dr. Michael Chen', 'Attending Physician', '555-0102', 'mchen@hospital.com', 'available');
-    insertProvider.run('Dr. Emily Rodriguez', 'Resident', '555-0103', 'erodriguez@hospital.com', 'on-duty');
-    insertProvider.run('Nurse Jessica Williams', 'Charge Nurse', '555-0104', 'jwilliams@hospital.com', 'on-duty');
-    insertProvider.run('Dr. David Martinez', 'Attending Physician', '555-0105', 'dmartinez@hospital.com', 'off-duty');
+    await db.execute({
+      sql: 'INSERT INTO providers (name, role, phone, email, status) VALUES (?, ?, ?, ?, ?)',
+      args: ['Dr. Sarah Johnson', 'Attending Physician', '555-0101', 'sjohnson@hospital.com', 'on-duty']
+    });
+    await db.execute({
+      sql: 'INSERT INTO providers (name, role, phone, email, status) VALUES (?, ?, ?, ?, ?)',
+      args: ['Dr. Michael Chen', 'Attending Physician', '555-0102', 'mchen@hospital.com', 'available']
+    });
 
-    // Seed shifts for today and tomorrow
-    const insertShift = db.prepare('INSERT INTO shifts (provider_name, shift_type, start_time, end_time, date) VALUES (?, ?, ?, ?, ?)');
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-
-    insertShift.run('Dr. Sarah Johnson', 'Day Shift', '07:00', '19:00', today);
-    insertShift.run('Dr. Emily Rodriguez', 'Day Shift', '07:00', '19:00', today);
-    insertShift.run('Nurse Jessica Williams', 'Day Shift', '07:00', '19:00', today);
-    insertShift.run('Dr. Michael Chen', 'Night Shift', '19:00', '07:00', today);
-    insertShift.run('Dr. David Martinez', 'Day Shift', '07:00', '19:00', tomorrow);
-
-    // Seed KPI Metrics
-    const insertKPI = db.prepare('INSERT INTO kpi_metrics (metric_name, metric_value, target_value, unit, category) VALUES (?, ?, ?, ?, ?)');
-
-    // Patient Flow Metrics
-    insertKPI.run('Average Length of Stay', 3.2, 3.0, 'hours', 'Patient Flow');
-    insertKPI.run('Door-to-Doctor Time', 28, 30, 'minutes', 'Patient Flow');
-    insertKPI.run('Left Without Being Seen', 2.1, 2.0, 'percent', 'Patient Flow');
-    insertKPI.run('Patient Throughput', 145, 150, 'patients/day', 'Patient Flow');
-
-    // Quality Metrics
-    insertKPI.run('Patient Satisfaction Score', 4.3, 4.5, 'out of 5', 'Quality');
-    insertKPI.run('72-Hour Return Rate', 4.8, 5.0, 'percent', 'Quality');
-    insertKPI.run('Admission Rate', 18.5, 20.0, 'percent', 'Quality');
-    insertKPI.run('Discharge Rate', 81.5, 80.0, 'percent', 'Quality');
-
-    // Operational Metrics
-    insertKPI.run('Staff Utilization', 87, 85, 'percent', 'Operational');
-    insertKPI.run('Bed Occupancy Rate', 78, 80, 'percent', 'Operational');
-    insertKPI.run('Average Wait Time', 42, 45, 'minutes', 'Operational');
-    insertKPI.run('Patient Per Provider Ratio', 8.5, 10.0, 'patients', 'Operational');
-
-    // Financial Metrics
-    insertKPI.run('Cost Per Visit', 420, 450, 'dollars', 'Financial');
-    insertKPI.run('Revenue Per Patient', 685, 650, 'dollars', 'Financial');
-    insertKPI.run('Collection Rate', 92.3, 90.0, 'percent', 'Financial');
-
-    // Seed quick links
-    const insertLink = db.prepare('INSERT INTO quick_links (title, url, category) VALUES (?, ?, ?)');
-    insertLink.run('UpToDate', 'https://www.uptodate.com', 'Reference');
-    insertLink.run('MDCalc', 'https://www.mdcalc.com', 'Clinical Tools');
-    insertLink.run('Hospital EMR', '#', 'Internal');
-    insertLink.run('Radiology PACS', '#', 'Internal');
-    insertLink.run('Lab Results Portal', '#', 'Internal');
-    insertLink.run('Pharmacy Reference', '#', 'Reference');
-
-    // Seed phone directory
-    const insertPhone = db.prepare('INSERT INTO phone_directory (name, number, extension, department, display_order) VALUES (?, ?, ?, ?, ?)');
-    insertPhone.run('Hospital Operator', '555-1000', null, 'Main', 1);
-    insertPhone.run('Emergency Department', '555-1100', '1100', 'ED', 2);
-    insertPhone.run('Laboratory', '555-1200', '1200', 'Lab', 3);
-    insertPhone.run('Imaging/Radiology', '555-1300', '1300', 'Radiology', 4);
-    insertPhone.run('Triage Nurse', '555-1150', '1150', 'ED', 5);
-    insertPhone.run('Pharmacy', '555-1400', '1400', 'Pharmacy', 6);
-    insertPhone.run('Security', '555-1500', '1500', 'Security', 7);
-    insertPhone.run('IT Help Desk', '555-1600', '1600', 'IT', 8);
+    // Seed phone directory with sample data
+    await db.execute({
+      sql: 'INSERT INTO phone_directory (name, number, extension, department, display_order) VALUES (?, ?, ?, ?, ?)',
+      args: ['Hospital Operator', '555-1000', null, 'Main', 1]
+    });
+    await db.execute({
+      sql: 'INSERT INTO phone_directory (name, number, extension, department, display_order) VALUES (?, ?, ?, ?, ?)',
+      args: ['Emergency Department', '555-1100', '1100', 'ED', 2]
+    });
+    await db.execute({
+      sql: 'INSERT INTO phone_directory (name, number, extension, department, display_order) VALUES (?, ?, ?, ?, ?)',
+      args: ['Laboratory', '555-1200', '1200', 'Lab', 3]
+    });
 
     // Seed news
-    const insertNews = db.prepare('INSERT INTO news (title, content, priority, created_at) VALUES (?, ?, ?, ?)');
     const now = new Date().toISOString();
-    const yesterday = new Date(Date.now() - 86400000).toISOString();
-    const twoDaysAgo = new Date(Date.now() - 172800000).toISOString();
+    await db.execute({
+      sql: 'INSERT INTO news (title, content, priority, created_at) VALUES (?, ?, ?, ?)',
+      args: ['Welcome to GVMH ED Dashboard', 'This dashboard helps ED providers stay informed and connected.', 'medium', now]
+    });
 
-    insertNews.run(
-      'New CT Scanner Available',
-      'The new 256-slice CT scanner is now operational in Imaging Department. Please update patient routing accordingly.',
-      'high',
-      yesterday
-    );
-    insertNews.run(
-      'Updated Sepsis Protocol',
-      'Please review the updated sepsis screening protocol effective immediately. New guidelines emphasize earlier intervention.',
-      'medium',
-      twoDaysAgo
-    );
-    insertNews.run(
-      'Staff Appreciation Week',
-      'Thank you all for your dedication! Staff appreciation events will be held throughout next week. Check your email for the schedule.',
-      'low',
-      now
-    );
-
-    // Seed order set suggestions
-    const insertSuggestion = db.prepare('INSERT INTO order_set_suggestions (suggestion, author, created_at) VALUES (?, ?, ?)');
-    const threeDaysAgo = new Date(Date.now() - 259200000).toISOString();
-
-    insertSuggestion.run(
-      'Consider adding low-dose aspirin to the chest pain order set for patients without contraindications.',
-      'Dr. Chen',
-      threeDaysAgo
-    );
-    insertSuggestion.run(
-      'Update the sepsis bundle to include lactate recheck at 6 hours if initial lactate >2.',
-      'Dr. Johnson',
-      twoDaysAgo
-    );
-
-    // Seed provider chart status
-    const insertProviderChart = db.prepare('INSERT INTO provider_charts (provider_name, outstanding_charts, delinquent_charts) VALUES (?, ?, ?)');
-    insertProviderChart.run('Dr. Sarah Johnson', 8, 2);
-    insertProviderChart.run('Dr. Michael Chen', 12, 0);
-    insertProviderChart.run('Dr. Emily Rodriguez', 15, 5);
-    insertProviderChart.run('Dr. David Martinez', 6, 1);
-    insertProviderChart.run('Dr. Lisa Thompson', 20, 8);
-
-    // Seed KPI goals
-    const insertKPIGoal = db.prepare('INSERT INTO kpi_goals (goal_name, current_value, target_value, unit, deadline) VALUES (?, ?, ?, ?, ?)');
-    const nextMonth = new Date();
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    const nextMonthStr = nextMonth.toISOString().split('T')[0];
-
-    insertKPIGoal.run('Door-to-Doctor Time', 28, 30, 'minutes', nextMonthStr);
-    insertKPIGoal.run('Patient Satisfaction', 4.3, 4.5, 'out of 5', nextMonthStr);
-    insertKPIGoal.run('Left Without Being Seen', 2.1, 2.0, 'percent', nextMonthStr);
-    insertKPIGoal.run('Average Length of Stay', 3.2, 3.0, 'hours', nextMonthStr);
-
-    // Seed message board
-    const insertMessage = db.prepare('INSERT INTO messages (message, author, created_at) VALUES (?, ?, ?)');
-    insertMessage.run(
-      'Heads up - Dr. Womack (ortho) is out of town today through Sunday Nov 30th. Dr. Stevens is covering.',
-      'Dr. Johnson',
-      now
-    );
-    insertMessage.run(
-      'Reminder: New sepsis protocol goes into effect Monday. Please review the updated order set.',
-      'Dr. Martinez',
-      yesterday
-    );
+    console.log('Database seeded with initial data');
   }
 }
 
-// API functions
-const getProviders = () => db.prepare('SELECT * FROM providers ORDER BY name').all();
-const getShifts = (date) => db.prepare('SELECT * FROM shifts WHERE date = ? ORDER BY start_time').all(date);
-const getKPIMetrics = () => db.prepare('SELECT * FROM kpi_metrics ORDER BY category, metric_name').all();
-const getQuickLinks = () => db.prepare('SELECT * FROM quick_links ORDER BY category, title').all();
-const getPhoneDirectory = () => db.prepare('SELECT * FROM phone_directory ORDER BY display_order, name').all();
-const getNews = () => db.prepare('SELECT * FROM news WHERE expires_at IS NULL OR expires_at > datetime(\'now\') ORDER BY created_at DESC').all();
-const getOrderSetSuggestions = () => db.prepare('SELECT * FROM order_set_suggestions ORDER BY created_at DESC').all();
-
-const updateKPIMetric = (data) => {
-  const stmt = db.prepare(`
-    UPDATE kpi_metrics
-    SET metric_value = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE metric_name = ?
-  `);
-  return stmt.run(data.metric_value, data.metric_name);
+// API functions - all async now
+const getProviders = async () => {
+  const result = await db.execute('SELECT * FROM providers ORDER BY name');
+  return result.rows;
 };
 
-const createOrderSetSuggestion = (data) => {
-  const stmt = db.prepare(`
-    INSERT INTO order_set_suggestions (suggestion, author)
-    VALUES (?, ?)
-  `);
-  return stmt.run(data.suggestion, data.author || 'Anonymous');
+const getShifts = async (date) => {
+  const result = await db.execute({
+    sql: 'SELECT * FROM shifts WHERE date = ? ORDER BY start_time',
+    args: [date]
+  });
+  return result.rows;
 };
 
-const addPhoneNumber = (data) => {
-  const stmt = db.prepare(`
-    INSERT INTO phone_directory (name, number, extension, department, display_order)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-  return stmt.run(data.name, data.number, data.extension || '', data.department, data.display_order || 0);
+const getKPIMetrics = async () => {
+  const result = await db.execute('SELECT * FROM kpi_metrics ORDER BY category, metric_name');
+  return result.rows;
 };
 
-const updatePhoneNumber = (id, data) => {
-  const stmt = db.prepare(`
-    UPDATE phone_directory
-    SET name=?, number=?, extension=?, department=?, display_order=?
-    WHERE id=?
-  `);
-  return stmt.run(data.name, data.number, data.extension || '', data.department, data.display_order || 0, id);
+const getQuickLinks = async () => {
+  const result = await db.execute('SELECT * FROM quick_links ORDER BY category, title');
+  return result.rows;
 };
 
-const deletePhoneNumber = (id) => {
-  const stmt = db.prepare('DELETE FROM phone_directory WHERE id=?');
-  return stmt.run(id);
+const getPhoneDirectory = async () => {
+  const result = await db.execute('SELECT * FROM phone_directory ORDER BY display_order, name');
+  return result.rows;
 };
 
-const addNews = (data) => {
-  const stmt = db.prepare(`
-    INSERT INTO news (title, content, priority, expires_at)
-    VALUES (?, ?, ?, ?)
-  `);
-  return stmt.run(data.title, data.content, data.priority || 'low', data.expires_at || null);
+const getNews = async () => {
+  const result = await db.execute("SELECT * FROM news WHERE expires_at IS NULL OR expires_at > datetime('now') ORDER BY created_at DESC");
+  return result.rows;
 };
 
-const updateNews = (id, data) => {
-  const stmt = db.prepare(`
-    UPDATE news
-    SET title=?, content=?, priority=?, expires_at=?
-    WHERE id=?
-  `);
-  return stmt.run(data.title, data.content, data.priority || 'low', data.expires_at || null, id);
+const getOrderSetSuggestions = async () => {
+  const result = await db.execute('SELECT * FROM order_set_suggestions ORDER BY created_at DESC');
+  return result.rows;
 };
 
-const deleteNews = (id) => {
-  const stmt = db.prepare('DELETE FROM news WHERE id=?');
-  return stmt.run(id);
+const updateKPIMetric = async (data) => {
+  return await db.execute({
+    sql: 'UPDATE kpi_metrics SET metric_value = ?, updated_at = CURRENT_TIMESTAMP WHERE metric_name = ?',
+    args: [data.metric_value, data.metric_name]
+  });
 };
 
-const getProviderCharts = () => db.prepare('SELECT * FROM provider_charts ORDER BY provider_name').all();
-
-const addProviderChart = (data) => {
-  const stmt = db.prepare(`
-    INSERT INTO provider_charts (provider_name, outstanding_charts, delinquent_charts)
-    VALUES (?, ?, ?)
-  `);
-  return stmt.run(data.provider_name, data.outstanding_charts || 0, data.delinquent_charts || 0);
+const createOrderSetSuggestion = async (data) => {
+  return await db.execute({
+    sql: 'INSERT INTO order_set_suggestions (suggestion, author) VALUES (?, ?)',
+    args: [data.suggestion, data.author || 'Anonymous']
+  });
 };
 
-const updateProviderChart = (id, data) => {
-  const stmt = db.prepare(`
-    UPDATE provider_charts
-    SET provider_name=?, outstanding_charts=?, delinquent_charts=?, updated_at=CURRENT_TIMESTAMP
-    WHERE id=?
-  `);
-  return stmt.run(data.provider_name, data.outstanding_charts || 0, data.delinquent_charts || 0, id);
+const addPhoneNumber = async (data) => {
+  return await db.execute({
+    sql: 'INSERT INTO phone_directory (name, number, extension, department, display_order) VALUES (?, ?, ?, ?, ?)',
+    args: [data.name, data.number, data.extension || '', data.department, data.display_order || 0]
+  });
 };
 
-const deleteProviderChart = (id) => {
-  const stmt = db.prepare('DELETE FROM provider_charts WHERE id=?');
-  return stmt.run(id);
+const updatePhoneNumber = async (id, data) => {
+  return await db.execute({
+    sql: 'UPDATE phone_directory SET name=?, number=?, extension=?, department=?, display_order=? WHERE id=?',
+    args: [data.name, data.number, data.extension || '', data.department, data.display_order || 0, id]
+  });
 };
 
-const getKPIGoals = () => db.prepare('SELECT * FROM kpi_goals ORDER BY created_at DESC').all();
-
-const addKPIGoal = (data) => {
-  const stmt = db.prepare(`
-    INSERT INTO kpi_goals (goal_name, current_value, target_value, unit, deadline)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-  return stmt.run(data.goal_name, data.current_value || 0, data.target_value, data.unit || '', data.deadline || null);
+const deletePhoneNumber = async (id) => {
+  return await db.execute({
+    sql: 'DELETE FROM phone_directory WHERE id=?',
+    args: [id]
+  });
 };
 
-const updateKPIGoal = (id, data) => {
-  const stmt = db.prepare(`
-    UPDATE kpi_goals
-    SET goal_name=?, current_value=?, target_value=?, unit=?, deadline=?, updated_at=CURRENT_TIMESTAMP
-    WHERE id=?
-  `);
-  return stmt.run(data.goal_name, data.current_value || 0, data.target_value, data.unit || '', data.deadline || null, id);
+const addNews = async (data) => {
+  return await db.execute({
+    sql: 'INSERT INTO news (title, content, priority, expires_at) VALUES (?, ?, ?, ?)',
+    args: [data.title, data.content, data.priority || 'low', data.expires_at || null]
+  });
 };
 
-const deleteKPIGoal = (id) => {
-  const stmt = db.prepare('DELETE FROM kpi_goals WHERE id=?');
-  return stmt.run(id);
+const updateNews = async (id, data) => {
+  return await db.execute({
+    sql: 'UPDATE news SET title=?, content=?, priority=?, expires_at=? WHERE id=?',
+    args: [data.title, data.content, data.priority || 'low', data.expires_at || null, id]
+  });
 };
 
-const getMessages = () => db.prepare('SELECT * FROM messages ORDER BY created_at DESC').all();
-
-const addMessage = (data) => {
-  const stmt = db.prepare(`
-    INSERT INTO messages (message, author)
-    VALUES (?, ?)
-  `);
-  return stmt.run(data.message, data.author || 'Anonymous');
+const deleteNews = async (id) => {
+  return await db.execute({
+    sql: 'DELETE FROM news WHERE id=?',
+    args: [id]
+  });
 };
 
-const updateMessage = (id, data) => {
-  const stmt = db.prepare(`
-    UPDATE messages
-    SET message=?, author=?
-    WHERE id=?
-  `);
-  return stmt.run(data.message, data.author || 'Anonymous', id);
+const getProviderCharts = async () => {
+  const result = await db.execute('SELECT * FROM provider_charts ORDER BY provider_name');
+  return result.rows;
 };
 
-const deleteMessage = (id) => {
-  const stmt = db.prepare('DELETE FROM messages WHERE id=?');
-  return stmt.run(id);
+const addProviderChart = async (data) => {
+  return await db.execute({
+    sql: 'INSERT INTO provider_charts (provider_name, outstanding_charts, delinquent_charts) VALUES (?, ?, ?)',
+    args: [data.provider_name, data.outstanding_charts || 0, data.delinquent_charts || 0]
+  });
+};
+
+const updateProviderChart = async (id, data) => {
+  return await db.execute({
+    sql: 'UPDATE provider_charts SET provider_name=?, outstanding_charts=?, delinquent_charts=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+    args: [data.provider_name, data.outstanding_charts || 0, data.delinquent_charts || 0, id]
+  });
+};
+
+const deleteProviderChart = async (id) => {
+  return await db.execute({
+    sql: 'DELETE FROM provider_charts WHERE id=?',
+    args: [id]
+  });
+};
+
+const getKPIGoals = async () => {
+  const result = await db.execute('SELECT * FROM kpi_goals ORDER BY created_at DESC');
+  return result.rows;
+};
+
+const addKPIGoal = async (data) => {
+  return await db.execute({
+    sql: 'INSERT INTO kpi_goals (goal_name, current_value, target_value, unit, deadline) VALUES (?, ?, ?, ?, ?)',
+    args: [data.goal_name, data.current_value || 0, data.target_value, data.unit || '', data.deadline || null]
+  });
+};
+
+const updateKPIGoal = async (id, data) => {
+  return await db.execute({
+    sql: 'UPDATE kpi_goals SET goal_name=?, current_value=?, target_value=?, unit=?, deadline=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+    args: [data.goal_name, data.current_value || 0, data.target_value, data.unit || '', data.deadline || null, id]
+  });
+};
+
+const deleteKPIGoal = async (id) => {
+  return await db.execute({
+    sql: 'DELETE FROM kpi_goals WHERE id=?',
+    args: [id]
+  });
+};
+
+const getMessages = async () => {
+  const result = await db.execute('SELECT * FROM messages ORDER BY created_at DESC');
+  return result.rows;
+};
+
+const addMessage = async (data) => {
+  return await db.execute({
+    sql: 'INSERT INTO messages (message, author) VALUES (?, ?)',
+    args: [data.message, data.author || 'Anonymous']
+  });
+};
+
+const updateMessage = async (id, data) => {
+  return await db.execute({
+    sql: 'UPDATE messages SET message=?, author=? WHERE id=?',
+    args: [data.message, data.author || 'Anonymous', id]
+  });
+};
+
+const deleteMessage = async (id) => {
+  return await db.execute({
+    sql: 'DELETE FROM messages WHERE id=?',
+    args: [id]
+  });
 };
 
 module.exports = {

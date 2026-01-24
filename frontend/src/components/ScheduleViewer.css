@@ -155,3 +155,84 @@ html.dark-mode iframe {
 html.dark-mode .current-month {
   color: #f1f5f9;
 }
+
+/* Month Tabs */
+.month-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.month-tab {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--gray-300);
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  transition: all 0.2s;
+}
+
+.month-tab:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.month-tab.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.month-tab.current-month-tab {
+  position: relative;
+}
+
+.month-tab.current-month-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: var(--success-color);
+  border-radius: 50%;
+}
+
+html.dark-mode .month-tab {
+  background: #1e293b;
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+html.dark-mode .month-tab:hover {
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
+
+html.dark-mode .month-tab.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+/* Iframe wrapper to hide Google Sheets tabs */
+.iframe-wrapper {
+  width: 100%;
+  height: 550px;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+}
+
+.iframe-wrapper iframe {
+  width: 100%;
+  height: 620px;
+  border: none;
+  margin-bottom: -70px;
+}

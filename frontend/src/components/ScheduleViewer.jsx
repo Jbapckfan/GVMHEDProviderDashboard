@@ -189,6 +189,40 @@ function ScheduleViewer() {
     setCurrentYear(new Date().getFullYear())
   }
 
+  // Get visible months: 1 previous + current + 3 future
+  const getVisibleMonths = () => {
+    const today = new Date()
+    const todayMonth = today.getMonth()
+    const todayYear = today.getFullYear()
+    const months = []
+
+    // Start from 1 month before current
+    for (let i = -1; i <= 3; i++) {
+      let targetMonth = todayMonth + i
+      let targetYear = todayYear
+
+      if (targetMonth < 0) {
+        targetMonth += 12
+        targetYear -= 1
+      } else if (targetMonth > 11) {
+        targetMonth -= 12
+        targetYear += 1
+      }
+
+      const shortMonth = monthNames[targetMonth].substring(0, 3)
+      const shortYear = String(targetYear).slice(-2)
+
+      months.push({
+        month: targetMonth,
+        year: targetYear,
+        label: `${shortMonth} '${shortYear}`,
+        isCurrent: targetMonth === todayMonth && targetYear === todayYear
+      })
+    }
+
+    return months
+  }
+
   const handleGoogleSheetsUrl = () => {
     if (!googleSheetsUrl.trim()) {
       alert('Please enter a Google Sheets URL')
@@ -322,12 +356,29 @@ function ScheduleViewer() {
             </div>
 
             {preview.includes('google.com') ? (
-              <iframe
-                key={refreshKey}
-                src={`${preview}${preview.includes('?') ? '&' : '?'}_t=${refreshKey}`}
-                style={{ width: '100%', height: '600px', border: 'none' }}
-                title="Google Sheets Schedule"
-              />
+              <>
+                <div className="month-tabs">
+                  {getVisibleMonths().map(({ month, year, label, isCurrent }) => (
+                    <button
+                      key={`${year}-${month}`}
+                      className={`month-tab ${month === currentMonth && year === currentYear ? 'active' : ''} ${isCurrent ? 'current-month-tab' : ''}`}
+                      onClick={() => {
+                        setCurrentMonth(month)
+                        setCurrentYear(year)
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="iframe-wrapper">
+                  <iframe
+                    key={refreshKey}
+                    src={`${preview}${preview.includes('?') ? '&' : '?'}_t=${refreshKey}`}
+                    title="Google Sheets Schedule"
+                  />
+                </div>
+              </>
             ) : (
               <img
                 src={preview}

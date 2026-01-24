@@ -14,6 +14,7 @@ function ScheduleViewer() {
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [googleSheetsUrl, setGoogleSheetsUrl] = useState('')
   const [baseSheetId] = useState('1eFtQiknDOiQSwJkYs-jC-w1_K0byKB5I9qkIE9xnnpU')
+  const [publishedSheetId] = useState('2PACX-1vT7ADDc3-u6oNQzWMl8pS0Joz7zLuGUc5FuoZY8VVEtjmLoJxXeZnEBjwUKmAXmZ9gtSECi2kQXQ5EA')
   const [isGoogleSheets, setIsGoogleSheets] = useState(false)
   const [refreshKey, setRefreshKey] = useState(Date.now()) // Force iframe refresh
   const fileInputRef = useRef(null)
@@ -42,8 +43,8 @@ function ScheduleViewer() {
     const key = `${monthName} ${year}`
     const gid = sheetGids[key]
     if (!gid) return null
-    // Use edit URL with gid - displays as view-only for non-editors
-    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/edit?gid=${gid}&single=true&rm=minimal`
+    // Use published web URL - works better on restricted networks
+    return `https://docs.google.com/spreadsheets/d/e/${publishedSheetId}/pubhtml?gid=${gid}&single=true`
   }
 
   // Check if current month has a sheet available

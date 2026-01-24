@@ -300,6 +300,15 @@ function ScheduleViewer() {
       </div>
 
       <div className="upload-container">
+        {/* Hidden file input - always in DOM for upload button to work */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleChange}
+          style={{ display: 'none' }}
+        />
+
         {!preview && !isGoogleSheets ? (
           <>
             {!showUrlInput ? (
@@ -312,14 +321,6 @@ function ScheduleViewer() {
                   onDrop={handleDrop}
                   onClick={onButtonClick}
                 >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleChange}
-                    style={{ display: 'none' }}
-                  />
-
                   <div className="drop-zone-content">
                     <div className="upload-icon">📁</div>
                     <p className="drop-text">

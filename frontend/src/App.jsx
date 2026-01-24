@@ -40,6 +40,9 @@ function App() {
             <span className="last-updated">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </span>
+            <button onClick={() => setShowQR(!showQR)} className="refresh-btn">
+              📱 QR Code
+            </button>
             <button onClick={() => setDarkMode(!darkMode)} className="refresh-btn">
               {darkMode ? '☀️' : '🌙'} {darkMode ? 'Light' : 'Dark'}
             </button>
@@ -47,6 +50,12 @@ function App() {
               ↻ Refresh
             </button>
           </div>
+          {showQR && (
+            <div className="qr-dropdown">
+              <img src={qrCodeUrl} alt="QR Code" className="qr-code" />
+              <p className="qr-text">Scan to access dashboard</p>
+            </div>
+          )}
         </div>
       </header>
 
@@ -93,19 +102,7 @@ function App() {
       </main>
 
       <footer className="footer">
-        <div className="footer-content">
-          <p>GVM Health ED Provider Dashboard v1.0 | For authorized use only</p>
-          <button className="qr-toggle" onClick={() => setShowQR(!showQR)}>
-            {showQR ? '✕ Hide QR' : '📱 Share'}
-          </button>
-        </div>
-        {showQR && (
-          <div className="qr-container">
-            <img src={qrCodeUrl} alt="QR Code to access dashboard" className="qr-code" />
-            <p className="qr-text">Scan to access dashboard on your phone</p>
-            <p className="qr-url">{siteUrl}</p>
-          </div>
-        )}
+        <p>GVM Health ED Provider Dashboard v1.0 | For authorized use only</p>
       </footer>
     </div>
   )

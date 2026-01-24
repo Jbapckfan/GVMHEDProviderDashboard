@@ -11,6 +11,7 @@
   color: white;
   padding: 1.5rem 2rem;
   box-shadow: var(--shadow-xl);
+  position: relative;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   position: sticky;
   top: 0;
@@ -235,72 +236,40 @@
   font-size: 0.875rem;
 }
 
-.footer-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.footer-content p {
-  margin: 0;
-}
-
-.qr-toggle {
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.qr-toggle:hover {
-  background: #1e40af;
-  transform: scale(1.05);
-}
-
-.qr-container {
-  margin-top: 1rem;
-  padding: 1.5rem;
+/* QR Code Dropdown */
+.qr-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 1rem;
+  margin-top: 0.5rem;
+  padding: 1rem;
   background: white;
   border-radius: 12px;
-  display: inline-block;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  text-align: center;
 }
 
 .qr-code {
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
   border-radius: 8px;
 }
 
 .qr-text {
   color: var(--gray-700);
   font-weight: 600;
-  margin: 0.75rem 0 0.25rem 0;
-}
-
-.qr-url {
-  color: var(--gray-500);
   font-size: 0.75rem;
-  margin: 0;
-  word-break: break-all;
+  margin: 0.5rem 0 0 0;
 }
 
-html.dark-mode .qr-container {
+html.dark-mode .qr-dropdown {
   background: #1e293b;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 html.dark-mode .qr-text {
   color: #e2e8f0;
-}
-
-html.dark-mode .qr-url {
-  color: #94a3b8;
 }
 
 html.dark-mode .qr-code {

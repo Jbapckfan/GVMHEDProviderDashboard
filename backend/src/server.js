@@ -3,6 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 const db = require('./database');
 
 const app = express();
@@ -460,6 +461,44 @@ app.delete('/api/messages/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Proxy Google Sheets schedule (bypasses network blocks)
+const SHEET_ID = '1eFtQiknDOiQSwJkYs-jC-w1_K0byKB5I9qkIE9xnnpU';
+const SHEET_GIDS = {
+  'December 2025': '256218995',
+  'January 2026': '1997148602',
+  'February 2026': '1342065365',
+  'March 2026': '94782258',
+};
+
+app.get('/api/schedule-proxy', async (req, res) => {
+  const { month, year } = req.query;
+  const key = `${month} ${year}`;
+  const gid = SHEET_GIDS[key];
+
+  if (!gid) {
+    return res.status(404).json({ error: 'Month not available' });
+  }
+
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/htmlembed?gid=${gid}&single=true`;
+
+  try {
+    const html = await new Promise((resolve, reject) => {
+      https.get(url, (response) => {
+        let data = '';
+        response.on('data', chunk => data += chunk);
+        response.on('end', () => resolve(data));
+        response.on('error', reject);
+      }).on('error', reject);
+    });
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('Error fetching schedule:', error);
+    res.status(500).json({ error: 'Failed to fetch schedule' });
   }
 });
 

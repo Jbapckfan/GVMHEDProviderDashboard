@@ -36,13 +36,14 @@ function ScheduleViewer() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
-  // Build Google Sheets URL using gid - returns null if month not available
+  // Build schedule URL using backend proxy (bypasses Google blocks)
   const getSheetUrl = (monthIndex, year) => {
     const monthName = monthNames[monthIndex]
     const key = `${monthName} ${year}`
     const gid = sheetGids[key]
     if (!gid) return null
-    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/htmlembed?gid=${gid}&single=true`
+    // Use backend proxy to bypass network blocks
+    return `${API_BASE}/schedule-proxy?month=${encodeURIComponent(monthName)}&year=${year}`
   }
 
   // Check if current month has a sheet available

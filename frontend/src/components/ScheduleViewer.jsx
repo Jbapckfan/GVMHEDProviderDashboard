@@ -36,13 +36,17 @@ function ScheduleViewer() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
-  // Build Google Sheets URL for direct embed
+  // Static schedule images (served from Vercel, works on all networks)
+  const scheduleImages = {
+    'January 2026': '/schedules/January 2026.png',
+    'February 2026': '/schedules/February 2026.png',
+  }
+
+  // Get schedule image URL
   const getSheetUrl = (monthIndex, year) => {
     const monthName = monthNames[monthIndex]
     const key = `${monthName} ${year}`
-    const gid = sheetGids[key]
-    if (!gid) return null
-    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/htmlembed?gid=${gid}&single=true`
+    return scheduleImages[key] || null
   }
 
   // Check if current month has a sheet available
@@ -361,16 +365,7 @@ function ScheduleViewer() {
         ) : (
           <div className="preview-container">
             <div className="schedule-note">
-              {isGoogleSheets ? (
-                <>
-                  <strong>Live Data:</strong> This schedule loads directly from Google Sheets.
-                  Click <strong>Refresh</strong> to ensure you're seeing the latest version.
-                </>
-              ) : (
-                <>
-                  <strong>Note:</strong> Upload one screenshot per month and use arrows to indicate which month you're viewing.
-                </>
-              )}
+              <strong>Schedule:</strong> Use the month tabs to view different months.
             </div>
 
             {isGoogleSheets ? (
@@ -389,12 +384,13 @@ function ScheduleViewer() {
                     </button>
                   ))}
                 </div>
-                <div className="iframe-wrapper">
+                <div className="schedule-image-container">
                   {preview ? (
-                    <iframe
+                    <img
                       key={`${currentMonth}-${currentYear}-${refreshKey}`}
                       src={preview}
-                      title="Google Sheets Schedule"
+                      alt={`${monthNames[currentMonth]} ${currentYear} Schedule`}
+                      className="schedule-image"
                     />
                   ) : (
                     <div className="no-schedule-message">

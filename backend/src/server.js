@@ -481,25 +481,35 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 async function fetchSheetData(gid) {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 
-  return new Promise((resolve, reject) => {
-    https.get(url, (response) => {
-      // Handle redirects
-      if (response.statusCode === 302 || response.statusCode === 301) {
-        https.get(response.headers.location, (redirectResponse) => {
-          let data = '';
-          redirectResponse.on('data', chunk => data += chunk);
-          redirectResponse.on('end', () => resolve(data));
-          redirectResponse.on('error', reject);
-        }).on('error', reject);
-        return;
+  const fetchWithRedirects = (targetUrl, maxRedirects = 5) => {
+    return new Promise((resolve, reject) => {
+      if (maxRedirects <= 0) {
+        return reject(new Error('Too many redirects'));
       }
 
-      let data = '';
-      response.on('data', chunk => data += chunk);
-      response.on('end', () => resolve(data));
-      response.on('error', reject);
-    }).on('error', reject);
-  });
+      const protocol = targetUrl.startsWith('https') ? https : require('http');
+      protocol.get(targetUrl, (response) => {
+        // Handle redirects (301, 302, 307, 308)
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          console.log(`Redirect ${response.statusCode} to: ${response.headers.location}`);
+          return fetchWithRedirects(response.headers.location, maxRedirects - 1)
+            .then(resolve)
+            .catch(reject);
+        }
+
+        if (response.statusCode !== 200) {
+          return reject(new Error(`HTTP ${response.statusCode}`));
+        }
+
+        let data = '';
+        response.on('data', chunk => data += chunk);
+        response.on('end', () => resolve(data));
+        response.on('error', reject);
+      }).on('error', reject);
+    });
+  };
+
+  return fetchWithRedirects(url);
 }
 
 // Parse CSV into calendar structure

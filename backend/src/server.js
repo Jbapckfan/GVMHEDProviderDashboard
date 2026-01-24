@@ -3,8 +3,6 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const https = require('https');
-const puppeteer = require('puppeteer');
 const db = require('./database');
 
 const app = express();
@@ -462,74 +460,6 @@ app.delete('/api/messages/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
-  }
-});
-
-// Proxy Google Sheets schedule (bypasses network blocks)
-const SHEET_ID = '1eFtQiknDOiQSwJkYs-jC-w1_K0byKB5I9qkIE9xnnpU';
-const SHEET_GIDS = {
-  'December 2025': '256218995',
-  'January 2026': '1997148602',
-  'February 2026': '1342065365',
-  'March 2026': '94782258',
-};
-
-// Cache for schedule screenshots (in-memory, refreshes on restart)
-const scheduleCache = new Map();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-app.get('/api/schedule-image', async (req, res) => {
-  const { month, year } = req.query;
-  const key = `${month} ${year}`;
-  const gid = SHEET_GIDS[key];
-
-  if (!gid) {
-    return res.status(404).json({ error: 'Month not available' });
-  }
-
-  // Check cache
-  const cached = scheduleCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=300');
-    return res.send(cached.image);
-  }
-
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/htmlembed?gid=${gid}&single=true`;
-
-  try {
-    console.log(`Capturing screenshot for ${key}...`);
-
-    const browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-    });
-
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1200, height: 900 });
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-
-    // Wait a bit for any dynamic content
-    await page.waitForTimeout(1000);
-
-    const screenshot = await page.screenshot({
-      type: 'png',
-      fullPage: true
-    });
-
-    await browser.close();
-
-    // Cache the result
-    scheduleCache.set(key, { image: screenshot, timestamp: Date.now() });
-
-    console.log(`Screenshot captured for ${key}`);
-
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=300');
-    res.send(screenshot);
-  } catch (error) {
-    console.error('Error capturing schedule screenshot:', error);
-    res.status(500).json({ error: 'Failed to capture schedule' });
   }
 });
 

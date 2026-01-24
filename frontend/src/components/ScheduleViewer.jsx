@@ -15,33 +15,32 @@ function ScheduleViewer() {
   const [googleSheetsUrl, setGoogleSheetsUrl] = useState('')
   const [baseSheetId] = useState('1eFtQiknDOiQSwJkYs-jC-w1_K0byKB5I9qkIE9xnnpU')
   const [isGoogleSheets, setIsGoogleSheets] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(Date.now()) // Force iframe refresh
   const fileInputRef = useRef(null)
+
+  // Refresh the Google Sheets iframe
+  const refreshSheet = () => {
+    setRefreshKey(Date.now())
+  }
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
-  // Map of month names to Google Sheets gids (you'll need to fill in the missing ones)
-  const monthGids = {
-    'November': '14906086',
-    'December': '256218995',
-    // Add other months as needed
+  // Build Google Sheets URL using sheet name (assumes tabs are named by month)
+  const getSheetUrl = (monthIndex) => {
+    const monthName = monthNames[monthIndex]
+    // Use the sheet parameter to select by tab name - more reliable than gid
+    return `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?sheet=${encodeURIComponent(monthName)}`
   }
 
   // Update Google Sheets URL when month changes
   useEffect(() => {
     if (isGoogleSheets) {
-      const monthName = monthNames[currentMonth]
-      const gid = monthGids[monthName]
-
-      if (gid) {
-        const newUrl = `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?gid=${gid}#gid=${gid}`
-        console.log('Switching to month:', monthName, 'gid:', gid)
-        setPreview(newUrl)
-      } else {
-        console.warn('No gid found for month:', monthName)
-      }
+      const newUrl = getSheetUrl(currentMonth)
+      console.log('Switching to month:', monthNames[currentMonth])
+      setPreview(newUrl)
     }
   }, [currentMonth, currentYear, isGoogleSheets, baseSheetId])
 
@@ -58,13 +57,9 @@ function ScheduleViewer() {
         } else {
           // No file uploaded, use Google Sheets with current month
           const monthName = monthNames[currentMonth]
-          const gid = monthGids[monthName] || '14906086' // Default to November
-          const embedUrl = `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?gid=${gid}#gid=${gid}`
+          const embedUrl = `https://docs.google.com/spreadsheets/d/${baseSheetId}/preview?sheet=${encodeURIComponent(monthName)}`
           setPreview(embedUrl)
-          setUploadedAt(new Date())
           setIsGoogleSheets(true)
-          localStorage.setItem('scheduleGoogleSheetsUrl', embedUrl)
-          localStorage.setItem('scheduleUploadedAt', new Date().toISOString())
         }
       } catch (error) {
         console.error('Error loading schedule:', error)
@@ -241,7 +236,11 @@ function ScheduleViewer() {
           </div>
         )}
 
-        {uploadedAt && (
+        {isGoogleSheets ? (
+          <span className="live-indicator" title="Data loads directly from Google Sheets">
+            🟢 LIVE
+          </span>
+        ) : uploadedAt && (
           <span className="upload-time">
             Updated: {uploadedAt.toLocaleDateString()}
           </span>
@@ -310,12 +309,22 @@ function ScheduleViewer() {
         ) : (
           <div className="preview-container">
             <div className="schedule-note">
-              <strong>Note:</strong> Navigation is for reference only. {preview.includes('google.com') ? 'Use the Google Sheets interface to navigate.' : 'Upload one screenshot per month and use arrows to indicate which month you\'re viewing.'}
+              {preview.includes('google.com') ? (
+                <>
+                  <strong>Live Data:</strong> This schedule loads directly from Google Sheets.
+                  Click <strong>Refresh</strong> to ensure you're seeing the latest version.
+                </>
+              ) : (
+                <>
+                  <strong>Note:</strong> Upload one screenshot per month and use arrows to indicate which month you're viewing.
+                </>
+              )}
             </div>
 
             {preview.includes('google.com') ? (
               <iframe
-                src={preview}
+                key={refreshKey}
+                src={`${preview}${preview.includes('?') ? '&' : '?'}_t=${refreshKey}`}
                 style={{ width: '100%', height: '600px', border: 'none' }}
                 title="Google Sheets Schedule"
               />
@@ -328,6 +337,11 @@ function ScheduleViewer() {
             )}
 
             <div className="preview-actions">
+              {isGoogleSheets && (
+                <button onClick={refreshSheet} className="btn btn-success">
+                  🔄 Refresh
+                </button>
+              )}
               <button onClick={onButtonClick} className="btn btn-primary" disabled={uploading}>
                 📤 Upload New
               </button>

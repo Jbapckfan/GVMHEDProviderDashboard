@@ -7,8 +7,27 @@ function OrderSetSuggestions() {
   const [suggestions, setSuggestions] = useState([])
   const [newSuggestion, setNewSuggestion] = useState('')
   const [author, setAuthor] = useState('')
+  const [selectedOrderSet, setSelectedOrderSet] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+
+  const orderSetOptions = [
+    'ED Chest Pain',
+    'ED Abdominal Pain',
+    'ED Stroke',
+    'ED Headache',
+    'ED Fever',
+    'ED Sepsis',
+    'ED Psych/Mental Health',
+    'ED Respiratory Distress',
+    'ED Altered Mental Status',
+    'ED Trauma',
+    'ED Back Pain',
+    'ED Kidney Stone',
+    'ED Seizure',
+    'ED Pediatric General',
+    'ED Pediatric Trauma'
+  ]
 
   useEffect(() => {
     fetchSuggestions()
@@ -28,6 +47,11 @@ function OrderSetSuggestions() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (!selectedOrderSet) {
+      alert('Please select an order set')
+      return
+    }
+
     if (!newSuggestion.trim()) {
       alert('Please enter a suggestion')
       return
@@ -37,12 +61,13 @@ function OrderSetSuggestions() {
 
     try {
       await axios.post(`${API_BASE}/order-set-suggestions`, {
-        suggestion: newSuggestion.trim(),
+        suggestion: `[${selectedOrderSet}] ${newSuggestion.trim()}`,
         author: author.trim() || 'Anonymous'
       })
 
       setNewSuggestion('')
       setAuthor('')
+      setSelectedOrderSet('')
       fetchSuggestions()
       alert('Suggestion submitted successfully!')
     } catch (error) {
@@ -74,10 +99,22 @@ function OrderSetSuggestions() {
 
       <div className="suggestion-form-container">
         <form onSubmit={handleSubmit} className="suggestion-form">
+          <select
+            value={selectedOrderSet}
+            onChange={(e) => setSelectedOrderSet(e.target.value)}
+            className="order-set-select"
+            disabled={submitting}
+          >
+            <option value="">Select Order Set...</option>
+            {orderSetOptions.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+
           <textarea
             value={newSuggestion}
             onChange={(e) => setNewSuggestion(e.target.value)}
-            placeholder="Enter your suggestion for order set changes..."
+            placeholder="Enter your suggestion for this order set..."
             className="suggestion-textarea"
             rows="3"
             disabled={submitting}

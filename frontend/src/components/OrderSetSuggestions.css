@@ -33,6 +33,33 @@
   gap: 0.75rem;
 }
 
+.order-set-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+}
+
+.order-set-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.order-set-select:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
 .suggestion-textarea {
   width: 100%;
   padding: 0.75rem;
@@ -190,4 +217,67 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Dark mode */
+html.dark-mode .suggestion-form-container {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+html.dark-mode .order-set-select {
+  background: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+}
+
+html.dark-mode .order-set-select:focus {
+  border-color: #60a5fa;
+}
+
+html.dark-mode .suggestion-textarea {
+  background: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+html.dark-mode .suggestion-textarea:focus {
+  border-color: #60a5fa;
+}
+
+html.dark-mode .author-input {
+  background: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+html.dark-mode .author-input:focus {
+  border-color: #60a5fa;
+}
+
+html.dark-mode .suggestion-count {
+  background: #334155;
+  color: #94a3b8;
+}
+
+html.dark-mode .suggestion-item {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+html.dark-mode .suggestion-header {
+  border-bottom-color: #334155;
+}
+
+html.dark-mode .suggestion-author {
+  color: #e2e8f0;
+}
+
+html.dark-mode .suggestion-time {
+  color: #64748b;
+}
+
+html.dark-mode .suggestion-text {
+  color: #cbd5e1;
 }

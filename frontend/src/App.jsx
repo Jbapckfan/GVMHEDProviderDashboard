@@ -86,17 +86,17 @@ function App() {
             <MessageBoard />
           </div>
 
-          {/* Sixth row - Phone Directory and Order Set Suggestions */}
+          {/* Sixth row - News Updates */}
+          <div className="grid-full">
+            <NewsUpdates />
+          </div>
+
+          {/* Seventh row - Phone Directory and Order Set Suggestions */}
           <div className="grid-col-1">
             <PhoneDirectory />
           </div>
           <div className="grid-col-2">
             <OrderSetSuggestions />
-          </div>
-
-          {/* Seventh row - News Updates */}
-          <div className="grid-full">
-            <NewsUpdates />
           </div>
         </div>
       </main>

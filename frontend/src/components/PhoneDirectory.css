@@ -1,12 +1,12 @@
 .phone-directory-card {
-  min-height: 500px;
+  min-height: 800px;
 }
 
 .phone-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-height: 600px;
+  max-height: 900px;
   overflow-y: auto;
 }
 

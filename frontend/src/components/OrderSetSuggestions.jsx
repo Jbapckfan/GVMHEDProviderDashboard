@@ -11,6 +11,7 @@ function OrderSetSuggestions() {
   const [customOrderSet, setCustomOrderSet] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [editingSuggestion, setEditingSuggestion] = useState(null)
 
   const orderSetOptions = [
     'ED Chest Pain',
@@ -101,6 +102,46 @@ function OrderSetSuggestions() {
     return date.toLocaleDateString()
   }
 
+  const handleEdit = (suggestion) => {
+    setEditingSuggestion({ ...suggestion })
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingSuggestion.suggestion.trim()) {
+      alert('Please enter a suggestion')
+      return
+    }
+
+    try {
+      await axios.put(`${API_BASE}/order-set-suggestions/${editingSuggestion.id}`, {
+        suggestion: editingSuggestion.suggestion.trim(),
+        author: editingSuggestion.author.trim() || 'Anonymous'
+      })
+      setEditingSuggestion(null)
+      fetchSuggestions()
+      alert('Suggestion updated successfully!')
+    } catch (error) {
+      console.error('Error updating suggestion:', error)
+      alert('Failed to update suggestion')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this suggestion?')) {
+      return
+    }
+
+    try {
+      await axios.delete(`${API_BASE}/order-set-suggestions/${editingSuggestion.id}`)
+      setEditingSuggestion(null)
+      fetchSuggestions()
+      alert('Suggestion deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting suggestion:', error)
+      alert('Failed to delete suggestion')
+    }
+  }
+
   return (
     <div className="card order-set-card">
       <div className="card-header">
@@ -176,9 +217,18 @@ function OrderSetSuggestions() {
                 <span className="suggestion-author">
                   👤 {suggestion.author}
                 </span>
-                <span className="suggestion-time">
-                  {getTimeAgo(suggestion.created_at)}
-                </span>
+                <div className="suggestion-header-right">
+                  <span className="suggestion-time">
+                    {getTimeAgo(suggestion.created_at)}
+                  </span>
+                  <button
+                    onClick={() => handleEdit(suggestion)}
+                    className="edit-suggestion-btn"
+                    title="Edit suggestion"
+                  >
+                    ✏️
+                  </button>
+                </div>
               </div>
               <div className="suggestion-text">
                 {suggestion.suggestion}
@@ -187,6 +237,46 @@ function OrderSetSuggestions() {
           ))
         )}
       </div>
+
+      {editingSuggestion && (
+        <div className="suggestion-edit-modal" onClick={() => setEditingSuggestion(null)}>
+          <div className="suggestion-edit-form" onClick={(e) => e.stopPropagation()}>
+            <h3>Edit Suggestion</h3>
+
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+              Author
+            </label>
+            <input
+              type="text"
+              value={editingSuggestion.author}
+              onChange={(e) => setEditingSuggestion({ ...editingSuggestion, author: e.target.value })}
+              placeholder="Author name"
+            />
+
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+              Suggestion
+            </label>
+            <textarea
+              value={editingSuggestion.suggestion}
+              onChange={(e) => setEditingSuggestion({ ...editingSuggestion, suggestion: e.target.value })}
+              placeholder="Enter suggestion..."
+              rows="4"
+            />
+
+            <div className="suggestion-edit-actions">
+              <button onClick={handleDelete} className="btn-delete">
+                🗑️ Delete
+              </button>
+              <button onClick={() => setEditingSuggestion(null)} className="btn-cancel">
+                Cancel
+              </button>
+              <button onClick={handleSaveEdit} className="btn-save">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

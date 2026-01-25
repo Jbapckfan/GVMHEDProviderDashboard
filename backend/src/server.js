@@ -338,6 +338,26 @@ app.post('/api/order-set-suggestions', async (req, res) => {
   }
 });
 
+// Update order set suggestion
+app.put('/api/order-set-suggestions/:id', async (req, res) => {
+  try {
+    await db.updateOrderSetSuggestion(req.params.id, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete order set suggestion
+app.delete('/api/order-set-suggestions/:id', async (req, res) => {
+  try {
+    await db.deleteOrderSetSuggestion(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get provider chart status
 app.get('/api/provider-charts', async (req, res) => {
   try {

@@ -7,7 +7,6 @@ function PhoneDirectory() {
   const [phoneNumbers, setPhoneNumbers] = useState([])
   const [loading, setLoading] = useState(true)
   const [editingPhone, setEditingPhone] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [draggedItem, setDraggedItem] = useState(null)
 
   useEffect(() => {
@@ -25,38 +24,11 @@ function PhoneDirectory() {
     }
   }
 
-  const verifyPassword = async () => {
-    const password = prompt('Enter admin password:')
-    if (!password) return false
-
-    try {
-      const response = await axios.post(`${API_BASE}/admin/verify`, { password })
-      if (response.data.success) {
-        setIsAuthenticated(true)
-        return true
-      } else {
-        alert('Invalid password')
-        return false
-      }
-    } catch (error) {
-      alert('Invalid password')
-      return false
-    }
-  }
-
-  const handleEdit = async (phone) => {
-    if (!isAuthenticated) {
-      const verified = await verifyPassword()
-      if (!verified) return
-    }
+  const handleEdit = (phone) => {
     setEditingPhone({ ...phone })
   }
 
-  const handleAddNew = async () => {
-    if (!isAuthenticated) {
-      const verified = await verifyPassword()
-      if (!verified) return
-    }
+  const handleAddNew = () => {
     setEditingPhone({
       id: null,
       name: '',

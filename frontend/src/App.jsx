@@ -61,29 +61,29 @@ function App() {
 
       <main className="main-content">
         <div className="dashboard-grid">
-          {/* Top row - KPI Metrics Image Upload */}
+          {/* Top row - Message Board (Important Messages) */}
+          <div className="grid-full">
+            <MessageBoard />
+          </div>
+
+          {/* Second row - KPI Metrics Image Upload */}
           <div className="grid-full">
             <KPIImageUpload />
           </div>
 
-          {/* Second row - Schedule Calendar */}
+          {/* Third row - Schedule Calendar */}
           <div className="grid-full">
             <ScheduleCalendar />
           </div>
 
-          {/* Third row - Provider Chart Status */}
+          {/* Fourth row - Provider Chart Status */}
           <div className="grid-full">
             <ProviderChartStatus />
           </div>
 
-          {/* Fourth row - KPI Goals */}
+          {/* Fifth row - KPI Goals */}
           <div className="grid-full">
             <KPIGoals />
-          </div>
-
-          {/* Fifth row - Message Board */}
-          <div className="grid-full">
-            <MessageBoard />
           </div>
 
           {/* Sixth row - News Updates */}

@@ -222,6 +222,20 @@ const createOrderSetSuggestion = async (data) => {
   });
 };
 
+const updateOrderSetSuggestion = async (id, data) => {
+  return await db.execute({
+    sql: 'UPDATE order_set_suggestions SET suggestion=?, author=? WHERE id=?',
+    args: [data.suggestion, data.author || 'Anonymous', id]
+  });
+};
+
+const deleteOrderSetSuggestion = async (id) => {
+  return await db.execute({
+    sql: 'DELETE FROM order_set_suggestions WHERE id=?',
+    args: [id]
+  });
+};
+
 const addPhoneNumber = async (data) => {
   return await db.execute({
     sql: 'INSERT INTO phone_directory (name, number, extension, department, display_order) VALUES (?, ?, ?, ?, ?)',
@@ -353,6 +367,8 @@ module.exports = {
   getOrderSetSuggestions,
   updateKPIMetric,
   createOrderSetSuggestion,
+  updateOrderSetSuggestion,
+  deleteOrderSetSuggestion,
   addPhoneNumber,
   updatePhoneNumber,
   deletePhoneNumber,

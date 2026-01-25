@@ -494,51 +494,102 @@ let sheetTabsCache = null;
 let sheetTabsCacheTime = 0;
 const TABS_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes for tabs
 
-// Fetch and parse available sheet tabs dynamically
+// Fetch and parse available sheet tabs dynamically using pubhtml endpoint
 async function fetchSheetTabs() {
   // Check cache first
   if (sheetTabsCache && Date.now() - sheetTabsCacheTime < TABS_CACHE_DURATION) {
     return sheetTabsCache;
   }
 
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
+  // Use pubhtml which reliably contains gid links
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pubhtml`;
 
   return new Promise((resolve, reject) => {
     https.get(url, (response) => {
-      let data = '';
-      response.on('data', chunk => data += chunk);
-      response.on('end', () => {
-        try {
-          // Parse the HTML to find sheet tabs
-          // Looking for patterns like: {"name":"January 2026","gid":1997148602}
-          const tabMatches = data.matchAll(/"name"\s*:\s*"([^"]+)"\s*,\s*"gid"\s*:\s*(\d+)/g);
-          const tabs = {};
-
-          // Month pattern to match schedule tabs
-          const monthPattern = /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/;
-
-          for (const match of tabMatches) {
-            const name = match[1];
-            const gid = match[2];
-            if (monthPattern.test(name)) {
-              tabs[name] = gid;
-              console.log(`Found sheet tab: ${name} (gid: ${gid})`);
-            }
-          }
-
-          // Cache the results
-          sheetTabsCache = tabs;
-          sheetTabsCacheTime = Date.now();
-
-          console.log(`Discovered ${Object.keys(tabs).length} month tabs`);
-          resolve(tabs);
-        } catch (error) {
-          console.error('Error parsing sheet tabs:', error);
-          reject(error);
-        }
-      });
-      response.on('error', reject);
+      // Handle redirects
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        https.get(response.headers.location, (redirectResponse) => {
+          handleResponse(redirectResponse, resolve, reject);
+        }).on('error', reject);
+        return;
+      }
+      handleResponse(response, resolve, reject);
     }).on('error', reject);
+  });
+
+  function handleResponse(response, resolve, reject) {
+    let data = '';
+    response.on('data', chunk => data += chunk);
+    response.on('end', async () => {
+      try {
+        // Find all gids from pubhtml links
+        const gidMatches = data.matchAll(/gid=(\d+)/g);
+        const gids = [...new Set([...gidMatches].map(m => m[1]))];
+
+        console.log(`Found ${gids.length} unique gids, checking each...`);
+
+        const tabs = {};
+        const monthPattern = /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/;
+
+        // Check each gid to find month tabs
+        for (const gid of gids) {
+          try {
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+            const firstLine = await fetchFirstLine(csvUrl);
+            const match = firstLine.match(monthPattern);
+            if (match) {
+              const monthName = `${match[1]} ${match[2]}`;
+              tabs[monthName] = gid;
+              console.log(`Found sheet tab: ${monthName} (gid: ${gid})`);
+            }
+          } catch (e) {
+            // Skip invalid gids
+          }
+        }
+
+        // Cache the results
+        sheetTabsCache = tabs;
+        sheetTabsCacheTime = Date.now();
+
+        console.log(`Discovered ${Object.keys(tabs).length} month tabs`);
+        resolve(tabs);
+      } catch (error) {
+        console.error('Error parsing sheet tabs:', error);
+        reject(error);
+      }
+    });
+    response.on('error', reject);
+  }
+}
+
+// Helper to fetch just the first line of a CSV
+function fetchFirstLine(url) {
+  return new Promise((resolve, reject) => {
+    const makeRequest = (targetUrl, redirectCount = 0) => {
+      if (redirectCount > 5) {
+        return reject(new Error('Too many redirects'));
+      }
+
+      https.get(targetUrl, (response) => {
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          return makeRequest(response.headers.location, redirectCount + 1);
+        }
+
+        let data = '';
+        response.on('data', chunk => {
+          data += chunk;
+          // Stop after getting first line
+          if (data.includes('\n')) {
+            response.destroy();
+            resolve(data.split('\n')[0]);
+          }
+        });
+        response.on('end', () => resolve(data.split('\n')[0]));
+        response.on('error', reject);
+      }).on('error', reject);
+    };
+
+    makeRequest(url);
   });
 }
 

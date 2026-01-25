@@ -492,8 +492,7 @@ const scheduleCache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 let sheetTabsCache = null;
 let sheetTabsCacheTime = 0;
-const TABS_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes for tabs (sheets structure rarely changes)
-let fetchingTabs = null; // Prevent duplicate fetches
+const TABS_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes for tabs
 
 // Fetch and parse available sheet tabs dynamically
 async function fetchSheetTabs() {
@@ -502,14 +501,9 @@ async function fetchSheetTabs() {
     return sheetTabsCache;
   }
 
-  // Prevent duplicate fetches - if already fetching, wait for that result
-  if (fetchingTabs) {
-    return fetchingTabs;
-  }
-
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
 
-  fetchingTabs = new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     https.get(url, (response) => {
       let data = '';
       response.on('data', chunk => data += chunk);
@@ -546,11 +540,6 @@ async function fetchSheetTabs() {
       response.on('error', reject);
     }).on('error', reject);
   });
-
-  // Clean up after fetch completes
-  fetchingTabs.then(() => { fetchingTabs = null; }).catch(() => { fetchingTabs = null; });
-
-  return fetchingTabs;
 }
 
 // Fetch Google Sheet as CSV and parse into calendar data

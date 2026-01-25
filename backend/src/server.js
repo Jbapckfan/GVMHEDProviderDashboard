@@ -466,16 +466,61 @@ app.delete('/api/messages/:id', async (req, res) => {
 
 // Google Sheets configuration
 const SHEET_ID = '1eFtQiknDOiQSwJkYs-jC-w1_K0byKB5I9qkIE9xnnpU';
-const SHEET_GIDS = {
-  'December 2025': '256218995',
-  'January 2026': '1997148602',
-  'February 2026': '1342065365',
-  'March 2026': '94782258',
-};
 
-// Cache for schedule data
+// Cache for schedule data and sheet tabs
 const scheduleCache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+let sheetTabsCache = null;
+let sheetTabsCacheTime = 0;
+const TABS_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes for tabs
+
+// Fetch and parse available sheet tabs dynamically
+async function fetchSheetTabs() {
+  // Check cache first
+  if (sheetTabsCache && Date.now() - sheetTabsCacheTime < TABS_CACHE_DURATION) {
+    return sheetTabsCache;
+  }
+
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
+
+  return new Promise((resolve, reject) => {
+    https.get(url, (response) => {
+      let data = '';
+      response.on('data', chunk => data += chunk);
+      response.on('end', () => {
+        try {
+          // Parse the HTML to find sheet tabs
+          // Looking for patterns like: {"name":"January 2026","gid":1997148602}
+          const tabMatches = data.matchAll(/"name"\s*:\s*"([^"]+)"\s*,\s*"gid"\s*:\s*(\d+)/g);
+          const tabs = {};
+
+          // Month pattern to match schedule tabs
+          const monthPattern = /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/;
+
+          for (const match of tabMatches) {
+            const name = match[1];
+            const gid = match[2];
+            if (monthPattern.test(name)) {
+              tabs[name] = gid;
+              console.log(`Found sheet tab: ${name} (gid: ${gid})`);
+            }
+          }
+
+          // Cache the results
+          sheetTabsCache = tabs;
+          sheetTabsCacheTime = Date.now();
+
+          console.log(`Discovered ${Object.keys(tabs).length} month tabs`);
+          resolve(tabs);
+        } catch (error) {
+          console.error('Error parsing sheet tabs:', error);
+          reject(error);
+        }
+      });
+      response.on('error', reject);
+    }).on('error', reject);
+  });
+}
 
 // Fetch Google Sheet as CSV and parse into calendar data
 async function fetchSheetData(gid) {
@@ -642,17 +687,43 @@ function parseScheduleCSV(csv, monthName, year) {
   };
 }
 
+// API endpoint to get available months
+app.get('/api/schedule-months', async (req, res) => {
+  try {
+    const tabs = await fetchSheetTabs();
+    const months = Object.keys(tabs).map(key => {
+      const [month, year] = key.split(' ');
+      return { month, year: parseInt(year), label: key };
+    });
+
+    // Sort by year and month
+    const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    months.sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month);
+    });
+
+    res.json({ months });
+  } catch (error) {
+    console.error('Error fetching months:', error);
+    res.status(500).json({ error: 'Failed to fetch available months' });
+  }
+});
+
 // Debug endpoint to get raw CSV (for verification)
 app.get('/api/schedule-debug', async (req, res) => {
   const { month, year } = req.query;
   const key = `${month} ${year}`;
-  const gid = SHEET_GIDS[key];
-
-  if (!gid) {
-    return res.status(404).json({ error: 'Month not available' });
-  }
 
   try {
+    const tabs = await fetchSheetTabs();
+    const gid = tabs[key];
+
+    if (!gid) {
+      return res.status(404).json({ error: 'Month not available', availableMonths: Object.keys(tabs) });
+    }
+
     const csv = await fetchSheetData(gid);
     res.type('text/plain').send(csv);
   } catch (error) {
@@ -664,11 +735,14 @@ app.get('/api/schedule-debug', async (req, res) => {
 app.get('/api/schedule-data', async (req, res) => {
   const { month, year } = req.query;
   const key = `${month} ${year}`;
-  const gid = SHEET_GIDS[key];
 
-  if (!gid) {
-    return res.status(404).json({ error: 'Month not available', availableMonths: Object.keys(SHEET_GIDS) });
-  }
+  try {
+    const tabs = await fetchSheetTabs();
+    const gid = tabs[key];
+
+    if (!gid) {
+      return res.status(404).json({ error: 'Month not available', availableMonths: Object.keys(tabs) });
+    }
 
   // Check cache
   const cached = scheduleCache.get(key);

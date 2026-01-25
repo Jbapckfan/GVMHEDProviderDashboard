@@ -10,22 +10,49 @@ function ScheduleCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [selectedProvider, setSelectedProvider] = useState(null)
+  const [availableMonths, setAvailableMonths] = useState([])
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
 
-  const availableMonths = [
-    { month: 11, year: 2025, label: "Dec '25" },
-    { month: 0, year: 2026, label: "Jan '26" },
-    { month: 1, year: 2026, label: "Feb '26" },
-    { month: 2, year: 2026, label: "Mar '26" },
-  ]
+  // Fetch available months on mount
+  useEffect(() => {
+    const fetchMonths = async () => {
+      try {
+        const response = await axios.get(`${API_BASE}/schedule-months`)
+        const months = response.data.months.map(m => ({
+          month: monthNames.indexOf(m.month),
+          year: m.year,
+          label: `${m.month.substring(0, 3)} '${String(m.year).slice(-2)}`
+        }))
+        setAvailableMonths(months)
+
+        // Set current selection to current month if available, otherwise first available
+        const today = new Date()
+        const currentAvailable = months.find(m => m.month === today.getMonth() && m.year === today.getFullYear())
+        if (currentAvailable) {
+          setCurrentMonth(currentAvailable.month)
+          setCurrentYear(currentAvailable.year)
+        } else if (months.length > 0) {
+          // Default to the most recent month
+          const latest = months[months.length - 1]
+          setCurrentMonth(latest.month)
+          setCurrentYear(latest.year)
+        }
+      } catch (err) {
+        console.error('Error fetching available months:', err)
+      }
+    }
+    fetchMonths()
+  }, [])
 
   useEffect(() => {
-    fetchSchedule()
-  }, [currentMonth, currentYear])
+    if (availableMonths.length > 0) {
+      fetchSchedule()
+    }
+  }, [currentMonth, currentYear, availableMonths])
 
   const fetchSchedule = async () => {
     setLoading(true)

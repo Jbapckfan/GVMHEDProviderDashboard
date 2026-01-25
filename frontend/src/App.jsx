@@ -66,19 +66,19 @@ function App() {
             <MessageBoard />
           </div>
 
-          {/* Second row - KPI Metrics Image Upload */}
-          <div className="grid-full">
-            <KPIImageUpload />
-          </div>
-
-          {/* Third row - Schedule Calendar */}
+          {/* Second row - Schedule Calendar */}
           <div className="grid-full">
             <ScheduleCalendar />
           </div>
 
-          {/* Fourth row - Provider Chart Status */}
+          {/* Third row - Provider Chart Status */}
           <div className="grid-full">
             <ProviderChartStatus />
+          </div>
+
+          {/* Fourth row - KPI Metrics Image Upload */}
+          <div className="grid-full">
+            <KPIImageUpload />
           </div>
 
           {/* Fifth row - KPI Goals */}

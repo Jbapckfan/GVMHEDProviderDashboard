@@ -233,7 +233,7 @@ app.get('/api/phone-directory', async (req, res) => {
 app.post('/api/admin/phone-directory', async (req, res) => {
   try {
     const result = await db.addPhoneNumber(req.body);
-    res.json({ success: true, id: result.lastInsertRowid });
+    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -290,7 +290,7 @@ app.get('/api/news', async (req, res) => {
 app.post('/api/admin/news', async (req, res) => {
   try {
     const result = await db.addNews(req.body);
-    res.json({ success: true, id: result.lastInsertRowid });
+    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -332,7 +332,7 @@ app.get('/api/order-set-suggestions', async (req, res) => {
 app.post('/api/order-set-suggestions', async (req, res) => {
   try {
     const result = await db.createOrderSetSuggestion(req.body);
-    res.json({ success: true, id: result.lastInsertRowid });
+    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -352,7 +352,7 @@ app.get('/api/provider-charts', async (req, res) => {
 app.post('/api/admin/provider-charts', async (req, res) => {
   try {
     const result = await db.addProviderChart(req.body);
-    res.json({ success: true, id: result.lastInsertRowid });
+    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -394,7 +394,7 @@ app.get('/api/kpi-goals', async (req, res) => {
 app.post('/api/admin/kpi-goals', async (req, res) => {
   try {
     const result = await db.addKPIGoal(req.body);
-    res.json({ success: true, id: result.lastInsertRowid });
+    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -436,7 +436,7 @@ app.get('/api/messages', async (req, res) => {
 app.post('/api/messages', async (req, res) => {
   try {
     const result = await db.addMessage(req.body);
-    res.json({ success: true, id: result.lastInsertRowid });
+    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

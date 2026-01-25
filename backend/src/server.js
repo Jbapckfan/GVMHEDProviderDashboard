@@ -744,13 +744,12 @@ app.get('/api/schedule-data', async (req, res) => {
       return res.status(404).json({ error: 'Month not available', availableMonths: Object.keys(tabs) });
     }
 
-  // Check cache
-  const cached = scheduleCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return res.json(cached.data);
-  }
+    // Check cache
+    const cached = scheduleCache.get(key);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return res.json(cached.data);
+    }
 
-  try {
     console.log(`Fetching schedule data for ${key}...`);
     const csv = await fetchSheetData(gid);
     const data = parseScheduleCSV(csv, month, parseInt(year));

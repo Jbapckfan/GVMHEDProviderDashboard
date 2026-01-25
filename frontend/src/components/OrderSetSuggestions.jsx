@@ -8,6 +8,7 @@ function OrderSetSuggestions() {
   const [newSuggestion, setNewSuggestion] = useState('')
   const [author, setAuthor] = useState('')
   const [selectedOrderSet, setSelectedOrderSet] = useState('')
+  const [customOrderSet, setCustomOrderSet] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
@@ -52,22 +53,32 @@ function OrderSetSuggestions() {
       return
     }
 
+    if (selectedOrderSet === 'Other' && !customOrderSet.trim()) {
+      alert('Please enter the order set name')
+      return
+    }
+
     if (!newSuggestion.trim()) {
       alert('Please enter a suggestion')
       return
     }
 
+    const orderSetName = selectedOrderSet === 'Other'
+      ? `ED ${customOrderSet.trim()}`
+      : selectedOrderSet
+
     setSubmitting(true)
 
     try {
       await axios.post(`${API_BASE}/order-set-suggestions`, {
-        suggestion: `[${selectedOrderSet}] ${newSuggestion.trim()}`,
+        suggestion: `[${orderSetName}] ${newSuggestion.trim()}`,
         author: author.trim() || 'Anonymous'
       })
 
       setNewSuggestion('')
       setAuthor('')
       setSelectedOrderSet('')
+      setCustomOrderSet('')
       fetchSuggestions()
       alert('Suggestion submitted successfully!')
     } catch (error) {
@@ -109,7 +120,19 @@ function OrderSetSuggestions() {
             {orderSetOptions.map(option => (
               <option key={option} value={option}>{option}</option>
             ))}
+            <option value="Other">Other (specify below)</option>
           </select>
+
+          {selectedOrderSet === 'Other' && (
+            <input
+              type="text"
+              value={customOrderSet}
+              onChange={(e) => setCustomOrderSet(e.target.value)}
+              placeholder="Enter order set name (e.g., Diabetic Ketoacidosis)"
+              className="custom-order-set-input"
+              disabled={submitting}
+            />
+          )}
 
           <textarea
             value={newSuggestion}

@@ -4,6 +4,38 @@ import * as XLSX from 'xlsx'
 import './KPIImageUpload.css'
 import { API_BASE } from '../utils/api'
 
+// Helper to format cell values nicely
+const formatCell = (value) => {
+  if (value === null || value === undefined || value === '') return ''
+
+  // If it's a number that looks like a percentage (0-1 range), format as percentage
+  if (typeof value === 'number') {
+    if (value > 0 && value < 1 && value !== Math.floor(value)) {
+      return `${(value * 100).toFixed(1)}%`
+    }
+    // Format large numbers with commas
+    if (value >= 1000) {
+      return value.toLocaleString()
+    }
+    // Format decimals nicely
+    if (value !== Math.floor(value)) {
+      return value.toFixed(1)
+    }
+    return value.toString()
+  }
+
+  // Handle string values that are already percentages
+  if (typeof value === 'string') {
+    // If it's wrapped in brackets like [1.10%], keep as is
+    if (value.startsWith('[') && value.endsWith(']')) {
+      return value
+    }
+    return value
+  }
+
+  return String(value)
+}
+
 function KPIImageUpload() {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
@@ -69,12 +101,32 @@ function KPIImageUpload() {
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
       console.log('Excel data parsed, rows:', jsonData.length)
       console.log('First 3 rows:', jsonData.slice(0, 3))
-      
+
       if (jsonData.length === 0) {
         console.error('No data in Excel file!')
         setExcelData([['No data found in Excel file']])
       } else {
-        setExcelData(jsonData)
+        // Smart header detection: find first row with meaningful content in first cell
+        let headerRowIndex = 0
+        for (let i = 0; i < Math.min(5, jsonData.length); i++) {
+          const row = jsonData[i]
+          // Check if first cell has content like "KPI METRICS" or similar
+          if (row && row[0] && typeof row[0] === 'string' && row[0].length > 3) {
+            headerRowIndex = i
+            break
+          }
+        }
+
+        // If row 0 is mostly empty but has some cells (like "GVMH", "FY 2026"), include it as a title row
+        const titleRow = headerRowIndex > 0 ? jsonData[0] : null
+        const processedData = jsonData.slice(headerRowIndex)
+
+        // Store both title and data
+        setExcelData({
+          title: titleRow,
+          data: processedData,
+          hasTitle: headerRowIndex > 0
+        })
       }
     } catch (error) {
       console.error('Error parsing Excel file:', error)
@@ -246,24 +298,40 @@ function KPIImageUpload() {
                   <p className="file-name">{file?.name || 'kpi-metrics.xlsx'}</p>
                 </div>
                 
-                {excelData && excelData.length > 0 ? (
+                {excelData && (excelData.data || excelData.length > 0) ? (
                   <div className="excel-table-container">
+                    {/* Title row if present */}
+                    {excelData.hasTitle && excelData.title && (
+                      <div className="excel-title-row">
+                        {excelData.title.filter(cell => cell).map((cell, index) => (
+                          <span key={index} className="excel-title-cell">{cell}</span>
+                        ))}
+                      </div>
+                    )}
                     <table className="excel-table">
                       <thead>
                         <tr>
-                          {excelData[0].map((header, index) => (
-                            <th key={index}>{header}</th>
+                          {(excelData.data ? excelData.data[0] : excelData[0]).map((header, index) => (
+                            <th key={index}>{header || ''}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {excelData.slice(1).map((row, rowIndex) => (
-                          <tr key={rowIndex}>
-                            {row.map((cell, cellIndex) => (
-                              <td key={cellIndex}>{cell}</td>
-                            ))}
-                          </tr>
-                        ))}
+                        {(excelData.data ? excelData.data.slice(1) : excelData.slice(1)).map((row, rowIndex) => {
+                          // Check if this is a section header row (mostly empty except first cell)
+                          const nonEmptyCells = row.filter(cell => cell !== null && cell !== undefined && cell !== '').length
+                          const isSection = nonEmptyCells === 1 && row[0]
+
+                          return (
+                            <tr key={rowIndex} className={isSection ? 'section-row' : ''}>
+                              {row.map((cell, cellIndex) => (
+                                <td key={cellIndex} className={cellIndex === 0 ? 'metric-name' : 'metric-value'}>
+                                  {formatCell(cell)}
+                                </td>
+                              ))}
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>

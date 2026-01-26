@@ -122,13 +122,32 @@
   margin-top: 0.5rem;
 }
 
+/* Excel Title Row */
+.excel-title-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  border-radius: 12px 12px 0 0;
+  margin-bottom: 0;
+}
+
+.excel-title-cell {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .excel-table-container {
   overflow-x: auto;
   background: white;
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
   margin-bottom: 1.5rem;
-  max-height: 600px;
+  max-height: 700px;
   overflow-y: auto;
 }
 
@@ -185,9 +204,44 @@
   border-right: none;
 }
 
-.excel-table tbody tr td:first-child {
+.excel-table tbody tr td:first-child,
+.excel-table td.metric-name {
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--gray-800);
+  background: var(--gray-50);
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  min-width: 200px;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.excel-table td.metric-value {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  min-width: 70px;
+}
+
+/* Section header rows */
+.excel-table tbody tr.section-row {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+}
+
+.excel-table tbody tr.section-row td {
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.75rem 1rem;
+}
+
+.excel-table tbody tr.section-row:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .loading-excel {
@@ -198,6 +252,10 @@
 }
 
 /* Dark Mode Excel Table */
+html.dark-mode .excel-title-row {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
+}
+
 html.dark-mode .excel-preview {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   border-color: #60a5fa;
@@ -244,9 +302,23 @@ html.dark-mode .excel-table td {
   font-weight: 500;
 }
 
-html.dark-mode .excel-table tbody tr td:first-child {
-  color: #60a5fa;
+html.dark-mode .excel-table tbody tr td:first-child,
+html.dark-mode .excel-table td.metric-name {
+  color: #93c5fd;
   font-weight: 700;
+  background: #1e293b;
+}
+
+html.dark-mode .excel-table td.metric-value {
+  color: #e2e8f0;
+}
+
+html.dark-mode .excel-table tbody tr.section-row {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+}
+
+html.dark-mode .excel-table tbody tr.section-row td {
+  color: white !important;
 }
 
 html.dark-mode .file-name {

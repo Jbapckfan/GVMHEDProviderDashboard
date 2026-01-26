@@ -162,10 +162,15 @@ function KPIImageUpload() {
   }
 
   const handleFile = (selectedFile) => {
-    // Validate file type
+    // Validate file type - check both MIME type and extension
+    // (drag-and-drop from Finder can report different MIME types than file browser)
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.xlsx', '.xls']
 
-    if (!allowedTypes.includes(selectedFile.type)) {
+    const fileExtension = selectedFile.name.toLowerCase().slice(selectedFile.name.lastIndexOf('.'))
+    const isValidType = allowedTypes.includes(selectedFile.type) || allowedExtensions.includes(fileExtension)
+
+    if (!isValidType) {
       alert('Please upload an image (JPG, PNG, GIF) or Excel file (.xlsx, .xls)')
       return
     }
@@ -179,7 +184,8 @@ function KPIImageUpload() {
     setFile(selectedFile)
 
     // Create preview for images
-    if (selectedFile.type.startsWith('image/')) {
+    const isImage = selectedFile.type.startsWith('image/') || ['.jpg', '.jpeg', '.png', '.gif'].includes(fileExtension)
+    if (isImage) {
       const reader = new FileReader()
       reader.onloadend = () => {
         setPreview(reader.result)

@@ -107,37 +107,47 @@ app.get('/api/quick-links', async (req, res) => {
   }
 });
 
-// Upload KPI image/file
-app.post('/api/upload-kpi', uploadKPI.single('file'), (req, res) => {
+// Upload KPI image/file - store in database for persistence
+app.post('/api/upload-kpi', uploadKPI.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    // Read file and convert to base64
+    const filePath = path.join(uploadsDir, req.file.filename);
+    const fileData = fs.readFileSync(filePath);
+    const base64Data = fileData.toString('base64');
+
+    // Store in database
+    await db.saveFile('kpi-metrics', req.file.originalname, req.file.mimetype, base64Data, req.file.size);
+
+    // Clean up temp file
+    fs.unlinkSync(filePath);
+
     res.json({
       success: true,
-      filename: req.file.filename,
-      path: `/uploads/${req.file.filename}`,
+      filename: req.file.originalname,
+      path: `/kpi-file/download`,
       uploadedAt: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Upload error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Get current KPI file info
-app.get('/api/kpi-file', (req, res) => {
+app.get('/api/kpi-file', async (req, res) => {
   try {
-    const files = fs.readdirSync(uploadsDir);
-    const kpiFile = files.find(f => f.startsWith('kpi-metrics'));
-    if (kpiFile) {
-      const filePath = path.join(uploadsDir, kpiFile);
-      const stats = fs.statSync(filePath);
+    const file = await db.getFile('kpi-metrics');
+    if (file) {
       res.json({
         exists: true,
-        filename: kpiFile,
-        path: `/uploads/${kpiFile}`,
-        uploadedAt: stats.mtime.toISOString(),
-        size: stats.size
+        filename: file.filename,
+        path: `/kpi-file/download`,
+        uploadedAt: file.uploaded_at,
+        size: file.size
       });
     } else {
       res.json({ exists: false });
@@ -147,13 +157,34 @@ app.get('/api/kpi-file', (req, res) => {
   }
 });
 
-// Delete KPI file
-app.delete('/api/kpi-file', (req, res) => {
+// Download KPI file from database
+app.get('/api/kpi-file/download', async (req, res) => {
   try {
-    const files = fs.readdirSync(uploadsDir);
-    const kpiFile = files.find(f => f.startsWith('kpi-metrics'));
-    if (kpiFile) {
-      fs.unlinkSync(path.join(uploadsDir, kpiFile));
+    const file = await db.getFile('kpi-metrics');
+    if (!file) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Convert base64 back to buffer
+    const buffer = Buffer.from(file.data, 'base64');
+
+    // Set appropriate headers
+    res.setHeader('Content-Type', file.mimetype || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${file.filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete KPI file
+app.delete('/api/kpi-file', async (req, res) => {
+  try {
+    const file = await db.getFile('kpi-metrics');
+    if (file) {
+      await db.deleteFile('kpi-metrics');
       res.json({ success: true, message: 'File deleted' });
     } else {
       res.status(404).json({ error: 'No file found' });

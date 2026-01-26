@@ -52,10 +52,13 @@ function KPIImageUpload() {
 
   useEffect(() => {
     // Parse Excel file whenever preview changes and it's an Excel file
-    if (preview && (preview.includes('.xlsx') || preview.includes('.xls'))) {
+    // Check file name since download URL may not include extension
+    const isExcel = file?.name?.includes('.xlsx') || file?.name?.includes('.xls') ||
+                    preview?.includes('.xlsx') || preview?.includes('.xls')
+    if (preview && isExcel) {
       parseExcelFile(preview)
     }
-  }, [preview])
+  }, [preview, file])
 
   const fetchExistingFile = async () => {
     try {
@@ -296,7 +299,14 @@ function KPIImageUpload() {
           </div>
         ) : (
           <div className="preview-container">
-            {preview && !preview.startsWith('data:image') && (preview.includes('.xlsx') || preview.includes('.xls') || (file && file.name && (file.name.includes('.xlsx') || file.name.includes('.xls')))) ? (
+            {(() => {
+              const isExcelFile = file?.name?.toLowerCase().endsWith('.xlsx') ||
+                                  file?.name?.toLowerCase().endsWith('.xls') ||
+                                  preview?.includes('.xlsx') ||
+                                  preview?.includes('.xls')
+              const isImagePreview = preview?.startsWith('data:image')
+              return isExcelFile && !isImagePreview
+            })() ? (
               <div className="excel-preview">
                 <div className="excel-header">
                   <div className="excel-icon">📊</div>

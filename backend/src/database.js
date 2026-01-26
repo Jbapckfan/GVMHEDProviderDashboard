@@ -125,6 +125,19 @@ async function initializeDatabase() {
     )
   `);
 
+  // Uploaded files table (for persistent file storage)
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS uploaded_files (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      file_key TEXT UNIQUE NOT NULL,
+      filename TEXT NOT NULL,
+      mimetype TEXT,
+      data TEXT NOT NULL,
+      size INTEGER,
+      uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Seed initial data if tables are empty
   await seedData();
 }
@@ -356,6 +369,34 @@ const deleteMessage = async (id) => {
   });
 };
 
+// File storage functions
+const saveFile = async (fileKey, filename, mimetype, base64Data, size) => {
+  // Upsert - replace if exists
+  await db.execute({
+    sql: 'DELETE FROM uploaded_files WHERE file_key = ?',
+    args: [fileKey]
+  });
+  return await db.execute({
+    sql: 'INSERT INTO uploaded_files (file_key, filename, mimetype, data, size) VALUES (?, ?, ?, ?, ?)',
+    args: [fileKey, filename, mimetype, base64Data, size]
+  });
+};
+
+const getFile = async (fileKey) => {
+  const result = await db.execute({
+    sql: 'SELECT * FROM uploaded_files WHERE file_key = ?',
+    args: [fileKey]
+  });
+  return result.rows[0] || null;
+};
+
+const deleteFile = async (fileKey) => {
+  return await db.execute({
+    sql: 'DELETE FROM uploaded_files WHERE file_key = ?',
+    args: [fileKey]
+  });
+};
+
 module.exports = {
   initializeDatabase,
   getProviders,
@@ -386,5 +427,8 @@ module.exports = {
   getMessages,
   addMessage,
   updateMessage,
-  deleteMessage
+  deleteMessage,
+  saveFile,
+  getFile,
+  deleteFile
 };

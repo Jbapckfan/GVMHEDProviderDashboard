@@ -1,12 +1,13 @@
+/* ===== PHONE DIRECTORY CARD ===== */
 .phone-directory-card {
-  min-height: 800px;
+  min-height: 700px;
 }
 
 .phone-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  max-height: 900px;
+  gap: var(--space-2);
+  max-height: 800px;
   overflow-y: auto;
 }
 
@@ -14,38 +15,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.25rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
-  border-radius: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-left: 4px solid transparent;
-  border: 1px solid rgba(203, 213, 225, 0.3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition);
+  border: 1px solid var(--gray-100);
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-
-.phone-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 4px;
-  background: linear-gradient(180deg, #3b82f6, #8b5cf6);
-  transform: scaleY(0);
-  transition: transform 0.3s ease;
 }
 
 .phone-item:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(240, 249, 255, 1) 100%);
-  box-shadow: var(--shadow-lg);
-  transform: translateX(4px);
-  border-color: rgba(59, 130, 246, 0.3);
-}
-
-.phone-item:hover::before {
-  transform: scaleY(1);
+  background: white;
+  box-shadow: var(--shadow);
+  border-color: var(--gray-200);
 }
 
 .phone-item.dragging {
@@ -55,270 +36,279 @@
 
 .drag-handle {
   user-select: none;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
+  color: var(--gray-400);
 }
 
 .phone-item:hover .drag-handle {
-  color: #3b82f6;
-}
-
-html.dark-mode .drag-handle {
-  color: #64748b;
-}
-
-html.dark-mode .phone-item:hover .drag-handle {
-  color: #60a5fa;
+  color: var(--primary-500);
 }
 
 .phone-details {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 2px;
 }
 
 .phone-label {
   font-weight: 600;
   color: var(--gray-800);
-  font-size: 1rem;
+  font-size: 0.875rem;
 }
 
 .phone-extension {
   font-size: 0.75rem;
-  color: var(--gray-700);
-  font-style: italic;
+  color: var(--gray-500);
 }
 
 .phone-number {
   font-weight: 600;
-  font-size: 1.125rem;
+  font-size: 0.9375rem;
   color: white;
   text-decoration: none;
-  padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-radius: 10px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 8px 16px;
+  background: var(--primary-500);
+  border-radius: var(--radius);
+  transition: all var(--transition);
   white-space: nowrap;
-  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.phone-number::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s;
 }
 
 .phone-number:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+  background: var(--primary-600);
 }
 
-.phone-number:hover::before {
-  left: 100%;
+/* Edit button */
+.edit-phone-btn {
+  padding: 8px 14px;
+  background: var(--accent-500);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  transition: all var(--transition);
 }
 
+.edit-phone-btn:hover {
+  background: var(--accent-600);
+}
+
+/* States */
 .loading-small {
   text-align: center;
-  padding: 2rem;
-  color: var(--gray-700);
+  padding: var(--space-8);
+  color: var(--gray-500);
+  font-size: 0.875rem;
 }
 
 .empty-state {
   text-align: center;
-  padding: 3rem 2rem;
-  color: var(--gray-700);
+  padding: var(--space-8) var(--space-6);
+  color: var(--gray-500);
 }
 
 .empty-state p {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
+  font-size: 0.875rem;
 }
 
 .empty-hint {
-  font-size: 0.875rem;
-  opacity: 0.8;
+  font-size: 0.8125rem;
+  color: var(--gray-400);
 }
 
-/* Dark mode styles */
-html.dark-mode .phone-item {
-  background: linear-gradient(135deg, rgba(51, 65, 85, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
-  border-color: rgba(71, 85, 105, 0.3);
-}
-
-html.dark-mode .phone-item:hover {
-  background: linear-gradient(135deg, rgba(51, 65, 85, 1) 0%, rgba(30, 41, 59, 1) 100%);
-  border-color: rgba(96, 165, 250, 0.5);
-}
-
-html.dark-mode .phone-label {
-  color: #f1f5f9;
-  font-weight: 600;
-}
-
-html.dark-mode .phone-extension {
-  color: #cbd5e1;
-}
-
-html.dark-mode .loading-small,
-html.dark-mode .empty-state {
-  color: #cbd5e1;
-}
-
-/* Edit button styles */
-.edit-phone-btn {
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  margin-left: 0.5rem;
-}
-
-.edit-phone-btn:hover {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(139, 92, 246, 0.4);
-}
-
+/* Edit Modal */
 .phone-edit-modal {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 1000;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-6);
 }
 
 .phone-edit-form {
   background: white;
-  padding: 2rem;
-  border-radius: 16px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-  margin: 2rem auto;
-  position: relative;
-}
-
-html.dark-mode .phone-edit-form {
-  background: #1e293b;
-  color: #f1f5f9;
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  max-width: 480px;
+  width: 100%;
+  box-shadow: var(--shadow-2xl);
+  margin: auto;
 }
 
 .phone-edit-form h3 {
   margin-top: 0;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-5);
   color: var(--gray-800);
+  font-size: 1.125rem;
+  font-weight: 600;
 }
 
-html.dark-mode .phone-edit-form h3 {
-  color: #f1f5f9;
+.phone-edit-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--gray-700);
 }
 
 .phone-edit-form input {
   width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  border: 2px solid var(--gray-300);
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-html.dark-mode .phone-edit-form input {
-  background: #334155;
-  border-color: #475569;
-  color: #f1f5f9;
+  padding: 10px 12px;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  transition: border-color var(--transition-fast);
 }
 
 .phone-edit-form input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .phone-edit-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-3);
   justify-content: flex-end;
-  margin-top: 1.5rem;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--gray-100);
 }
 
 .btn-save {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  padding: 10px 20px;
+  background: var(--success-500);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all var(--transition);
 }
 
 .btn-save:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  transform: translateY(-2px);
+  background: var(--success-600);
 }
 
 .btn-cancel {
-  padding: 0.75rem 1.5rem;
-  background: var(--gray-200);
-  color: var(--gray-800);
+  padding: 10px 20px;
+  background: var(--gray-100);
+  color: var(--gray-700);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-html.dark-mode .btn-cancel {
-  background: #475569;
-  color: #f1f5f9;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all var(--transition);
 }
 
 .btn-cancel:hover {
-  background: var(--gray-300);
-  transform: translateY(-2px);
-}
-
-html.dark-mode .btn-cancel:hover {
-  background: #64748b;
+  background: var(--gray-200);
 }
 
 .btn-delete {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  padding: 10px 20px;
+  background: var(--danger-500);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all var(--transition);
   margin-right: auto;
 }
 
 .btn-delete:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  transform: translateY(-2px);
+  background: var(--danger-600);
 }
 
-/* Responsive */
+/* ===== DARK MODE ===== */
+html.dark-mode .phone-item {
+  background: var(--gray-200);
+  border-color: var(--gray-300);
+}
+
+html.dark-mode .phone-item:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+}
+
+html.dark-mode .drag-handle {
+  color: var(--gray-500);
+}
+
+html.dark-mode .phone-item:hover .drag-handle {
+  color: var(--primary-400);
+}
+
+html.dark-mode .phone-label {
+  color: var(--gray-800);
+}
+
+html.dark-mode .phone-extension {
+  color: var(--gray-600);
+}
+
+html.dark-mode .loading-small,
+html.dark-mode .empty-state {
+  color: var(--gray-600);
+}
+
+html.dark-mode .phone-edit-form {
+  background: var(--gray-100);
+}
+
+html.dark-mode .phone-edit-form h3 {
+  color: var(--gray-800);
+}
+
+html.dark-mode .phone-edit-form label {
+  color: var(--gray-700);
+}
+
+html.dark-mode .phone-edit-form input {
+  background: var(--gray-200);
+  border-color: var(--gray-300);
+  color: var(--gray-800);
+}
+
+html.dark-mode .phone-edit-form input:focus {
+  border-color: var(--primary-400);
+}
+
+html.dark-mode .phone-edit-actions {
+  border-top-color: var(--gray-200);
+}
+
+html.dark-mode .btn-cancel {
+  background: var(--gray-300);
+  color: var(--gray-700);
+}
+
+html.dark-mode .btn-cancel:hover {
+  background: var(--gray-400);
+}
+
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .phone-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .phone-number {
@@ -327,7 +317,6 @@ html.dark-mode .btn-cancel:hover {
   }
 
   .phone-edit-form {
-    width: 95%;
-    padding: 1.5rem;
+    padding: var(--space-5);
   }
 }

@@ -9,10 +9,23 @@ const db = require('./database');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Ensure uploads directory exists (ephemeral on Render, but needed for local dev)
-const uploadsDir = path.join(__dirname, '../uploads');
+// Use persistent volume in production, local directory in development
+const isProduction = process.env.NODE_ENV === 'production';
+const uploadsDir = isProduction ? '/data/uploads' : path.join(__dirname, '../uploads');
+const dbDir = isProduction ? '/data/db' : path.join(__dirname, '..');
+
+// Ensure data directories exist (important for persistent volume)
+console.log(`Environment: ${isProduction ? 'production' : 'development'}`);
+console.log(`Uploads directory: ${uploadsDir}`);
+console.log(`Database directory: ${dbDir}`);
+
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+  console.log(`Created database directory: ${dbDir}`);
+}
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log(`Created uploads directory: ${uploadsDir}`);
 }
 
 // Configure multer for file uploads
@@ -189,6 +202,139 @@ app.delete('/api/kpi-file', async (req, res) => {
     } else {
       res.status(404).json({ error: 'No file found' });
     }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// KPI Documents API (Multiple File Support)
+// ============================================
+
+// Get all KPI documents (metadata only, no file data)
+app.get('/api/kpi-documents', async (req, res) => {
+  try {
+    const documents = await db.getKPIDocuments();
+    res.json(documents);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Upload new KPI document
+app.post('/api/kpi-documents', uploadKPI.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Read file and convert to base64
+    const filePath = path.join(uploadsDir, req.file.filename);
+    const fileData = fs.readFileSync(filePath);
+    const base64Data = fileData.toString('base64');
+
+    // Use custom title if provided, otherwise use original filename without extension
+    const title = req.body.title || req.file.originalname.replace(/\.[^/.]+$/, '');
+
+    // Store in database
+    const result = await db.addKPIDocument(
+      title,
+      req.file.originalname,
+      req.file.mimetype,
+      base64Data,
+      req.file.size
+    );
+
+    // Clean up temp file
+    fs.unlinkSync(filePath);
+
+    res.json({
+      success: true,
+      id: result?.lastInsertRowid || result?.lastInsertRowId || null,
+      title: title,
+      filename: req.file.originalname,
+      uploadedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get single KPI document info
+app.get('/api/kpi-documents/:id', async (req, res) => {
+  try {
+    const doc = await db.getKPIDocument(req.params.id);
+    if (!doc) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+    // Return metadata without the file data
+    res.json({
+      id: doc.id,
+      title: doc.title,
+      filename: doc.filename,
+      mimetype: doc.mimetype,
+      size: doc.size,
+      display_order: doc.display_order,
+      uploaded_at: doc.uploaded_at
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Download KPI document
+app.get('/api/kpi-documents/:id/download', async (req, res) => {
+  try {
+    const doc = await db.getKPIDocument(req.params.id);
+    if (!doc) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    // Convert base64 back to buffer
+    const buffer = Buffer.from(doc.data, 'base64');
+
+    // Set appropriate headers
+    res.setHeader('Content-Type', doc.mimetype || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${doc.filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update KPI document title
+app.put('/api/kpi-documents/:id', async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+    await db.updateKPIDocumentTitle(req.params.id, title);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update document order (for reordering tabs)
+app.put('/api/kpi-documents/:id/order', async (req, res) => {
+  try {
+    const { display_order } = req.body;
+    await db.updateKPIDocumentOrder(req.params.id, display_order);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete KPI document
+app.delete('/api/kpi-documents/:id', async (req, res) => {
+  try {
+    await db.deleteKPIDocument(req.params.id);
+    res.json({ success: true, message: 'Document deleted' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

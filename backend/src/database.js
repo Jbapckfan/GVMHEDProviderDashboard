@@ -1,10 +1,26 @@
 const { createClient } = require('@libsql/client');
+const fs = require('fs');
+const path = require('path');
+
+// Determine database path - use persistent volume in production
+const isProduction = process.env.NODE_ENV === 'production';
+const dbDir = isProduction ? '/data/db' : __dirname;
+const defaultDbPath = isProduction ? 'file:/data/db/local.db' : 'file:local.db';
+
+// Ensure database directory exists before connecting
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+  console.log(`Created database directory: ${dbDir}`);
+}
 
 // Create Turso client
 const db = createClient({
-  url: process.env.TURSO_DATABASE_URL || 'file:local.db',
+  url: process.env.TURSO_DATABASE_URL || defaultDbPath,
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
+
+console.log(`Database connecting to: ${process.env.TURSO_DATABASE_URL || defaultDbPath}`);
+console.log(`Database directory: ${dbDir}`);
 
 // Initialize database schema
 async function initializeDatabase() {
@@ -134,6 +150,20 @@ async function initializeDatabase() {
       mimetype TEXT,
       data TEXT NOT NULL,
       size INTEGER,
+      uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // KPI Documents table (for multiple document uploads with custom titles)
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS kpi_documents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      filename TEXT NOT NULL,
+      mimetype TEXT,
+      data TEXT NOT NULL,
+      size INTEGER,
+      display_order INTEGER DEFAULT 0,
       uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -397,6 +427,52 @@ const deleteFile = async (fileKey) => {
   });
 };
 
+// KPI Documents functions (multiple file support)
+const getKPIDocuments = async () => {
+  const result = await db.execute('SELECT id, title, filename, mimetype, size, display_order, uploaded_at FROM kpi_documents ORDER BY display_order, uploaded_at DESC');
+  return result.rows;
+};
+
+const getKPIDocument = async (id) => {
+  const result = await db.execute({
+    sql: 'SELECT * FROM kpi_documents WHERE id = ?',
+    args: [id]
+  });
+  return result.rows[0] || null;
+};
+
+const addKPIDocument = async (title, filename, mimetype, base64Data, size) => {
+  // Get max display_order
+  const orderResult = await db.execute('SELECT MAX(display_order) as maxOrder FROM kpi_documents');
+  const maxOrder = orderResult.rows[0]?.maxOrder || 0;
+
+  return await db.execute({
+    sql: 'INSERT INTO kpi_documents (title, filename, mimetype, data, size, display_order) VALUES (?, ?, ?, ?, ?, ?)',
+    args: [title, filename, mimetype, base64Data, size, maxOrder + 1]
+  });
+};
+
+const updateKPIDocumentTitle = async (id, title) => {
+  return await db.execute({
+    sql: 'UPDATE kpi_documents SET title = ? WHERE id = ?',
+    args: [title, id]
+  });
+};
+
+const updateKPIDocumentOrder = async (id, displayOrder) => {
+  return await db.execute({
+    sql: 'UPDATE kpi_documents SET display_order = ? WHERE id = ?',
+    args: [displayOrder, id]
+  });
+};
+
+const deleteKPIDocument = async (id) => {
+  return await db.execute({
+    sql: 'DELETE FROM kpi_documents WHERE id = ?',
+    args: [id]
+  });
+};
+
 module.exports = {
   initializeDatabase,
   getProviders,
@@ -430,5 +506,11 @@ module.exports = {
   deleteMessage,
   saveFile,
   getFile,
-  deleteFile
+  deleteFile,
+  getKPIDocuments,
+  getKPIDocument,
+  addKPIDocument,
+  updateKPIDocumentTitle,
+  updateKPIDocumentOrder,
+  deleteKPIDocument
 };

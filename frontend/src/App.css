@@ -44,6 +44,13 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+.header-logo {
+  height: 36px;
+  width: auto;
+  filter: brightness(0) invert(1);
+  transition: filter 0.3s ease;
+}
+
 .header-info {
   display: flex;
   align-items: center;

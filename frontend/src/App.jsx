@@ -181,7 +181,7 @@ function App() {
     <div className="app">
       <header className="header">
         <div className="header-content">
-          <h1>{'\u{1F3E5}'} GVMH ED Provider Dashboard</h1>
+          <h1><img src="/gvmh-logo.png" alt="GVMH" className="header-logo" /> ED Provider Dashboard</h1>
           <div className="header-info">
             <span className="status-dot"></span>
             <span className="last-updated">

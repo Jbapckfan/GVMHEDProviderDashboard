@@ -305,33 +305,6 @@ html.dark-mode .qr-code {
   overflow: hidden;
 }
 
-.dashboard-section.dragging {
-  opacity: 0.4;
-  transform: scale(0.98);
-}
-
-/* Drop indicator lines */
-.dashboard-section.drop-before::before,
-.dashboard-section.drop-after::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: #3b82f6;
-  border-radius: 2px;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
-  z-index: 10;
-  pointer-events: none;
-}
-
-.dashboard-section.drop-before::before {
-  top: -10px;
-}
-
-.dashboard-section.drop-after::after {
-  bottom: -10px;
-}
 
 /* Section content wrapper */
 .section-content {
@@ -346,32 +319,47 @@ html.dark-mode .qr-code {
 .section-toolbar {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  padding: 6px 10px;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
   background: var(--gray-100, #f1f5f9);
   border-bottom: 1px solid var(--gray-200, #e2e8f0);
 }
 
-/* Drag handle */
-.drag-handle {
-  cursor: grab;
-  user-select: none;
-  font-size: 1.25rem;
+.toolbar-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-500, #64748b);
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Move up/down buttons */
+.move-btn {
+  background: none;
+  border: 1px solid var(--gray-200, #e2e8f0);
+  cursor: pointer;
+  font-size: 0.7rem;
   line-height: 1;
-  padding: 2px 6px;
-  border-radius: var(--radius);
-  color: var(--gray-400);
-  transition: color 0.15s ease, background 0.15s ease;
+  padding: 5px 10px;
+  border-radius: var(--radius, 6px);
+  color: var(--gray-500, #64748b);
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
-.drag-handle:hover {
-  color: var(--gray-700);
-  background: rgba(0, 0, 0, 0.06);
+.move-btn:hover:not(:disabled) {
+  color: var(--gray-800, #1e293b);
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--gray-300, #cbd5e1);
 }
 
-.drag-handle:active {
-  cursor: grabbing;
+.move-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 /* Collapse / Expand buttons */
@@ -424,7 +412,7 @@ html.dark-mode .qr-code {
   flex: 1;
 }
 
-.collapsed-bar .expand-btn {
+.collapsed-bar .toolbar-actions {
   margin-left: auto;
 }
 
@@ -491,13 +479,19 @@ html.dark-mode .section-toolbar {
   border-bottom-color: #334155;
 }
 
-html.dark-mode .drag-handle {
-  color: #64748b;
+html.dark-mode .toolbar-title {
+  color: #94a3b8;
 }
 
-html.dark-mode .drag-handle:hover {
+html.dark-mode .move-btn {
+  color: #94a3b8;
+  border-color: #475569;
+}
+
+html.dark-mode .move-btn:hover:not(:disabled) {
   color: #e2e8f0;
   background: rgba(255, 255, 255, 0.08);
+  border-color: #64748b;
 }
 
 html.dark-mode .collapse-btn,

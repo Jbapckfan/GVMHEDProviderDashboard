@@ -298,6 +298,11 @@ html.dark-mode .qr-code {
 .dashboard-section {
   position: relative;
   transition: opacity 0.2s ease, transform 0.2s ease;
+  background: white;
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
 }
 
 .dashboard-section.dragging {
@@ -337,27 +342,15 @@ html.dark-mode .qr-code {
   display: none;
 }
 
-/* Hover toolbar overlay */
+/* Section toolbar — always visible */
 .section-toolbar {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  z-index: 5;
-  padding: 4px 6px;
-  border-radius: var(--radius);
-  background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.7));
-  backdrop-filter: blur(4px);
-  pointer-events: none;
-}
-
-.section-content:hover .section-toolbar {
-  opacity: 1;
-  pointer-events: auto;
+  padding: 6px 10px;
+  background: var(--gray-100, #f1f5f9);
+  border-bottom: 1px solid var(--gray-200, #e2e8f0);
 }
 
 /* Drag handle */
@@ -488,8 +481,14 @@ html.dark-mode .collapsed-title {
   color: #e2e8f0;
 }
 
+html.dark-mode .dashboard-section {
+  background: var(--gray-100, #1e293b);
+  border-color: var(--gray-200, #334155);
+}
+
 html.dark-mode .section-toolbar {
-  background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(30,41,59,0.75));
+  background: #1e293b;
+  border-bottom-color: #334155;
 }
 
 html.dark-mode .drag-handle {
@@ -553,9 +552,4 @@ html.dark-mode .expand-btn:hover {
     border-radius: var(--radius-lg);
   }
 
-  /* Toolbar always visible on mobile (no hover) */
-  .section-toolbar {
-    opacity: 1;
-    pointer-events: auto;
-  }
 }

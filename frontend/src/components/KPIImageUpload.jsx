@@ -42,6 +42,13 @@ function KPIImageUpload() {
   const [loadingContent, setLoadingContent] = useState({})
   const fileInputRef = useRef(null)
 
+  // Annotations state
+  const [annotations, setAnnotations] = useState([])
+  const [loadingAnnotations, setLoadingAnnotations] = useState(false)
+  const [showAnnotationForm, setShowAnnotationForm] = useState(false)
+  const [annotationForm, setAnnotationForm] = useState({ content: '', author: '', annotation_type: 'comment' })
+  const [editingAnnotation, setEditingAnnotation] = useState(null)
+
   useEffect(() => {
     fetchDocuments()
   }, [])
@@ -50,6 +57,15 @@ function KPIImageUpload() {
   useEffect(() => {
     if (activeDocId && !excelData[activeDocId]) {
       loadDocumentContent(activeDocId)
+    }
+  }, [activeDocId])
+
+  // Fetch annotations when active document changes
+  useEffect(() => {
+    if (activeDocId) {
+      fetchAnnotations(activeDocId)
+    } else {
+      setAnnotations([])
     }
   }, [activeDocId])
 
@@ -143,6 +159,90 @@ function KPIImageUpload() {
         ...prev,
         [docId]: { type: 'error', message: error.message }
       }))
+    }
+  }
+
+  const fetchAnnotations = async (docId) => {
+    setLoadingAnnotations(true)
+    try {
+      const response = await axios.get(`${API_BASE}/kpi-documents/${docId}/annotations`)
+      setAnnotations(response.data)
+    } catch (error) {
+      console.error('Error fetching annotations:', error)
+      setAnnotations([])
+    } finally {
+      setLoadingAnnotations(false)
+    }
+  }
+
+  const handleAddAnnotation = async () => {
+    if (!annotationForm.content.trim() || !activeDocId) return
+
+    try {
+      await axios.post(`${API_BASE}/kpi-documents/${activeDocId}/annotations`, {
+        content: annotationForm.content,
+        author: annotationForm.author || 'Anonymous',
+        annotation_type: annotationForm.annotation_type
+      })
+      setAnnotationForm({ content: '', author: '', annotation_type: 'comment' })
+      setShowAnnotationForm(false)
+      fetchAnnotations(activeDocId)
+    } catch (error) {
+      console.error('Error adding annotation:', error)
+      alert('Failed to add annotation')
+    }
+  }
+
+  const handleUpdateAnnotation = async (id) => {
+    if (!annotationForm.content.trim() || !activeDocId) return
+
+    try {
+      await axios.put(`${API_BASE}/kpi-documents/${activeDocId}/annotations/${id}`, {
+        content: annotationForm.content,
+        author: annotationForm.author || 'Anonymous',
+        annotation_type: annotationForm.annotation_type
+      })
+      setEditingAnnotation(null)
+      setAnnotationForm({ content: '', author: '', annotation_type: 'comment' })
+      fetchAnnotations(activeDocId)
+    } catch (error) {
+      console.error('Error updating annotation:', error)
+      alert('Failed to update annotation')
+    }
+  }
+
+  const handleDeleteAnnotation = async (id) => {
+    if (!window.confirm('Delete this annotation?')) return
+
+    try {
+      await axios.delete(`${API_BASE}/kpi-documents/${activeDocId}/annotations/${id}`)
+      fetchAnnotations(activeDocId)
+    } catch (error) {
+      console.error('Error deleting annotation:', error)
+      alert('Failed to delete annotation')
+    }
+  }
+
+  const startEditAnnotation = (annotation) => {
+    setEditingAnnotation(annotation.id)
+    setAnnotationForm({
+      content: annotation.content,
+      author: annotation.author,
+      annotation_type: annotation.annotation_type
+    })
+    setShowAnnotationForm(false)
+  }
+
+  const cancelAnnotationEdit = () => {
+    setEditingAnnotation(null)
+    setAnnotationForm({ content: '', author: '', annotation_type: 'comment' })
+  }
+
+  const getTypeBadgeClass = (type) => {
+    switch (type) {
+      case 'highlight': return 'annotation-type-badge badge-highlight'
+      case 'flag': return 'annotation-type-badge badge-flag'
+      default: return 'annotation-type-badge badge-comment'
     }
   }
 
@@ -507,6 +607,133 @@ function KPIImageUpload() {
               </div>
             )}
             {renderDocumentContent()}
+
+            {/* Annotations Panel */}
+            {activeDoc && (
+              <div className="annotations-panel">
+                <div className="annotations-header">
+                  <h3>Annotations</h3>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => {
+                      setShowAnnotationForm(!showAnnotationForm)
+                      setEditingAnnotation(null)
+                      setAnnotationForm({ content: '', author: '', annotation_type: 'comment' })
+                    }}
+                  >
+                    {showAnnotationForm ? 'Cancel' : '+ Add Note'}
+                  </button>
+                </div>
+
+                {/* Add annotation form */}
+                {showAnnotationForm && (
+                  <div className="annotation-form">
+                    <input
+                      type="text"
+                      placeholder="Your name (optional)"
+                      value={annotationForm.author}
+                      onChange={(e) => setAnnotationForm(prev => ({ ...prev, author: e.target.value }))}
+                      className="annotation-input"
+                    />
+                    <textarea
+                      placeholder="Write your note..."
+                      value={annotationForm.content}
+                      onChange={(e) => setAnnotationForm(prev => ({ ...prev, content: e.target.value }))}
+                      className="annotation-textarea"
+                      rows={3}
+                    />
+                    <div className="annotation-form-actions">
+                      <select
+                        value={annotationForm.annotation_type}
+                        onChange={(e) => setAnnotationForm(prev => ({ ...prev, annotation_type: e.target.value }))}
+                        className="annotation-type-select"
+                      >
+                        <option value="comment">Comment</option>
+                        <option value="highlight">Highlight</option>
+                        <option value="flag">Flag</option>
+                      </select>
+                      <button className="btn btn-success btn-sm" onClick={handleAddAnnotation}>
+                        Post
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Annotations list */}
+                {loadingAnnotations ? (
+                  <div className="loading-content">
+                    <div className="spinner-small"></div>
+                    <span>Loading annotations...</span>
+                  </div>
+                ) : annotations.length > 0 ? (
+                  <div className="annotations-list">
+                    {annotations.map(annotation => (
+                      <div key={annotation.id} className="annotation-item">
+                        {editingAnnotation === annotation.id ? (
+                          <div className="annotation-form">
+                            <input
+                              type="text"
+                              placeholder="Your name"
+                              value={annotationForm.author}
+                              onChange={(e) => setAnnotationForm(prev => ({ ...prev, author: e.target.value }))}
+                              className="annotation-input"
+                            />
+                            <textarea
+                              value={annotationForm.content}
+                              onChange={(e) => setAnnotationForm(prev => ({ ...prev, content: e.target.value }))}
+                              className="annotation-textarea"
+                              rows={3}
+                            />
+                            <div className="annotation-form-actions">
+                              <select
+                                value={annotationForm.annotation_type}
+                                onChange={(e) => setAnnotationForm(prev => ({ ...prev, annotation_type: e.target.value }))}
+                                className="annotation-type-select"
+                              >
+                                <option value="comment">Comment</option>
+                                <option value="highlight">Highlight</option>
+                                <option value="flag">Flag</option>
+                              </select>
+                              <div className="annotation-edit-buttons">
+                                <button className="btn btn-success btn-sm" onClick={() => handleUpdateAnnotation(annotation.id)}>
+                                  Save
+                                </button>
+                                <button className="btn btn-secondary btn-sm" onClick={cancelAnnotationEdit}>
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="annotation-meta">
+                              <span className="annotation-author">{annotation.author}</span>
+                              <span className={getTypeBadgeClass(annotation.annotation_type)}>
+                                {annotation.annotation_type}
+                              </span>
+                              <span className="annotation-date">
+                                {new Date(annotation.created_at).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="annotation-content">{annotation.content}</p>
+                            <div className="annotation-actions">
+                              <button className="annotation-action-btn" onClick={() => startEditAnnotation(annotation)}>
+                                Edit
+                              </button>
+                              <button className="annotation-action-btn action-delete" onClick={() => handleDeleteAnnotation(annotation.id)}>
+                                Delete
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="no-annotations">No annotations yet. Be the first to add a note.</p>
+                )}
+              </div>
+            )}
 
             {/* Drop zone for adding more files */}
             <div

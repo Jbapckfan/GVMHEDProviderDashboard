@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
+const net = require('net');
 const db = require('./database');
 
 const app = express();
@@ -335,6 +336,67 @@ app.delete('/api/kpi-documents/:id', async (req, res) => {
   try {
     await db.deleteKPIDocument(req.params.id);
     res.json({ success: true, message: 'Document deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// KPI Document Annotations API
+// ============================================
+
+// Get annotations for a document
+app.get('/api/kpi-documents/:docId/annotations', async (req, res) => {
+  try {
+    const annotations = await db.getAnnotations(req.params.docId);
+    res.json(annotations);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add annotation to a document
+app.post('/api/kpi-documents/:docId/annotations', async (req, res) => {
+  try {
+    const { content, author, annotation_type } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+    const result = await db.addAnnotation({
+      document_id: req.params.docId,
+      content: content.trim(),
+      author: author || 'Anonymous',
+      annotation_type: annotation_type || 'comment'
+    });
+    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update annotation
+app.put('/api/kpi-documents/:docId/annotations/:id', async (req, res) => {
+  try {
+    const { content, author, annotation_type } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+    await db.updateAnnotation(req.params.id, {
+      content: content.trim(),
+      author: author || 'Anonymous',
+      annotation_type: annotation_type || 'comment'
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete annotation
+app.delete('/api/kpi-documents/:docId/annotations/:id', async (req, res) => {
+  try {
+    await db.deleteAnnotation(req.params.id);
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -1014,6 +1076,120 @@ app.get('/api/schedule-data', async (req, res) => {
   } catch (error) {
     console.error('Error fetching schedule:', error);
     res.status(500).json({ error: 'Failed to fetch schedule data' });
+  }
+});
+
+// ============================================
+// Hospitalist Pager (SNPP)
+// ============================================
+
+function sendSNPP(pagerNumber, message) {
+  return new Promise((resolve, reject) => {
+    const socket = new net.Socket();
+    let phase = 'greeting';
+    let buffer = '';
+    let settled = false;
+
+    const finish = (err, result) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      socket.destroy();
+      if (err) reject(err);
+      else resolve(result);
+    };
+
+    const timer = setTimeout(() => {
+      finish(new Error('SNPP connection timed out after 15 seconds'));
+    }, 15000);
+
+    socket.connect(444, 'snpp.amsmsg.net', () => {
+      // connected — wait for greeting
+    });
+
+    socket.on('data', (data) => {
+      buffer += data.toString();
+      const lines = buffer.split('\r\n');
+      buffer = lines.pop(); // keep incomplete tail
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const code = parseInt(line.substring(0, 3), 10);
+
+        if (phase === 'greeting') {
+          if (code === 220) {
+            phase = 'page';
+            socket.write(`PAGE ${pagerNumber}\r\n`);
+          } else {
+            finish(new Error(`Unexpected greeting (${code}): ${line}`));
+          }
+        } else if (phase === 'page') {
+          if (code === 250) {
+            phase = 'mess';
+            socket.write(`MESS ${message}\r\n`);
+          } else {
+            finish(new Error(`PAGE command failed (${code}): ${line}`));
+          }
+        } else if (phase === 'mess') {
+          if (code === 250) {
+            phase = 'send';
+            socket.write('SEND\r\n');
+          } else {
+            finish(new Error(`MESS command failed (${code}): ${line}`));
+          }
+        } else if (phase === 'send') {
+          if (code === 250) {
+            phase = 'quit';
+            socket.write('QUIT\r\n');
+            finish(null, { statusCode: 250, detail: line });
+          } else {
+            finish(new Error(`SEND command failed (${code}): ${line}`));
+          }
+        } else if (phase === 'quit') {
+          // 221 goodbye — already resolved
+        }
+      }
+    });
+
+    socket.on('error', (err) => {
+      finish(new Error(`TCP connection error: ${err.message}`));
+    });
+
+    socket.on('close', () => {
+      finish(new Error('Connection closed unexpectedly before page was confirmed'));
+    });
+  });
+}
+
+app.post('/api/page-hospitalist', async (req, res) => {
+  try {
+    const pagerNumber = process.env.HOSPITALIST_PAGER_NUMBER;
+    if (!pagerNumber) {
+      return res.status(500).json({
+        success: false,
+        error: 'Hospitalist pager number is not configured. Contact the administrator.'
+      });
+    }
+
+    const { senderName, message } = req.body;
+
+    if (!senderName || !senderName.trim()) {
+      return res.status(400).json({ success: false, error: 'Sender name is required.' });
+    }
+    if (!message || !message.trim()) {
+      return res.status(400).json({ success: false, error: 'Message is required.' });
+    }
+    if (message.length > 240) {
+      return res.status(400).json({ success: false, error: 'Message exceeds 240 character limit.' });
+    }
+
+    console.log(`[Pager] Sending page from: ${senderName.trim()} at ${new Date().toISOString()}`);
+
+    const result = await sendSNPP(pagerNumber, message);
+    res.json({ success: true, statusCode: result.statusCode });
+  } catch (error) {
+    console.error('[Pager] Send failed:', error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

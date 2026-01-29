@@ -609,6 +609,276 @@ html.dark-mode .drop-zone:hover {
   border-color: #60a5fa;
 }
 
+/* ===== ANNOTATIONS PANEL ===== */
+.annotations-panel {
+  margin-top: 1.5rem;
+  border-top: 2px solid var(--gray-200);
+  padding-top: 1.5rem;
+}
+
+.annotations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.annotations-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.annotation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid var(--gray-200);
+}
+
+.annotation-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background: white;
+  color: var(--gray-800);
+}
+
+.annotation-textarea {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+  background: white;
+  color: var(--gray-800);
+}
+
+.annotation-input:focus,
+.annotation-textarea:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.annotation-form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.annotation-type-select {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 0.813rem;
+  font-family: inherit;
+  background: white;
+  color: var(--gray-700);
+  cursor: pointer;
+}
+
+.annotation-edit-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.annotations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.annotation-item {
+  padding: 1rem;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  transition: box-shadow 0.2s ease;
+}
+
+.annotation-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.annotation-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.annotation-author {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--gray-800);
+}
+
+.annotation-type-badge {
+  font-size: 0.688rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-comment {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-highlight {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-flag {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.annotation-date {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-left: auto;
+}
+
+.annotation-content {
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.annotation-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.annotation-action-btn {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: 0.125rem 0;
+  transition: color 0.2s;
+}
+
+.annotation-action-btn:hover {
+  color: var(--primary-500);
+}
+
+.annotation-action-btn.action-delete:hover {
+  color: #dc2626;
+}
+
+.no-annotations {
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.875rem;
+  padding: 1.5rem;
+  font-style: italic;
+}
+
+/* Annotations Dark Mode */
+html.dark-mode .annotations-panel {
+  border-top-color: #475569;
+}
+
+html.dark-mode .annotations-header h3 {
+  color: #e2e8f0;
+}
+
+html.dark-mode .annotation-form {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+html.dark-mode .annotation-input,
+html.dark-mode .annotation-textarea {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+html.dark-mode .annotation-input:focus,
+html.dark-mode .annotation-textarea:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+}
+
+html.dark-mode .annotation-type-select {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+html.dark-mode .annotation-item {
+  background: #334155;
+  border-color: #475569;
+}
+
+html.dark-mode .annotation-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+html.dark-mode .annotation-author {
+  color: #e2e8f0;
+}
+
+html.dark-mode .badge-comment {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+
+html.dark-mode .badge-highlight {
+  background: #422006;
+  color: #fbbf24;
+}
+
+html.dark-mode .badge-flag {
+  background: #450a0a;
+  color: #fca5a5;
+}
+
+html.dark-mode .annotation-date {
+  color: #94a3b8;
+}
+
+html.dark-mode .annotation-content {
+  color: #cbd5e1;
+}
+
+html.dark-mode .annotation-action-btn {
+  color: #94a3b8;
+}
+
+html.dark-mode .annotation-action-btn:hover {
+  color: #60a5fa;
+}
+
+html.dark-mode .annotation-action-btn.action-delete:hover {
+  color: #f87171;
+}
+
+html.dark-mode .no-annotations {
+  color: #94a3b8;
+}
+
 .preview-actions {
   display: flex;
   gap: 1rem;

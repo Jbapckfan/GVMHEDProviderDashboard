@@ -13,6 +13,7 @@
   top: 0;
   z-index: 100;
   box-shadow: 0 4px 20px rgba(30, 64, 175, 0.25);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .header-content {
@@ -81,6 +82,17 @@
 
 .refresh-btn:active {
   transform: translateY(0);
+}
+
+.dark-mode-toggle {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+}
+
+.dark-mode-toggle:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* ===== QR CODE DROPDOWN ===== */
@@ -169,7 +181,7 @@ html.dark-mode .qr-code {
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   box-shadow: var(--shadow-card);
-  transition: all var(--transition-slow);
+  transition: all var(--transition-slow), background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   border: 1px solid var(--gray-100);
   position: relative;
 }
@@ -256,6 +268,7 @@ html.dark-mode .qr-code {
   padding: var(--space-4);
   font-size: 0.8125rem;
   font-weight: 500;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ===== LOADING STATES ===== */
@@ -281,6 +294,147 @@ html.dark-mode .qr-code {
   to { transform: rotate(360deg); }
 }
 
+/* ===== DASHBOARD SECTIONS (Collapsible + DnD) ===== */
+.dashboard-section {
+  position: relative;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dashboard-section.dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+}
+
+/* Drop indicator lines */
+.dashboard-section.drop-before::before,
+.dashboard-section.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #3b82f6;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.dashboard-section.drop-before::before {
+  top: -10px;
+}
+
+.dashboard-section.drop-after::after {
+  bottom: -10px;
+}
+
+/* Section content wrapper */
+.section-content {
+  position: relative;
+}
+
+.section-hidden {
+  display: none;
+}
+
+/* Hover toolbar overlay */
+.section-toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 5;
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.7));
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+
+.section-content:hover .section-toolbar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Drag handle */
+.drag-handle {
+  cursor: grab;
+  user-select: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: var(--radius);
+  color: var(--gray-400);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.drag-handle:hover {
+  color: var(--gray-700);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Collapse / Expand buttons */
+.collapse-btn,
+.expand-btn {
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  color: var(--gray-500);
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.collapse-btn:hover,
+.expand-btn:hover {
+  color: var(--gray-800);
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--gray-200);
+}
+
+/* Collapsed bar */
+.collapsed-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 48px;
+  padding: 0 var(--space-4);
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.collapsed-bar:hover {
+  background: var(--gray-200);
+}
+
+.collapsed-icon {
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.collapsed-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  flex: 1;
+}
+
+.collapsed-bar .expand-btn {
+  margin-left: auto;
+}
+
 /* ===== DARK MODE ===== */
 html.dark-mode .header {
   background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
@@ -290,6 +444,12 @@ html.dark-mode .header {
 html.dark-mode .card {
   background: var(--gray-100);
   border-color: var(--gray-200);
+  box-shadow: var(--shadow-card), 0 0 0 1px rgba(96, 165, 250, 0.05);
+}
+
+html.dark-mode .card:hover {
+  border-color: rgba(96, 165, 250, 0.2);
+  box-shadow: var(--shadow-card-hover), 0 0 0 1px rgba(96, 165, 250, 0.1);
 }
 
 html.dark-mode .card-header {
@@ -312,6 +472,45 @@ html.dark-mode .btn-secondary {
 
 html.dark-mode .btn-secondary:hover:not(:disabled) {
   background: var(--gray-300);
+}
+
+/* Dark mode: dashboard section elements */
+html.dark-mode .collapsed-bar {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+html.dark-mode .collapsed-bar:hover {
+  background: #334155;
+}
+
+html.dark-mode .collapsed-title {
+  color: #e2e8f0;
+}
+
+html.dark-mode .section-toolbar {
+  background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(30,41,59,0.75));
+}
+
+html.dark-mode .drag-handle {
+  color: #64748b;
+}
+
+html.dark-mode .drag-handle:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html.dark-mode .collapse-btn,
+html.dark-mode .expand-btn {
+  color: #94a3b8;
+}
+
+html.dark-mode .collapse-btn:hover,
+html.dark-mode .expand-btn:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #475569;
 }
 
 /* ===== RESPONSIVE ===== */
@@ -352,5 +551,11 @@ html.dark-mode .btn-secondary:hover:not(:disabled) {
   .card {
     padding: var(--space-4);
     border-radius: var(--radius-lg);
+  }
+
+  /* Toolbar always visible on mobile (no hover) */
+  .section-toolbar {
+    opacity: 1;
+    pointer-events: auto;
   }
 }

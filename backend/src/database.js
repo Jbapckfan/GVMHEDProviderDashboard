@@ -168,6 +168,18 @@ async function initializeDatabase() {
     )
   `);
 
+  // KPI Document Annotations table
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS kpi_document_annotations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      document_id INTEGER NOT NULL,
+      content TEXT NOT NULL,
+      author TEXT DEFAULT 'Anonymous',
+      annotation_type TEXT DEFAULT 'comment',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Seed initial data if tables are empty
   await seedData();
 }
@@ -467,8 +479,43 @@ const updateKPIDocumentOrder = async (id, displayOrder) => {
 };
 
 const deleteKPIDocument = async (id) => {
+  // Also delete associated annotations
+  await db.execute({
+    sql: 'DELETE FROM kpi_document_annotations WHERE document_id = ?',
+    args: [id]
+  });
   return await db.execute({
     sql: 'DELETE FROM kpi_documents WHERE id = ?',
+    args: [id]
+  });
+};
+
+// KPI Document Annotations functions
+const getAnnotations = async (documentId) => {
+  const result = await db.execute({
+    sql: 'SELECT * FROM kpi_document_annotations WHERE document_id = ? ORDER BY created_at DESC',
+    args: [documentId]
+  });
+  return result.rows;
+};
+
+const addAnnotation = async (data) => {
+  return await db.execute({
+    sql: 'INSERT INTO kpi_document_annotations (document_id, content, author, annotation_type) VALUES (?, ?, ?, ?)',
+    args: [data.document_id, data.content, data.author || 'Anonymous', data.annotation_type || 'comment']
+  });
+};
+
+const updateAnnotation = async (id, data) => {
+  return await db.execute({
+    sql: 'UPDATE kpi_document_annotations SET content = ?, author = ?, annotation_type = ? WHERE id = ?',
+    args: [data.content, data.author || 'Anonymous', data.annotation_type || 'comment', id]
+  });
+};
+
+const deleteAnnotation = async (id) => {
+  return await db.execute({
+    sql: 'DELETE FROM kpi_document_annotations WHERE id = ?',
     args: [id]
   });
 };
@@ -512,5 +559,9 @@ module.exports = {
   addKPIDocument,
   updateKPIDocumentTitle,
   updateKPIDocumentOrder,
-  deleteKPIDocument
+  deleteKPIDocument,
+  getAnnotations,
+  addAnnotation,
+  updateAnnotation,
+  deleteAnnotation
 };

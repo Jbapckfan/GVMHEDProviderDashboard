@@ -27,6 +27,21 @@ const FAST_TRACK_BEDS = [
   { label: 'FT5', value: 'FT5' },
 ]
 
+const PROVIDERS = [
+  'Dr. Alford',
+  'Dr. Anderson',
+  'Dr. Beck',
+  'Dr. Boylan',
+  'Dr. Epema',
+  'Dr. Hakala',
+  'Dr. Lucas',
+  'Dr. Watts',
+  'Toni Gutierrez, NP',
+  'Kirsten McGuire, NP',
+  'Teri Ficken, NP',
+  'Angie Reffitt, NP',
+]
+
 const MAX_CHARS = 240
 
 function HospitalistPager() {
@@ -180,14 +195,17 @@ function HospitalistPager() {
       {/* Sender Name */}
       <div className="pager-field">
         <label className="pager-label" htmlFor="pager-sender">Your Name</label>
-        <input
+        <select
           id="pager-sender"
-          type="text"
           className="pager-input"
-          placeholder="Dr. Smith"
           value={senderName}
           onChange={(e) => setSenderName(e.target.value)}
-        />
+        >
+          <option value="">-- Select Provider --</option>
+          {PROVIDERS.map(name => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
       </div>
 
       {/* Diagnosis / Reason */}

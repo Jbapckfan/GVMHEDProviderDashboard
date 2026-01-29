@@ -38,6 +38,9 @@ const SECTION_COMPONENTS = {
 const VALID_IDS = new Set(DEFAULT_SECTIONS.map(s => s.id))
 const DEFAULT_ORDER = DEFAULT_SECTIONS.map(s => s.id)
 
+// Sections that must stay full-width (layout breaks otherwise)
+const FULL_WIDTH_ONLY = new Set(['schedule'])
+
 // --- localStorage helpers with stale-data reconciliation ---
 function getInitialOrder() {
   try {
@@ -73,6 +76,24 @@ function getInitialCollapsed() {
   }
 }
 
+function getInitialSizes() {
+  try {
+    const raw = localStorage.getItem('dashboard-section-sizes')
+    if (!raw) return {}
+    const stored = JSON.parse(raw)
+    if (typeof stored !== 'object' || stored === null) return {}
+    const result = {}
+    for (const id of Object.keys(stored)) {
+      if (VALID_IDS.has(id) && (stored[id] === 'full' || stored[id] === 'half')) {
+        result[id] = stored[id]
+      }
+    }
+    return result
+  } catch {
+    return {}
+  }
+}
+
 function App() {
   const [lastUpdated, setLastUpdated] = useState(new Date())
   const [darkMode, setDarkMode] = useState(() => {
@@ -81,11 +102,10 @@ function App() {
   })
   const [showQR, setShowQR] = useState(false)
 
-  // Section order + collapsed state (persisted to localStorage)
+  // Section order + collapsed + sizes state (persisted to localStorage)
   const [sectionOrder, setSectionOrder] = useState(getInitialOrder)
   const [collapsedSections, setCollapsedSections] = useState(getInitialCollapsed)
-
-  // (drag state removed — using button-based reorder instead)
+  const [sectionSizes, setSectionSizes] = useState(getInitialSizes)
 
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(siteUrl)}`
@@ -105,6 +125,11 @@ function App() {
     try { localStorage.setItem('dashboard-collapsed', JSON.stringify(collapsedSections)) } catch {}
   }, [collapsedSections])
 
+  // Persist section sizes
+  useEffect(() => {
+    try { localStorage.setItem('dashboard-section-sizes', JSON.stringify(sectionSizes)) } catch {}
+  }, [sectionSizes])
+
   const handleRefresh = () => {
     setLastUpdated(new Date())
     window.location.reload()
@@ -118,13 +143,23 @@ function App() {
     })
   }, [])
 
+  // --- Toggle section size ---
+  const toggleSize = useCallback((id) => {
+    setSectionSizes(prev => {
+      const current = prev[id] || 'full'
+      return { ...prev, [id]: current === 'full' ? 'half' : 'full' }
+    })
+  }, [])
+
   // --- Reset Layout ---
   const resetLayout = useCallback(() => {
     setSectionOrder(DEFAULT_ORDER)
     setCollapsedSections({})
+    setSectionSizes({})
     try {
       localStorage.removeItem('dashboard-section-order')
       localStorage.removeItem('dashboard-collapsed')
+      localStorage.removeItem('dashboard-section-sizes')
     } catch {}
   }, [])
 
@@ -184,9 +219,12 @@ function App() {
             const isCollapsed = !!collapsedSections[sectionId]
             const isFirst = index === 0
             const isLast = index === sectionOrder.length - 1
+            const canResize = !FULL_WIDTH_ONLY.has(sectionId)
+            const size = canResize ? (sectionSizes[sectionId] || 'full') : 'full'
+            const gridClass = size === 'half' ? 'grid-half' : 'grid-full'
 
             return (
-              <div key={sectionId} className="dashboard-section grid-full">
+              <div key={sectionId} className={`dashboard-section ${gridClass}`}>
                 {/* Collapsed bar - shown when collapsed */}
                 {isCollapsed && (
                   <div className="collapsed-bar">
@@ -195,6 +233,11 @@ function App() {
                     <div className="toolbar-actions">
                       <button className="move-btn" onClick={() => moveSection(sectionId, -1)} disabled={isFirst} title="Move up">{'\u25B2'}</button>
                       <button className="move-btn" onClick={() => moveSection(sectionId, 1)} disabled={isLast} title="Move down">{'\u25BC'}</button>
+                      {canResize && (
+                        <button className="move-btn" onClick={() => toggleSize(sectionId)} title={size === 'full' ? 'Half width' : 'Full width'}>
+                          {size === 'full' ? '\u{2B0C}' : '\u{2B0D}'}
+                        </button>
+                      )}
                       <button className="expand-btn" onClick={() => toggleCollapse(sectionId)} title="Expand section">{'\u25BC'}</button>
                     </div>
                   </div>
@@ -207,6 +250,11 @@ function App() {
                     <div className="toolbar-actions">
                       <button className="move-btn" onClick={() => moveSection(sectionId, -1)} disabled={isFirst} title="Move up">{'\u25B2'}</button>
                       <button className="move-btn" onClick={() => moveSection(sectionId, 1)} disabled={isLast} title="Move down">{'\u25BC'}</button>
+                      {canResize && (
+                        <button className="move-btn" onClick={() => toggleSize(sectionId)} title={size === 'full' ? 'Half width' : 'Full width'}>
+                          {size === 'full' ? '\u{2B0C}' : '\u{2B0D}'}
+                        </button>
+                      )}
                       <button className="collapse-btn" onClick={() => toggleCollapse(sectionId)} title="Collapse section">{'\u2212'}</button>
                     </div>
                   </div>

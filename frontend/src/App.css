@@ -159,12 +159,16 @@ html.dark-mode .qr-code {
 /* ===== DASHBOARD GRID ===== */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-5);
 }
 
 .grid-full {
   grid-column: 1 / -1;
+}
+
+.grid-half {
+  grid-column: span 1;
 }
 
 .grid-col-2 {
@@ -524,7 +528,8 @@ html.dark-mode .expand-btn:hover {
   }
 
   .grid-col-2,
-  .grid-col-1 {
+  .grid-col-1,
+  .grid-half {
     grid-column: span 1;
   }
 

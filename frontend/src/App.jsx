@@ -14,12 +14,12 @@ import HospitalistPager from './components/HospitalistPager'
 const DEFAULT_SECTIONS = [
   { id: 'messages', title: 'Provider Message Board', icon: '\u{1F4AC}' },
   { id: 'pager', title: 'Page Hospitalist', icon: '\u{1F4DF}' },
+  { id: 'phone', title: 'Quick Reference Numbers', icon: '\u{1F4DE}' },
   { id: 'schedule', title: 'Schedule', icon: '\u{1F4C5}' },
   { id: 'charts', title: 'Provider Chart Status', icon: '\u{1F4CA}' },
   { id: 'kpi-docs', title: 'Department KPI Documents', icon: '\u{1F4C1}' },
   { id: 'kpi-goals', title: 'KPI Goals & Targets', icon: '\u{1F3AF}' },
   { id: 'news', title: 'Latest Updates', icon: '\u{1F4F0}' },
-  { id: 'phone', title: 'Quick Reference Numbers', icon: '\u{1F4DE}' },
   { id: 'suggestions', title: 'Order Set Suggestions', icon: '\u{1F4A1}' },
 ]
 
@@ -40,6 +40,9 @@ const DEFAULT_ORDER = DEFAULT_SECTIONS.map(s => s.id)
 
 // Sections that must stay full-width (layout breaks otherwise)
 const FULL_WIDTH_ONLY = new Set(['schedule'])
+
+// Sections that default to half-width
+const DEFAULT_HALF_WIDTH = { pager: 'half', phone: 'half' }
 
 // --- localStorage helpers with stale-data reconciliation ---
 function getInitialOrder() {
@@ -220,7 +223,7 @@ function App() {
             const isFirst = index === 0
             const isLast = index === sectionOrder.length - 1
             const canResize = !FULL_WIDTH_ONLY.has(sectionId)
-            const size = canResize ? (sectionSizes[sectionId] || 'full') : 'full'
+            const size = canResize ? (sectionSizes[sectionId] || DEFAULT_HALF_WIDTH[sectionId] || 'full') : 'full'
             const gridClass = size === 'half' ? 'grid-half' : 'grid-full'
 
             return (

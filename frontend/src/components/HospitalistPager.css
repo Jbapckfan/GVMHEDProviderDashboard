@@ -1,10 +1,11 @@
 .pager-container {
-  padding: 20px;
+  padding: 14px 16px;
+  max-width: 520px;
 }
 
 .pager-title {
-  margin: 0 0 16px 0;
-  font-size: 1.4rem;
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
 }
 
 /* --- Status banners --- */
@@ -48,7 +49,7 @@
 
 /* --- Fields --- */
 .pager-field {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .pager-field-header {
@@ -96,8 +97,8 @@
   background: #e9ecef;
   border: 2px solid transparent;
   border-radius: 6px;
-  padding: 8px 4px;
-  font-size: 0.85rem;
+  padding: 6px 4px;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   text-align: center;
@@ -132,6 +133,12 @@
   box-sizing: border-box;
   background: #fff;
   color: #333;
+}
+
+.pager-textarea {
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.4;
 }
 
 .pager-input:focus {
@@ -173,7 +180,7 @@
 /* --- Send button --- */
 .pager-send-btn {
   width: 100%;
-  padding: 12px 20px;
+  padding: 10px 16px;
   background: #0d6efd;
   color: #fff;
   border: none;

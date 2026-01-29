@@ -211,11 +211,11 @@ function HospitalistPager() {
       {/* Diagnosis / Reason */}
       <div className="pager-field">
         <label className="pager-label" htmlFor="pager-diagnosis">Diagnosis / Reason</label>
-        <input
+        <textarea
           id="pager-diagnosis"
-          type="text"
-          className="pager-input"
+          className="pager-input pager-textarea"
           placeholder="Sepsis, AKI, needs admission"
+          rows={3}
           value={diagnosis}
           onChange={(e) => setDiagnosis(e.target.value)}
         />

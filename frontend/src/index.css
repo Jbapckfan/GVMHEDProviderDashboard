@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -10,23 +12,20 @@ body {
     'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f0f4f8;
+  background: linear-gradient(135deg, #f0f4f8 0%, #e8eef5 50%, #eef2f7 100%);
   color: #1e293b;
   min-height: 100vh;
   line-height: 1.6;
   letter-spacing: -0.01em;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
-
-/* Import Inter font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 #root {
   min-height: 100vh;
 }
 
 :root {
-  /* Primary palette - Medical Blue */
+  /* Primary palette - Vibrant Medical Blue */
   --primary-50: #eff6ff;
   --primary-100: #dbeafe;
   --primary-200: #bfdbfe;
@@ -37,6 +36,7 @@ body {
   --primary-700: #1d4ed8;
 
   /* Accent - Purple */
+  --accent-400: #a78bfa;
   --accent-500: #8b5cf6;
   --accent-600: #7c3aed;
 
@@ -65,7 +65,7 @@ body {
   --gray-800: #1f2937;
   --gray-900: #111827;
 
-  /* Shadows - Refined and subtle */
+  /* Shadows - Layered depth */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
@@ -75,11 +75,15 @@ body {
   --shadow-2xl: 0 32px 64px -12px rgba(0, 0, 0, 0.16);
   --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.04);
 
-  /* Card shadow with subtle color */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 6px 16px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.06), 0 12px 28px rgba(0, 0, 0, 0.08);
+  /* Card shadows with blue tint */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(59, 130, 246, 0.06);
+  --shadow-card-hover: 0 8px 32px rgba(59, 130, 246, 0.12), 0 16px 48px rgba(0, 0, 0, 0.08);
 
-  /* Border radius - Consistent scale */
+  /* Glow effects */
+  --glow-blue: 0 0 20px rgba(59, 130, 246, 0.15);
+  --glow-purple: 0 0 20px rgba(139, 92, 246, 0.15);
+
+  /* Border radius */
   --radius-sm: 6px;
   --radius: 8px;
   --radius-md: 10px;
@@ -144,19 +148,17 @@ button:disabled, .btn:disabled {
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--gray-100);
-  border-radius: var(--radius-full);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--gray-300);
   border-radius: var(--radius-full);
-  border: 2px solid var(--gray-100);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -177,20 +179,20 @@ html.dark-mode {
   --gray-800: #e2e8f0;
   --gray-900: #f1f5f9;
 
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 6px 16px rgba(0, 0, 0, 0.2);
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.3), 0 12px 28px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-card-hover: 0 8px 32px rgba(59, 130, 246, 0.15), 0 16px 48px rgba(0, 0, 0, 0.35);
+  --glow-blue: 0 0 30px rgba(59, 130, 246, 0.2);
 }
 
 html.dark-mode body {
-  background: #0d1117;
+  background: linear-gradient(135deg, #0d1117 0%, #111827 50%, #0f172a 100%);
   color: #e2e8f0;
 }
 
 html.dark-mode ::-webkit-scrollbar-track {
-  background: var(--gray-100);
+  background: transparent;
 }
 
 html.dark-mode ::-webkit-scrollbar-thumb {
   background: var(--gray-300);
-  border-color: var(--gray-100);
 }

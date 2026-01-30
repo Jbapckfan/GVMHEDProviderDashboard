@@ -168,6 +168,17 @@ async function initializeDatabase() {
     )
   `);
 
+  // Provider chart history table (for trend tracking)
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS provider_chart_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      provider_name TEXT NOT NULL,
+      outstanding_charts INTEGER DEFAULT 0,
+      delinquent_charts INTEGER DEFAULT 0,
+      recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // KPI Document Annotations table
   await db.execute(`
     CREATE TABLE IF NOT EXISTS kpi_document_annotations (
@@ -334,7 +345,7 @@ const deleteNews = async (id) => {
 };
 
 const getProviderCharts = async () => {
-  const result = await db.execute('SELECT * FROM provider_charts ORDER BY provider_name');
+  const result = await db.execute('SELECT * FROM provider_charts ORDER BY delinquent_charts DESC, outstanding_charts DESC');
   return result.rows;
 };
 
@@ -357,6 +368,70 @@ const deleteProviderChart = async (id) => {
     sql: 'DELETE FROM provider_charts WHERE id=?',
     args: [id]
   });
+};
+
+const upsertProviderChart = async (data) => {
+  // Check if provider already exists (case-insensitive)
+  const existing = await db.execute({
+    sql: 'SELECT id FROM provider_charts WHERE LOWER(provider_name) = LOWER(?)',
+    args: [data.provider_name]
+  });
+
+  if (existing.rows.length > 0) {
+    // Update existing
+    await db.execute({
+      sql: 'UPDATE provider_charts SET provider_name=?, outstanding_charts=?, delinquent_charts=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+      args: [data.provider_name, data.outstanding_charts || 0, data.delinquent_charts || 0, existing.rows[0].id]
+    });
+  } else {
+    // Insert new
+    await db.execute({
+      sql: 'INSERT INTO provider_charts (provider_name, outstanding_charts, delinquent_charts) VALUES (?, ?, ?)',
+      args: [data.provider_name, data.outstanding_charts || 0, data.delinquent_charts || 0]
+    });
+  }
+
+  // Record history snapshot
+  await db.execute({
+    sql: 'INSERT INTO provider_chart_history (provider_name, outstanding_charts, delinquent_charts) VALUES (?, ?, ?)',
+    args: [data.provider_name, data.outstanding_charts || 0, data.delinquent_charts || 0]
+  });
+};
+
+const bulkUpsertProviderCharts = async (entries) => {
+  let count = 0;
+  for (const entry of entries) {
+    await upsertProviderChart(entry);
+    count++;
+  }
+  return count;
+};
+
+const getProviderChartHistory = async (providerName, limit = 10) => {
+  const result = await db.execute({
+    sql: 'SELECT * FROM provider_chart_history WHERE LOWER(provider_name) = LOWER(?) ORDER BY recorded_at DESC LIMIT ?',
+    args: [providerName, limit]
+  });
+  return result.rows;
+};
+
+const getAllProviderChartHistory = async () => {
+  // Get latest 2 records per provider for trend comparison
+  const result = await db.execute(`
+    SELECT h1.provider_name, h1.outstanding_charts, h1.delinquent_charts, h1.recorded_at,
+           h2.outstanding_charts as prev_outstanding, h2.delinquent_charts as prev_delinquent
+    FROM provider_chart_history h1
+    LEFT JOIN provider_chart_history h2 ON LOWER(h1.provider_name) = LOWER(h2.provider_name)
+      AND h2.recorded_at = (
+        SELECT MAX(recorded_at) FROM provider_chart_history
+        WHERE LOWER(provider_name) = LOWER(h1.provider_name) AND recorded_at < h1.recorded_at
+      )
+    WHERE h1.recorded_at = (
+      SELECT MAX(recorded_at) FROM provider_chart_history
+      WHERE LOWER(provider_name) = LOWER(h1.provider_name)
+    )
+  `);
+  return result.rows;
 };
 
 const getKPIGoals = async () => {
@@ -543,6 +618,10 @@ module.exports = {
   addProviderChart,
   updateProviderChart,
   deleteProviderChart,
+  upsertProviderChart,
+  bulkUpsertProviderCharts,
+  getProviderChartHistory,
+  getAllProviderChartHistory,
   getKPIGoals,
   addKPIGoal,
   updateKPIGoal,

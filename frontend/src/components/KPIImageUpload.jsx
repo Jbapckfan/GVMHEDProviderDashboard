@@ -3,6 +3,8 @@ import axios from 'axios'
 import * as XLSX from 'xlsx'
 import './KPIImageUpload.css'
 import { API_BASE } from '../utils/api'
+import { useToast } from './Toast'
+import ConfirmModal from './ConfirmModal'
 
 // Helper to format cell values nicely
 const formatCell = (value) => {
@@ -41,6 +43,8 @@ function KPIImageUpload() {
   const [excelData, setExcelData] = useState({})
   const [loadingContent, setLoadingContent] = useState({})
   const fileInputRef = useRef(null)
+  const toast = useToast()
+  const [confirmAction, setConfirmAction] = useState(null)
 
   // Annotations state
   const [annotations, setAnnotations] = useState([])
@@ -189,7 +193,7 @@ function KPIImageUpload() {
       fetchAnnotations(activeDocId)
     } catch (error) {
       console.error('Error adding annotation:', error)
-      alert('Failed to add annotation')
+      toast.error('Failed to add annotation')
     }
   }
 
@@ -207,20 +211,25 @@ function KPIImageUpload() {
       fetchAnnotations(activeDocId)
     } catch (error) {
       console.error('Error updating annotation:', error)
-      alert('Failed to update annotation')
+      toast.error('Failed to update annotation')
     }
   }
 
-  const handleDeleteAnnotation = async (id) => {
-    if (!window.confirm('Delete this annotation?')) return
-
-    try {
-      await axios.delete(`${API_BASE}/kpi-documents/${activeDocId}/annotations/${id}`)
-      fetchAnnotations(activeDocId)
-    } catch (error) {
-      console.error('Error deleting annotation:', error)
-      alert('Failed to delete annotation')
-    }
+  const handleDeleteAnnotation = (id) => {
+    setConfirmAction({
+      title: 'Delete Annotation',
+      message: 'Are you sure you want to delete this annotation?',
+      onConfirm: async () => {
+        setConfirmAction(null)
+        try {
+          await axios.delete(`${API_BASE}/kpi-documents/${activeDocId}/annotations/${id}`)
+          fetchAnnotations(activeDocId)
+        } catch (error) {
+          console.error('Error deleting annotation:', error)
+          toast.error('Failed to delete annotation')
+        }
+      }
+    })
   }
 
   const startEditAnnotation = (annotation) => {
@@ -286,12 +295,12 @@ function KPIImageUpload() {
     const isValidType = allowedTypes.includes(selectedFile.type) || allowedExtensions.includes(fileExtension)
 
     if (!isValidType) {
-      alert('Please upload an image (JPG, PNG, GIF), Excel file (.xlsx, .xls), or PDF')
+      toast.warning('Please upload an image (JPG, PNG, GIF), Excel file (.xlsx, .xls), or PDF')
       return
     }
 
     if (selectedFile.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB')
+      toast.warning('File size must be less than 10MB')
       return
     }
 
@@ -321,39 +330,38 @@ function KPIImageUpload() {
       }
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload file: ' + (error.response?.data?.error || error.message))
+      toast.error('Failed to upload file: ' + (error.response?.data?.error || error.message))
     } finally {
       setUploading(false)
     }
   }
 
-  const handleDelete = async (docId, e) => {
+  const handleDelete = (docId, e) => {
     e.stopPropagation()
-
-    if (!window.confirm('Are you sure you want to delete this document?')) {
-      return
-    }
-
-    try {
-      await axios.delete(`${API_BASE}/kpi-documents/${docId}`)
-
-      // Remove from local state
-      setDocuments(prev => prev.filter(d => d.id !== docId))
-      setExcelData(prev => {
-        const newData = { ...prev }
-        delete newData[docId]
-        return newData
-      })
-
-      // If deleted doc was active, switch to another
-      if (activeDocId === docId) {
-        const remaining = documents.filter(d => d.id !== docId)
-        setActiveDocId(remaining.length > 0 ? remaining[0].id : null)
+    setConfirmAction({
+      title: 'Delete Document',
+      message: 'Are you sure you want to delete this document?',
+      onConfirm: async () => {
+        setConfirmAction(null)
+        try {
+          await axios.delete(`${API_BASE}/kpi-documents/${docId}`)
+          setDocuments(prev => prev.filter(d => d.id !== docId))
+          setExcelData(prev => {
+            const newData = { ...prev }
+            delete newData[docId]
+            return newData
+          })
+          if (activeDocId === docId) {
+            const remaining = documents.filter(d => d.id !== docId)
+            setActiveDocId(remaining.length > 0 ? remaining[0].id : null)
+          }
+          toast.success('Document deleted.')
+        } catch (error) {
+          console.error('Delete error:', error)
+          toast.error('Failed to delete document')
+        }
       }
-    } catch (error) {
-      console.error('Delete error:', error)
-      alert('Failed to delete document')
-    }
+    })
   }
 
   const startEditingTitle = (docId, currentTitle, e) => {
@@ -375,7 +383,7 @@ function KPIImageUpload() {
       ))
     } catch (error) {
       console.error('Error updating title:', error)
-      alert('Failed to update title')
+      toast.error('Failed to update title')
     } finally {
       setEditingTitle(null)
     }
@@ -756,6 +764,17 @@ function KPIImageUpload() {
           </div>
         )}
       </div>
+
+      {confirmAction && (
+        <ConfirmModal
+          title={confirmAction.title}
+          message={confirmAction.message}
+          confirmLabel="Delete"
+          variant="danger"
+          onConfirm={confirmAction.onConfirm}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
     </div>
   )
 }

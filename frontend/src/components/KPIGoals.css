@@ -178,6 +178,68 @@
   font-weight: 600;
 }
 
+.goal-deadline-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+}
+
+.goal-deadline-date {
+  color: var(--gray-700);
+  font-weight: 600;
+}
+
+.deadline-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.deadline-overdue {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+.deadline-today {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+}
+
+.deadline-soon {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.deadline-upcoming {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.deadline-normal {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 .edit-goal-btn {
   padding: 0.5rem 1rem;
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
@@ -335,6 +397,44 @@ html.dark-mode .progress-bar {
 html.dark-mode .goal-deadline {
   background: rgba(59, 130, 246, 0.2);
   color: #cbd5e1;
+}
+
+html.dark-mode .goal-deadline-row {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+html.dark-mode .goal-deadline-date {
+  color: #cbd5e1;
+}
+
+html.dark-mode .deadline-overdue {
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+html.dark-mode .deadline-today {
+  background: rgba(234, 88, 12, 0.2);
+  color: #fdba74;
+  border-color: rgba(234, 88, 12, 0.3);
+}
+
+html.dark-mode .deadline-soon {
+  background: rgba(217, 119, 6, 0.2);
+  color: #fcd34d;
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+html.dark-mode .deadline-upcoming {
+  background: rgba(37, 99, 235, 0.2);
+  color: #93c5fd;
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+html.dark-mode .deadline-normal {
+  background: rgba(22, 163, 74, 0.2);
+  color: #86efac;
+  border-color: rgba(22, 163, 74, 0.3);
 }
 
 html.dark-mode .loading-small,

@@ -515,6 +515,104 @@ app.post('/api/admin/verify', (req, res) => {
   }
 });
 
+// Provider login: verify last name against schedule providers
+app.post('/api/auth/provider-login', async (req, res) => {
+  try {
+    const { lastName } = req.body;
+    if (!lastName || typeof lastName !== 'string' || lastName.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Last name is required' });
+    }
+
+    const needle = lastName.trim().toLowerCase();
+
+    // Collect all provider names from all cached schedule months + fetch current month
+    const allProviders = new Set();
+
+    // 1) Pull from schedule cache (already fetched months)
+    for (const [, entry] of scheduleCache) {
+      if (entry && entry.data && entry.data.calendar) {
+        Object.values(entry.data.calendar).forEach(day => {
+          (day.providers || []).forEach(p => allProviders.add(p));
+        });
+      }
+    }
+
+    // 2) Fetch current month if not already cached
+    try {
+      const tabs = await fetchSheetTabs();
+      const now = new Date();
+      const monthNames = ['January','February','March','April','May','June',
+                          'July','August','September','October','November','December'];
+      const currentKey = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+      const gid = tabs[currentKey];
+
+      if (gid) {
+        const cached = scheduleCache.get(currentKey);
+        let data;
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+          data = cached.data;
+        } else {
+          const csv = await fetchSheetData(gid);
+          data = parseScheduleCSV(csv, monthNames[now.getMonth()], now.getFullYear());
+          if (data) scheduleCache.set(currentKey, { data, timestamp: Date.now() });
+        }
+        if (data && data.calendar) {
+          Object.values(data.calendar).forEach(day => {
+            (day.providers || []).forEach(p => allProviders.add(p));
+          });
+        }
+      }
+
+      // Also fetch next month in case we're near month boundary
+      const nextDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const nextKey = `${monthNames[nextDate.getMonth()]} ${nextDate.getFullYear()}`;
+      const nextGid = tabs[nextKey];
+      if (nextGid) {
+        const cachedNext = scheduleCache.get(nextKey);
+        let nextData;
+        if (cachedNext && Date.now() - cachedNext.timestamp < CACHE_DURATION) {
+          nextData = cachedNext.data;
+        } else {
+          const csv = await fetchSheetData(nextGid);
+          nextData = parseScheduleCSV(csv, monthNames[nextDate.getMonth()], nextDate.getFullYear());
+          if (nextData) scheduleCache.set(nextKey, { data: nextData, timestamp: Date.now() });
+        }
+        if (nextData && nextData.calendar) {
+          Object.values(nextData.calendar).forEach(day => {
+            (day.providers || []).forEach(p => allProviders.add(p));
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching schedule for provider login:', err.message);
+    }
+
+    // 3) Also check providers table in DB
+    try {
+      const dbProviders = await db.getProviders();
+      dbProviders.forEach(p => allProviders.add(p.name));
+    } catch (err) {
+      console.error('Error fetching DB providers:', err.message);
+    }
+
+    // Extract last names and match
+    const match = Array.from(allProviders).find(name => {
+      const parts = name.trim().split(/\s+/);
+      const last = parts[parts.length - 1].toLowerCase();
+      return last === needle;
+    });
+
+    if (match) {
+      res.json({ success: true, providerName: match });
+    } else {
+      res.status(401).json({ success: false, error: 'Last name not found' });
+    }
+  } catch (error) {
+    console.error('Provider login error:', error);
+    res.status(500).json({ success: false, error: 'Login failed' });
+  }
+});
+
 // Get news
 app.get('/api/news', async (req, res) => {
   try {
@@ -607,6 +705,16 @@ app.get('/api/provider-charts', async (req, res) => {
   }
 });
 
+// Get provider chart trends (latest vs previous for all providers)
+app.get('/api/provider-charts/trends', async (req, res) => {
+  try {
+    const trends = await db.getAllProviderChartHistory();
+    res.json(trends);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Admin: Add provider chart status
 app.post('/api/admin/provider-charts', async (req, res) => {
   try {
@@ -628,12 +736,58 @@ app.put('/api/admin/provider-charts/:id', async (req, res) => {
   }
 });
 
+// Admin: Bulk import provider chart statuses
+app.post('/api/admin/charts/bulk-import', async (req, res) => {
+  try {
+    const { entries } = req.body;
+
+    if (!Array.isArray(entries) || entries.length === 0) {
+      return res.status(400).json({ error: 'entries must be a non-empty array' });
+    }
+
+    // Validate each entry
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      if (!entry.provider_name || typeof entry.provider_name !== 'string' || !entry.provider_name.trim()) {
+        return res.status(400).json({ error: `Entry ${i + 1}: provider_name is required` });
+      }
+      if (typeof entry.outstanding_charts !== 'number' || entry.outstanding_charts < 0) {
+        return res.status(400).json({ error: `Entry ${i + 1}: outstanding_charts must be a non-negative number` });
+      }
+      if (typeof entry.delinquent_charts !== 'number' || entry.delinquent_charts < 0) {
+        return res.status(400).json({ error: `Entry ${i + 1}: delinquent_charts must be a non-negative number` });
+      }
+    }
+
+    const imported = await db.bulkUpsertProviderCharts(entries);
+    res.json({ success: true, imported });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Admin: Delete provider chart status
 app.delete('/api/admin/provider-charts/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await db.deleteProviderChart(id);
     res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Bulk delete provider charts
+app.post('/api/admin/provider-charts/bulk-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids array is required' });
+    }
+    for (const id of ids) {
+      await db.deleteProviderChart(id);
+    }
+    res.json({ success: true, deleted: ids.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

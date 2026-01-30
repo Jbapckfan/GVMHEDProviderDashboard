@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './KPIGoals.css'
 import { API_BASE } from '../utils/api'
+import { useToast } from './Toast'
+import ConfirmModal from './ConfirmModal'
 
 function KPIGoals() {
   const [goals, setGoals] = useState([])
   const [loading, setLoading] = useState(true)
   const [editingGoal, setEditingGoal] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
+  const toast = useToast()
 
   useEffect(() => {
     fetchGoals()
@@ -34,11 +38,11 @@ function KPIGoals() {
         setIsAuthenticated(true)
         return true
       } else {
-        alert('Invalid password')
+        toast.error('Invalid password')
         return false
       }
     } catch (error) {
-      alert('Invalid password')
+      toast.error('Invalid password')
       return false
     }
   }
@@ -70,33 +74,35 @@ function KPIGoals() {
     try {
       if (editingGoal.id) {
         await axios.put(`${API_BASE}/admin/kpi-goals/${editingGoal.id}`, editingGoal)
-        alert('KPI goal updated successfully!')
+        toast.success('KPI goal updated.')
       } else {
         await axios.post(`${API_BASE}/admin/kpi-goals`, editingGoal)
-        alert('KPI goal added successfully!')
+        toast.success('KPI goal added.')
       }
       setEditingGoal(null)
       fetchGoals()
     } catch (error) {
-      alert('Failed to save KPI goal: ' + error.message)
+      toast.error('Failed to save KPI goal: ' + error.message)
     }
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!editingGoal.id) return
-
-    if (!window.confirm('Are you sure you want to delete this KPI goal?')) {
-      return
-    }
-
-    try {
-      await axios.delete(`${API_BASE}/admin/kpi-goals/${editingGoal.id}`)
-      alert('KPI goal deleted successfully!')
-      setEditingGoal(null)
-      fetchGoals()
-    } catch (error) {
-      alert('Failed to delete KPI goal: ' + error.message)
-    }
+    setConfirmAction({
+      title: 'Delete KPI Goal',
+      message: `Are you sure you want to delete "${editingGoal.goal_name}"?`,
+      onConfirm: async () => {
+        setConfirmAction(null)
+        try {
+          await axios.delete(`${API_BASE}/admin/kpi-goals/${editingGoal.id}`)
+          toast.success('KPI goal deleted.')
+          setEditingGoal(null)
+          fetchGoals()
+        } catch (error) {
+          toast.error('Failed to delete KPI goal: ' + error.message)
+        }
+      }
+    })
   }
 
   const getProgressPercentage = (current, target) => {
@@ -111,13 +117,32 @@ function KPIGoals() {
     return 'status-critical'
   }
 
+  const getDeadlineInfo = (deadline) => {
+    if (!deadline) return null
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const dl = new Date(deadline + 'T00:00:00')
+    const diffMs = dl - now
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffDays < 0) return { label: 'Overdue', className: 'deadline-overdue' }
+    if (diffDays === 0) return { label: 'Due today', className: 'deadline-today' }
+    if (diffDays <= 7) return { label: `${diffDays}d left`, className: 'deadline-soon' }
+    if (diffDays <= 30) return { label: `${diffDays}d left`, className: 'deadline-upcoming' }
+    return { label: `${diffDays}d left`, className: 'deadline-normal' }
+  }
+
   if (loading) {
     return (
       <div className="card kpi-goals-card">
         <div className="card-header">
-          <h2 className="card-title">🎯 KPI Goals & Targets</h2>
+          <h2 className="card-title">KPI Goals & Targets</h2>
         </div>
-        <div className="loading-small">Loading...</div>
+        <div className="skeleton-grid">
+          {[1, 2].map(i => (
+            <div key={i} className="skeleton skeleton-card" style={{ height: '140px' }}></div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -125,9 +150,9 @@ function KPIGoals() {
   return (
     <div className="card kpi-goals-card">
       <div className="card-header">
-        <h2 className="card-title">🎯 KPI Goals & Targets</h2>
+        <h2 className="card-title">KPI Goals & Targets</h2>
         <button onClick={handleAddNew} className="edit-goal-btn">
-          ➕ Add Goal
+          + Add Goal
         </button>
       </div>
 
@@ -135,13 +160,14 @@ function KPIGoals() {
         {goals.map((goal) => {
           const percentage = getProgressPercentage(goal.current_value, goal.target_value)
           const statusClass = getStatusClass(percentage)
+          const deadlineInfo = getDeadlineInfo(goal.deadline)
 
           return (
             <div key={goal.id} className={`goal-card ${statusClass}`}>
               <div className="goal-header">
                 <h3 className="goal-name">{goal.goal_name}</h3>
                 <button onClick={() => handleEdit(goal)} className="edit-goal-btn-small">
-                  ✏️
+                  Edit
                 </button>
               </div>
 
@@ -167,8 +193,15 @@ function KPIGoals() {
               </div>
 
               {goal.deadline && (
-                <div className="goal-deadline">
-                  📅 Deadline: {new Date(goal.deadline).toLocaleDateString()}
+                <div className="goal-deadline-row">
+                  <span className="goal-deadline-date">
+                    Deadline: {new Date(goal.deadline + 'T00:00:00').toLocaleDateString()}
+                  </span>
+                  {deadlineInfo && (
+                    <span className={`deadline-badge ${deadlineInfo.className}`}>
+                      {deadlineInfo.label}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -242,7 +275,7 @@ function KPIGoals() {
             <div className="goal-edit-actions">
               {editingGoal.id && (
                 <button onClick={handleDelete} className="btn-delete">
-                  🗑️ Delete
+                  Delete
                 </button>
               )}
               <button onClick={() => setEditingGoal(null)} className="btn-cancel">
@@ -254,6 +287,17 @@ function KPIGoals() {
             </div>
           </div>
         </div>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          title={confirmAction.title}
+          message={confirmAction.message}
+          confirmLabel="Delete"
+          variant="danger"
+          onConfirm={confirmAction.onConfirm}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   )

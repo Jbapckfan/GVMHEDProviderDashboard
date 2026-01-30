@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './NewsUpdates.css'
 import { API_BASE } from '../utils/api'
+import { useToast } from './Toast'
+import ConfirmModal from './ConfirmModal'
 
 function NewsUpdates() {
   const [news, setNews] = useState([])
   const [loading, setLoading] = useState(true)
   const [editingNews, setEditingNews] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
+  const toast = useToast()
 
   useEffect(() => {
     fetchNews()
@@ -34,11 +38,11 @@ function NewsUpdates() {
         setIsAuthenticated(true)
         return true
       } else {
-        alert('Invalid password')
+        toast.error('Invalid password')
         return false
       }
     } catch (error) {
-      alert('Invalid password')
+      toast.error('Invalid password')
       return false
     }
   }
@@ -68,36 +72,36 @@ function NewsUpdates() {
   const handleSave = async () => {
     try {
       if (editingNews.id) {
-        // Update existing
         await axios.put(`${API_BASE}/admin/news/${editingNews.id}`, editingNews)
-        alert('News updated successfully!')
+        toast.success('News updated.')
       } else {
-        // Add new
         await axios.post(`${API_BASE}/admin/news`, editingNews)
-        alert('News added successfully!')
+        toast.success('News added.')
       }
       setEditingNews(null)
       fetchNews()
     } catch (error) {
-      alert('Failed to save news: ' + error.message)
+      toast.error('Failed to save news: ' + error.message)
     }
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!editingNews.id) return
-
-    if (!window.confirm('Are you sure you want to delete this news item?')) {
-      return
-    }
-
-    try {
-      await axios.delete(`${API_BASE}/admin/news/${editingNews.id}`)
-      alert('News deleted successfully!')
-      setEditingNews(null)
-      fetchNews()
-    } catch (error) {
-      alert('Failed to delete news: ' + error.message)
-    }
+    setConfirmAction({
+      title: 'Delete Update',
+      message: `Are you sure you want to delete "${editingNews.title}"?`,
+      onConfirm: async () => {
+        setConfirmAction(null)
+        try {
+          await axios.delete(`${API_BASE}/admin/news/${editingNews.id}`)
+          toast.success('News deleted.')
+          setEditingNews(null)
+          fetchNews()
+        } catch (error) {
+          toast.error('Failed to delete news: ' + error.message)
+        }
+      }
+    })
   }
 
   const getTimeAgo = (dateString) => {
@@ -127,9 +131,13 @@ function NewsUpdates() {
     return (
       <div className="card news-updates-card">
         <div className="card-header">
-          <h2 className="card-title">📰 Latest Updates</h2>
+          <h2 className="card-title">Latest Updates</h2>
         </div>
-        <div className="loading-small">Loading...</div>
+        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {[1, 2].map(i => (
+            <div key={i} className="skeleton skeleton-block" style={{ height: '90px' }}></div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -137,11 +145,11 @@ function NewsUpdates() {
   return (
     <div className="card news-updates-card">
       <div className="card-header">
-        <h2 className="card-title">📰 Latest Updates</h2>
+        <h2 className="card-title">Latest Updates</h2>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <span className="news-count">{news.length} updates</span>
           <button onClick={handleAddNew} className="edit-news-btn">
-            ➕ Add Update
+            + Add Update
           </button>
         </div>
       </div>
@@ -160,7 +168,7 @@ function NewsUpdates() {
                     {getTimeAgo(item.created_at)}
                   </span>
                   <button onClick={() => handleEdit(item)} className="edit-news-btn-small">
-                    ✏️
+                    Edit
                   </button>
                 </div>
               </div>
@@ -220,7 +228,7 @@ function NewsUpdates() {
             <div className="news-edit-actions">
               {editingNews.id && (
                 <button onClick={handleDelete} className="btn-delete">
-                  🗑️ Delete
+                  Delete
                 </button>
               )}
               <button onClick={() => setEditingNews(null)} className="btn-cancel">
@@ -232,6 +240,17 @@ function NewsUpdates() {
             </div>
           </div>
         </div>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          title={confirmAction.title}
+          message={confirmAction.message}
+          confirmLabel="Delete"
+          variant="danger"
+          onConfirm={confirmAction.onConfirm}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   )

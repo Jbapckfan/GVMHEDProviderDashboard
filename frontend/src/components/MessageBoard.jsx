@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './MessageBoard.css'
 import { API_BASE } from '../utils/api'
+import { useToast } from './Toast'
+import ConfirmModal from './ConfirmModal'
 
 function MessageBoard() {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
   const [editingMessage, setEditingMessage] = useState(null)
+  const [confirmAction, setConfirmAction] = useState(null)
+  const toast = useToast()
 
   useEffect(() => {
     fetchMessages()
@@ -39,33 +43,35 @@ function MessageBoard() {
     try {
       if (editingMessage.id) {
         await axios.put(`${API_BASE}/messages/${editingMessage.id}`, editingMessage)
-        alert('Message updated successfully!')
+        toast.success('Message updated.')
       } else {
         await axios.post(`${API_BASE}/messages`, editingMessage)
-        alert('Message posted successfully!')
+        toast.success('Message posted.')
       }
       setEditingMessage(null)
       fetchMessages()
     } catch (error) {
-      alert('Failed to save message: ' + error.message)
+      toast.error('Failed to save message: ' + error.message)
     }
   }
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!editingMessage.id) return
-
-    if (!window.confirm('Are you sure you want to delete this message?')) {
-      return
-    }
-
-    try {
-      await axios.delete(`${API_BASE}/messages/${editingMessage.id}`)
-      alert('Message deleted successfully!')
-      setEditingMessage(null)
-      fetchMessages()
-    } catch (error) {
-      alert('Failed to delete message: ' + error.message)
-    }
+    setConfirmAction({
+      title: 'Delete Message',
+      message: 'Are you sure you want to delete this message?',
+      onConfirm: async () => {
+        setConfirmAction(null)
+        try {
+          await axios.delete(`${API_BASE}/messages/${editingMessage.id}`)
+          toast.success('Message deleted.')
+          setEditingMessage(null)
+          fetchMessages()
+        } catch (error) {
+          toast.error('Failed to delete message: ' + error.message)
+        }
+      }
+    })
   }
 
   const getTimeAgo = (dateString) => {
@@ -87,9 +93,13 @@ function MessageBoard() {
     return (
       <div className="card message-board-card">
         <div className="card-header">
-          <h2 className="card-title">💬 Provider Message Board</h2>
+          <h2 className="card-title">Provider Message Board</h2>
         </div>
-        <div className="loading-small">Loading...</div>
+        <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} className="skeleton skeleton-block" style={{ height: '72px' }}></div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -97,9 +107,9 @@ function MessageBoard() {
   return (
     <div className="card message-board-card">
       <div className="card-header">
-        <h2 className="card-title">💬 Provider Message Board</h2>
+        <h2 className="card-title">Provider Message Board</h2>
         <button onClick={handleAddNew} className="edit-message-btn">
-          ➕ Post Message
+          + Post Message
         </button>
       </div>
 
@@ -112,7 +122,7 @@ function MessageBoard() {
                 <span className="message-time">{getTimeAgo(message.created_at)}</span>
               </div>
               <button onClick={() => handleEdit(message)} className="edit-message-btn-small">
-                ✏️
+                Edit
               </button>
             </div>
             <p className="message-content">{message.message}</p>
@@ -156,7 +166,7 @@ function MessageBoard() {
             <div className="message-edit-actions">
               {editingMessage.id && (
                 <button onClick={handleDelete} className="btn-delete">
-                  🗑️ Delete
+                  Delete
                 </button>
               )}
               <button onClick={() => setEditingMessage(null)} className="btn-cancel">
@@ -168,6 +178,17 @@ function MessageBoard() {
             </div>
           </div>
         </div>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          title={confirmAction.title}
+          message={confirmAction.message}
+          confirmLabel="Delete"
+          variant="danger"
+          onConfirm={confirmAction.onConfirm}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   )

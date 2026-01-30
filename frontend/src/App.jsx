@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import './App.css'
 import KPIImageUpload from './components/KPIImageUpload'
 import ScheduleCalendar from './components/ScheduleCalendar'
@@ -9,9 +10,14 @@ import ProviderChartStatus from './components/ProviderChartStatus'
 import KPIGoals from './components/KPIGoals'
 import MessageBoard from './components/MessageBoard'
 import HospitalistPager from './components/HospitalistPager'
+import WhosOnNow from './components/WhosOnNow'
+import ClinicalResources from './components/ClinicalResources'
+import SchedulePage from './pages/SchedulePage'
+import LoginPage from './pages/LoginPage'
 
 // --- Section configuration ---
 const DEFAULT_SECTIONS = [
+  { id: 'whos-on', title: "Who's On Now", icon: '\u{1F7E2}' },
   { id: 'messages', title: 'Provider Message Board', icon: '\u{1F4AC}' },
   { id: 'pager', title: 'Page Hospitalist', icon: '\u{1F4DF}' },
   { id: 'phone', title: 'Quick Reference Numbers', icon: '\u{1F4DE}' },
@@ -20,10 +26,12 @@ const DEFAULT_SECTIONS = [
   { id: 'kpi-docs', title: 'Department KPI Documents', icon: '\u{1F4C1}' },
   { id: 'kpi-goals', title: 'KPI Goals & Targets', icon: '\u{1F3AF}' },
   { id: 'news', title: 'Latest Updates', icon: '\u{1F4F0}' },
+  { id: 'clinical', title: 'Clinical Resources', icon: '\u{1F4D6}' },
   { id: 'suggestions', title: 'Order Set Suggestions', icon: '\u{1F4A1}' },
 ]
 
 const SECTION_COMPONENTS = {
+  'whos-on': WhosOnNow,
   'messages': MessageBoard,
   'pager': HospitalistPager,
   'schedule': ScheduleCalendar,
@@ -32,6 +40,7 @@ const SECTION_COMPONENTS = {
   'kpi-goals': KPIGoals,
   'news': NewsUpdates,
   'phone': PhoneDirectory,
+  'clinical': ClinicalResources,
   'suggestions': OrderSetSuggestions,
 }
 
@@ -39,7 +48,7 @@ const VALID_IDS = new Set(DEFAULT_SECTIONS.map(s => s.id))
 const DEFAULT_ORDER = DEFAULT_SECTIONS.map(s => s.id)
 
 // Sections that must stay full-width (layout breaks otherwise)
-const FULL_WIDTH_ONLY = new Set(['schedule'])
+const FULL_WIDTH_ONLY = new Set(['schedule', 'whos-on'])
 
 // Sections that default to half-width
 const DEFAULT_HALF_WIDTH = { pager: 'half', phone: 'half' }
@@ -98,12 +107,27 @@ function getInitialSizes() {
 }
 
 function App() {
+  const [providerName, setProviderName] = useState(() => {
+    try {
+      const auth = JSON.parse(sessionStorage.getItem('providerAuth'))
+      return auth?.providerName || null
+    } catch { return null }
+  })
+
+  const handleLogin = (name) => setProviderName(name)
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('providerAuth')
+    setProviderName(null)
+  }
+
   const [lastUpdated, setLastUpdated] = useState(new Date())
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode')
     return saved ? JSON.parse(saved) : false
   })
   const [showQR, setShowQR] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   // Section order + collapsed + sizes state (persisted to localStorage)
   const [sectionOrder, setSectionOrder] = useState(getInitialOrder)
@@ -181,11 +205,19 @@ function App() {
   }, [])
 
   return (
+    <Routes>
+      <Route path="/schedule" element={<SchedulePage />} />
+      <Route path="*" element={providerName ? (
     <div className="app">
       <header className="header">
         <div className="header-content">
           <h1><img src="/gvmh-logo.png" alt="GVMH" className="header-logo" /> ED Provider Dashboard</h1>
-          <div className="header-info">
+          <button className="hamburger-btn" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
+            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>
+            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>
+            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>
+          </button>
+          <div className={`header-info ${menuOpen ? 'header-info-open' : ''}`}>
             <span className="status-dot"></span>
             <span className="last-updated">
               Last updated: {lastUpdated.toLocaleTimeString()}
@@ -201,6 +233,9 @@ function App() {
             </button>
             <button onClick={handleRefresh} className="refresh-btn">
               {'\u21BB'} Refresh
+            </button>
+            <button onClick={handleLogout} className="refresh-btn" title="Sign out">
+              Sign Out
             </button>
           </div>
           {showQR && (
@@ -273,6 +308,10 @@ function App() {
         <p>GVM Health ED Provider Dashboard v1.0 | For authorized use only</p>
       </footer>
     </div>
+      ) : (
+        <LoginPage onLogin={handleLogin} />
+      )} />
+    </Routes>
   )
 }
 

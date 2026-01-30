@@ -128,6 +128,64 @@
   border: 1px solid #fca5a5;
 }
 
+.trend-arrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 0.35rem;
+  vertical-align: super;
+}
+
+.trend-up {
+  color: #dc2626;
+}
+
+.trend-down {
+  color: #16a34a;
+}
+
+html.dark-mode .trend-up {
+  color: #fca5a5;
+}
+
+html.dark-mode .trend-down {
+  color: #86efac;
+}
+
+.tile-selected {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.tile-checkbox {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tile-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.bulk-delete-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+.bulk-delete-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4) !important;
+}
+
+.select-all-btn {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+}
+
+.select-all-btn:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
+}
+
 .edit-provider-btn {
   padding: 0.5rem 1rem;
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
@@ -288,6 +346,164 @@ html.dark-mode .empty-state {
   color: #cbd5e1;
 }
 
+/* Card header actions */
+.card-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Bulk import button */
+.bulk-import-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+}
+
+.bulk-import-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Bulk import form */
+.bulk-import-form {
+  max-width: 650px !important;
+}
+
+.bulk-import-hint {
+  color: var(--gray-600);
+  font-size: 0.875rem;
+  margin: 0 0 1rem 0;
+}
+
+html.dark-mode .bulk-import-hint {
+  color: #94a3b8;
+}
+
+/* Bulk import table */
+.bulk-import-table {
+  margin-bottom: 0.75rem;
+}
+
+.bulk-import-header-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 0 0.5rem 0;
+  border-bottom: 2px solid var(--gray-200);
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-600);
+}
+
+html.dark-mode .bulk-import-header-row {
+  border-bottom-color: #475569;
+  color: #94a3b8;
+}
+
+.bulk-import-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.bulk-col-name {
+  flex: 2;
+}
+
+.bulk-col-num {
+  flex: 1;
+}
+
+.bulk-col-action {
+  width: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bulk-import-row input {
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 2px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  margin-bottom: 0;
+}
+
+html.dark-mode .bulk-import-row input {
+  background: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+.bulk-import-row input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.bulk-remove-btn {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.bulk-remove-btn:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+html.dark-mode .bulk-remove-btn:hover:not(:disabled) {
+  background: rgba(127, 29, 29, 0.4);
+  color: #fca5a5;
+}
+
+.bulk-remove-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.bulk-add-row-btn {
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+  background: transparent;
+  border: 2px dashed var(--gray-300);
+  border-radius: 8px;
+  color: var(--gray-600);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.bulk-add-row-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+html.dark-mode .bulk-add-row-btn {
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+html.dark-mode .bulk-add-row-btn:hover {
+  border-color: #60a5fa;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .provider-chart-grid {
@@ -305,5 +521,25 @@ html.dark-mode .empty-state {
   .provider-edit-form {
     width: 95%;
     padding: 1.5rem;
+  }
+
+  .bulk-import-header-row {
+    display: none;
+  }
+
+  .bulk-import-row {
+    flex-wrap: wrap;
+  }
+
+  .bulk-col-name {
+    flex: 1 1 100%;
+  }
+
+  .bulk-col-num {
+    flex: 1;
+  }
+
+  .bulk-col-action {
+    width: 32px;
   }
 }

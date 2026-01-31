@@ -120,6 +120,21 @@
   color: var(--gray-400);
 }
 
+.login-schedule-link {
+  display: inline-block;
+  margin-top: var(--space-3);
+  font-size: 0.8125rem;
+  color: var(--primary-600);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition);
+}
+
+.login-schedule-link:hover {
+  color: var(--primary-700);
+  text-decoration: underline;
+}
+
 /* Dark mode */
 html.dark-mode .login-card {
   background: rgba(30, 41, 59, 0.95);
@@ -145,4 +160,12 @@ html.dark-mode .login-input:focus {
 
 html.dark-mode .login-hint {
   color: var(--gray-500);
+}
+
+html.dark-mode .login-schedule-link {
+  color: var(--primary-400);
+}
+
+html.dark-mode .login-schedule-link:hover {
+  color: var(--primary-300);
 }

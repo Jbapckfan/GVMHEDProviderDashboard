@@ -20,13 +20,21 @@ console.log(`Environment: ${isProduction ? 'production' : 'development'}`);
 console.log(`Uploads directory: ${uploadsDir}`);
 console.log(`Database directory: ${dbDir}`);
 
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-  console.log(`Created database directory: ${dbDir}`);
+try {
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+    console.log(`Created database directory: ${dbDir}`);
+  }
+} catch (err) {
+  console.warn(`Could not create database directory ${dbDir}: ${err.message}`);
 }
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log(`Created uploads directory: ${uploadsDir}`);
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log(`Created uploads directory: ${uploadsDir}`);
+  }
+} catch (err) {
+  console.warn(`Could not create uploads directory ${uploadsDir}: ${err.message}`);
 }
 
 // Configure multer for file uploads

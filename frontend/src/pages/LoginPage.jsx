@@ -63,6 +63,14 @@ function LoginPage({ onLogin }) {
         <p className="login-hint">
           Access is restricted to ED providers.
         </p>
+        <a
+          href="https://docs.google.com/spreadsheets/d/1eFtQiknDOiQSwJkYs-jC-w1_K0byKB5I9qkIE9xnnpU/pubhtml"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="login-schedule-link"
+        >
+          View Provider Schedule
+        </a>
       </div>
     </div>
   )

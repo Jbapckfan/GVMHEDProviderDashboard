@@ -7,10 +7,14 @@ const isProduction = process.env.NODE_ENV === 'production';
 const dbDir = isProduction ? '/data/db' : __dirname;
 const defaultDbPath = isProduction ? 'file:/data/db/local.db' : 'file:local.db';
 
-// Ensure database directory exists before connecting
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-  console.log(`Created database directory: ${dbDir}`);
+// Ensure database directory exists before connecting (skip if using Turso remote DB)
+if (!process.env.TURSO_DATABASE_URL && !fs.existsSync(dbDir)) {
+  try {
+    fs.mkdirSync(dbDir, { recursive: true });
+    console.log(`Created database directory: ${dbDir}`);
+  } catch (err) {
+    console.warn(`Could not create directory ${dbDir}: ${err.message}`);
+  }
 }
 
 // Create Turso client

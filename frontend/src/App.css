@@ -375,8 +375,40 @@ html.dark-mode .qr-code {
   gap: 4px;
 }
 
-/* Move up/down / resize buttons */
-.move-btn {
+/* Drag handle (grip icon) */
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--gray-200, #e2e8f0);
+  border-radius: var(--radius, 6px);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--gray-400, #94a3b8);
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+  transition: all 0.15s ease;
+  backdrop-filter: blur(4px);
+  flex-shrink: 0;
+}
+
+.drag-handle:hover {
+  color: var(--primary-600, #2563eb);
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Resize toggle button */
+.resize-btn {
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid var(--gray-200, #e2e8f0);
   cursor: pointer;
@@ -389,7 +421,7 @@ html.dark-mode .qr-code {
   backdrop-filter: blur(4px);
 }
 
-.move-btn:hover:not(:disabled) {
+.resize-btn:hover {
   color: var(--primary-600, #2563eb);
   background: rgba(59, 130, 246, 0.08);
   border-color: rgba(59, 130, 246, 0.3);
@@ -397,9 +429,37 @@ html.dark-mode .qr-code {
   box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
 }
 
-.move-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
+/* Toolbar left group (drag handle + title) */
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Section being dragged */
+.section-dragging {
+  opacity: 0.4;
+  outline: 2px solid var(--primary-500, #3b82f6);
+  outline-offset: -2px;
+}
+
+/* Drag overlay floating card */
+.drag-overlay-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(59, 130, 246, 0.1);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--gray-800, #1e293b);
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 /* Collapse / Expand buttons */
@@ -533,16 +593,39 @@ html.dark-mode .toolbar-title {
   color: #94a3b8;
 }
 
-html.dark-mode .move-btn {
+html.dark-mode .drag-handle {
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark-mode .drag-handle:hover {
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+html.dark-mode .resize-btn {
   color: #94a3b8;
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-html.dark-mode .move-btn:hover:not(:disabled) {
+html.dark-mode .resize-btn:hover {
   color: #60a5fa;
   background: rgba(59, 130, 246, 0.1);
   border-color: rgba(59, 130, 246, 0.3);
+}
+
+html.dark-mode .section-dragging {
+  outline-color: #60a5fa;
+}
+
+html.dark-mode .drag-overlay-card {
+  background: rgba(30, 38, 50, 0.92);
+  border-color: rgba(96, 165, 250, 0.3);
+  color: #e2e8f0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
 html.dark-mode .collapse-btn,

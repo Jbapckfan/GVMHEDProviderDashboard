@@ -1,5 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import './App.css'
 import KPIImageUpload from './components/KPIImageUpload'
 import ScheduleCalendar from './components/ScheduleCalendar'
@@ -106,6 +123,71 @@ function getInitialSizes() {
   }
 }
 
+// --- Sortable section wrapper ---
+function SortableSection({ sectionId, config, Component, isCollapsed, canResize, size, gridClass, toggleCollapse, toggleSize }) {
+  const {
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    attributes,
+    listeners,
+  } = useSortable({ id: sectionId })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`dashboard-section ${gridClass}${isDragging ? ' section-dragging' : ''}`}
+    >
+      {/* Collapsed bar - shown when collapsed */}
+      {isCollapsed && (
+        <div className="collapsed-bar">
+          <button className="drag-handle" {...attributes} {...listeners} title="Drag to reorder" aria-label="Drag to reorder">
+            {'\u2630'}
+          </button>
+          <span className="collapsed-icon">{config.icon}</span>
+          <span className="collapsed-title">{config.title}</span>
+          <div className="toolbar-actions">
+            {canResize && (
+              <button className="resize-btn" onClick={() => toggleSize(sectionId)} title={size === 'full' ? 'Half width' : 'Full width'}>
+                {size === 'full' ? '\u{2B0C}' : '\u{2B0D}'}
+              </button>
+            )}
+            <button className="expand-btn" onClick={() => toggleCollapse(sectionId)} title="Expand section">{'\u25BC'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* Section content - ALWAYS rendered, hidden via CSS when collapsed */}
+      <div className={`section-content${isCollapsed ? ' section-hidden' : ''}`}>
+        <div className="section-toolbar">
+          <div className="toolbar-left">
+            <button className="drag-handle" {...attributes} {...listeners} title="Drag to reorder" aria-label="Drag to reorder">
+              {'\u2630'}
+            </button>
+            <span className="toolbar-title">{config.icon} {config.title}</span>
+          </div>
+          <div className="toolbar-actions">
+            {canResize && (
+              <button className="resize-btn" onClick={() => toggleSize(sectionId)} title={size === 'full' ? 'Half width' : 'Full width'}>
+                {size === 'full' ? '\u{2B0C}' : '\u{2B0D}'}
+              </button>
+            )}
+            <button className="collapse-btn" onClick={() => toggleCollapse(sectionId)} title="Collapse section">{'\u2212'}</button>
+          </div>
+        </div>
+        <Component />
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [providerName, setProviderName] = useState(() => {
     try {
@@ -133,6 +215,9 @@ function App() {
   const [sectionOrder, setSectionOrder] = useState(getInitialOrder)
   const [collapsedSections, setCollapsedSections] = useState(getInitialCollapsed)
   const [sectionSizes, setSectionSizes] = useState(getInitialSizes)
+
+  // Active drag ID for DragOverlay
+  const [activeDragId, setActiveDragId] = useState(null)
 
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(siteUrl)}`
@@ -190,19 +275,42 @@ function App() {
     } catch {}
   }, [])
 
-  // --- Move section up / down ---
-  const moveSection = useCallback((id, direction) => {
+  // --- Drag-and-drop sensors ---
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: { distance: 8 },
+  })
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: { delay: 200, tolerance: 5 },
+  })
+  const keyboardSensor = useSensor(KeyboardSensor)
+  const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor)
+
+  // --- Drag handlers ---
+  const handleDragStart = useCallback((event) => {
+    setActiveDragId(event.active.id)
+  }, [])
+
+  const handleDragEnd = useCallback((event) => {
+    setActiveDragId(null)
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
     setSectionOrder(prev => {
-      const idx = prev.indexOf(id)
-      if (idx === -1) return prev
-      const targetIdx = idx + direction
-      if (targetIdx < 0 || targetIdx >= prev.length) return prev
-      const next = [...prev]
-      next[idx] = next[targetIdx]
-      next[targetIdx] = id
-      return next
+      const oldIndex = prev.indexOf(active.id)
+      const newIndex = prev.indexOf(over.id)
+      if (oldIndex === -1 || newIndex === -1) return prev
+      return arrayMove(prev, oldIndex, newIndex)
     })
   }, [])
+
+  const handleDragCancel = useCallback(() => {
+    setActiveDragId(null)
+  }, [])
+
+  // Find config for the active drag overlay
+  const activeDragConfig = activeDragId
+    ? DEFAULT_SECTIONS.find(s => s.id === activeDragId)
+    : null
 
   return (
     <Routes>
@@ -248,60 +356,51 @@ function App() {
       </header>
 
       <main className="main-content">
-        <div className="dashboard-grid">
-          {sectionOrder.map((sectionId, index) => {
-            const config = DEFAULT_SECTIONS.find(s => s.id === sectionId)
-            const Component = SECTION_COMPONENTS[sectionId]
-            if (!config || !Component) return null
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+        >
+          <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
+            <div className="dashboard-grid">
+              {sectionOrder.map((sectionId) => {
+                const config = DEFAULT_SECTIONS.find(s => s.id === sectionId)
+                const Component = SECTION_COMPONENTS[sectionId]
+                if (!config || !Component) return null
 
-            const isCollapsed = !!collapsedSections[sectionId]
-            const isFirst = index === 0
-            const isLast = index === sectionOrder.length - 1
-            const canResize = !FULL_WIDTH_ONLY.has(sectionId)
-            const size = canResize ? (sectionSizes[sectionId] || DEFAULT_HALF_WIDTH[sectionId] || 'full') : 'full'
-            const gridClass = size === 'half' ? 'grid-half' : 'grid-full'
+                const isCollapsed = !!collapsedSections[sectionId]
+                const canResize = !FULL_WIDTH_ONLY.has(sectionId)
+                const size = canResize ? (sectionSizes[sectionId] || DEFAULT_HALF_WIDTH[sectionId] || 'full') : 'full'
+                const gridClass = size === 'half' ? 'grid-half' : 'grid-full'
 
-            return (
-              <div key={sectionId} className={`dashboard-section ${gridClass}`}>
-                {/* Collapsed bar - shown when collapsed */}
-                {isCollapsed && (
-                  <div className="collapsed-bar">
-                    <span className="collapsed-icon">{config.icon}</span>
-                    <span className="collapsed-title">{config.title}</span>
-                    <div className="toolbar-actions">
-                      <button className="move-btn" onClick={() => moveSection(sectionId, -1)} disabled={isFirst} title="Move up">{'\u25B2'}</button>
-                      <button className="move-btn" onClick={() => moveSection(sectionId, 1)} disabled={isLast} title="Move down">{'\u25BC'}</button>
-                      {canResize && (
-                        <button className="move-btn" onClick={() => toggleSize(sectionId)} title={size === 'full' ? 'Half width' : 'Full width'}>
-                          {size === 'full' ? '\u{2B0C}' : '\u{2B0D}'}
-                        </button>
-                      )}
-                      <button className="expand-btn" onClick={() => toggleCollapse(sectionId)} title="Expand section">{'\u25BC'}</button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Section content - ALWAYS rendered, hidden via CSS when collapsed */}
-                <div className={`section-content${isCollapsed ? ' section-hidden' : ''}`}>
-                  <div className="section-toolbar">
-                    <span className="toolbar-title">{config.icon} {config.title}</span>
-                    <div className="toolbar-actions">
-                      <button className="move-btn" onClick={() => moveSection(sectionId, -1)} disabled={isFirst} title="Move up">{'\u25B2'}</button>
-                      <button className="move-btn" onClick={() => moveSection(sectionId, 1)} disabled={isLast} title="Move down">{'\u25BC'}</button>
-                      {canResize && (
-                        <button className="move-btn" onClick={() => toggleSize(sectionId)} title={size === 'full' ? 'Half width' : 'Full width'}>
-                          {size === 'full' ? '\u{2B0C}' : '\u{2B0D}'}
-                        </button>
-                      )}
-                      <button className="collapse-btn" onClick={() => toggleCollapse(sectionId)} title="Collapse section">{'\u2212'}</button>
-                    </div>
-                  </div>
-                  <Component />
-                </div>
+                return (
+                  <SortableSection
+                    key={sectionId}
+                    sectionId={sectionId}
+                    config={config}
+                    Component={Component}
+                    isCollapsed={isCollapsed}
+                    canResize={canResize}
+                    size={size}
+                    gridClass={gridClass}
+                    toggleCollapse={toggleCollapse}
+                    toggleSize={toggleSize}
+                  />
+                )
+              })}
+            </div>
+          </SortableContext>
+          <DragOverlay>
+            {activeDragConfig ? (
+              <div className="drag-overlay-card">
+                <span>{activeDragConfig.icon}</span>
+                <span>{activeDragConfig.title}</span>
               </div>
-            )
-          })}
-        </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </main>
 
       <footer className="footer">

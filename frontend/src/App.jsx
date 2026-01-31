@@ -143,6 +143,7 @@ function SortableSection({ sectionId, config, Component, isCollapsed, canResize,
     <div
       ref={setNodeRef}
       style={style}
+      data-section-id={sectionId}
       className={`dashboard-section ${gridClass}${isDragging ? ' section-dragging' : ''}`}
     >
       {/* Collapsed bar - shown when collapsed */}
@@ -218,6 +219,19 @@ function App() {
 
   // Active drag ID for DragOverlay
   const [activeDragId, setActiveDragId] = useState(null)
+
+  // Auto-collapse low-priority sections on mobile if user hasn't set preferences
+  useEffect(() => {
+    if (window.innerWidth >= 768) return
+    const hasStoredPrefs = localStorage.getItem('dashboard-collapsed')
+    if (hasStoredPrefs) return
+    setCollapsedSections(prev => ({
+      ...prev,
+      charts: true,
+      'kpi-goals': true,
+      'kpi-docs': true,
+    }))
+  }, [])
 
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(siteUrl)}`

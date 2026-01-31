@@ -779,6 +779,15 @@ html.dark-mode .skeleton {
     flex: 1;
   }
 
+  /* Safe area inset for notched phones */
+  .header {
+    padding-top: calc(var(--space-4) + env(safe-area-inset-top));
+  }
+
+  .footer {
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  }
+
   .hamburger-btn {
     display: flex;
   }
@@ -820,5 +829,48 @@ html.dark-mode .skeleton {
 
   .dashboard-section {
     border-radius: var(--radius-xl);
+  }
+
+  /* Hide drag handles and resize buttons — poor UX on touch screens */
+  .drag-handle {
+    display: none;
+  }
+
+  .resize-btn {
+    display: none;
+  }
+
+  /* Remove gap left behind in toolbar */
+  .toolbar-left {
+    gap: 0;
+  }
+
+  .toolbar-actions {
+    gap: 2px;
+  }
+
+  /* Compact section headers */
+  .section-toolbar {
+    padding: 8px 12px;
+  }
+
+  .collapsed-bar {
+    height: 40px;
+  }
+
+  .toolbar-title {
+    font-size: 0.75rem;
+  }
+
+  /* Sticky Who's On Now banner */
+  .dashboard-section[data-section-id="whos-on"] {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  /* Compact Who's On Now to save vertical space */
+  .whos-on-card {
+    padding: 0.75rem 1rem !important;
   }
 }

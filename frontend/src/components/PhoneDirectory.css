@@ -309,11 +309,25 @@ html.dark-mode .btn-cancel:hover {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-3);
+    padding: var(--space-4);
   }
 
   .phone-number {
     width: 100%;
     text-align: center;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.0625rem;
+    border-radius: var(--radius-lg);
+    gap: 0.5rem;
+  }
+
+  /* Phone icon indicator */
+  .phone-number::before {
+    content: '\260E';
+    font-size: 1.125rem;
   }
 
   .phone-edit-form {

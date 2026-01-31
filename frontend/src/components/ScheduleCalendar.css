@@ -558,9 +558,21 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
     text-align: center;
   }
 
+  /* Make calendar horizontally scrollable so cells stay readable */
+  .calendar-grid {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .calendar-day-headers,
+  .calendar-body,
+  .calendar-week {
+    min-width: 600px;
+  }
+
   .calendar-cell {
-    min-height: 64px;
-    padding: 4px;
+    min-height: 72px;
+    padding: 6px;
   }
 
   .day-header {
@@ -574,8 +586,8 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
   }
 
   .provider-name {
-    font-size: 0.5625rem;
-    padding: 2px 4px;
+    font-size: 0.6875rem;
+    padding: 3px 6px;
     border-left-width: 2px;
   }
 }
@@ -585,11 +597,17 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
     padding: var(--space-3);
   }
 
+  .calendar-day-headers,
+  .calendar-body,
+  .calendar-week {
+    min-width: 600px;
+  }
+
   .calendar-cell {
-    min-height: 56px;
+    min-height: 72px;
   }
 
   .provider-name {
-    font-size: 0.5rem;
+    font-size: 0.625rem;
   }
 }

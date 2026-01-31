@@ -23,7 +23,7 @@ const RESOURCE_CATEGORIES = [
     name: 'Legal / Psychiatric',
     icon: '\u{1F4CB}',
     links: [
-      { title: 'Missouri 96-Hour Hold Template', url: '', desc: 'Involuntary psychiatric hold documentation', placeholder: true },
+      { title: 'MO 96-Hour Hold Form (Pre-filled)', url: '/mo-96hr-hold.pdf', desc: 'DMH 142 — GVMH address pre-filled, editable PDF' },
     ]
   },
   {

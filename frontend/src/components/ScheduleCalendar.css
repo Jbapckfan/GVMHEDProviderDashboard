@@ -650,6 +650,11 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
 
 /* ===== PRINT STYLES ===== */
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   /* Hide everything except the schedule calendar */
   body > *:not(#root),
   nav, header, footer,
@@ -791,21 +796,22 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
     print-color-adjust: exact;
   }
 
-  /* Today — bold blue outline */
+  /* Remove "TODAY" label and special styling — print is a static reference */
   .calendar-cell.today {
     box-shadow: none !important;
-    background: #dbeafe !important;
-    border: 2.5pt solid #2563eb !important;
+    background: white !important;
+    border: none !important;
+    border-right: 1px solid #cbd5e1 !important;
+  }
+
+  .calendar-cell.today.weekend {
+    background: #eff6ff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .calendar-cell.today::before {
-    font-size: 5.5pt !important;
-    font-weight: 800 !important;
-    color: #1d4ed8 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    display: none !important;
   }
 
   /* Day number */
@@ -823,9 +829,7 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
   }
 
   .calendar-cell.today .cell-day {
-    color: #1d4ed8 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    color: #1e293b !important;
   }
 
   /* ---- Provider name badges ---- */

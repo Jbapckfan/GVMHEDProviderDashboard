@@ -197,11 +197,11 @@ function HospitalistPager() {
         {sendStatus === 'sending' ? (
           <><span className="pager-spinner" /> Sending...</>
         ) : (
-          'I Have an Admit'
+          'Rapid Admit Page (no details)'
         )}
       </button>
 
-      <div className="pager-section-divider" />
+      <div className="pager-section-divider">Or</div>
 
       {/* Bed Selection */}
       <div className="pager-field">

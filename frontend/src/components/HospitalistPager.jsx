@@ -141,6 +141,30 @@ function HospitalistPager() {
     }
   }
 
+  const handleQuickAdmit = async () => {
+    if (!senderName.trim() || sendStatus === 'sending') return
+    setSendStatus('sending')
+    setSendError('')
+
+    const msg = `${senderName.trim()} - I have an admit`
+    try {
+      const response = await axios.post(`${API_BASE}/page-hospitalist`, {
+        senderName: senderName.trim(),
+        message: msg,
+      })
+      if (response.data.success) {
+        setSendStatus('success')
+      } else {
+        setSendStatus('error')
+        setSendError(response.data.error || 'Unknown error')
+      }
+    } catch (error) {
+      setSendStatus('error')
+      const msg = error.response?.data?.error || error.message || 'Failed to send page'
+      setSendError(msg)
+    }
+  }
+
   const handleRetry = () => {
     setSendStatus(null)
     setSendError('')
@@ -162,6 +186,22 @@ function HospitalistPager() {
           <button className="pager-retry-btn" onClick={handleRetry}>Retry</button>
         </div>
       )}
+
+      {/* Quick Admit */}
+      <button
+        className="pager-quick-admit-btn"
+        disabled={!senderName.trim() || sendStatus === 'sending'}
+        onClick={handleQuickAdmit}
+        type="button"
+      >
+        {sendStatus === 'sending' ? (
+          <><span className="pager-spinner" /> Sending...</>
+        ) : (
+          'I Have an Admit'
+        )}
+      </button>
+
+      <div className="pager-section-divider" />
 
       {/* Bed Selection */}
       <div className="pager-field">

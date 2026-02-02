@@ -661,7 +661,6 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
     display: none !important;
   }
 
-  /* Let the dashboard grid show only the schedule card */
   .dashboard-section:not(:has(.schedule-calendar-card)) {
     display: none !important;
   }
@@ -673,7 +672,7 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
     gap: 0 !important;
   }
 
-  /* Hide calendar chrome */
+  /* Hide calendar UI chrome */
   .schedule-calendar-card .card-header,
   .calendar-header-actions,
   .refresh-btn,
@@ -685,7 +684,7 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
     display: none !important;
   }
 
-  /* Reset card container for full-page print */
+  /* Reset card for full-page */
   .schedule-calendar-card {
     box-shadow: none !important;
     border: none !important;
@@ -700,16 +699,23 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
     padding: 0 !important;
   }
 
-  /* Print header: show month/year title prominently */
+  /* ---- Title header ---- */
   .calendar-header {
-    margin-bottom: 12pt !important;
+    margin-bottom: 10pt !important;
+    border-bottom: 3px solid #1e3a5f !important;
+    padding-bottom: 8pt !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .calendar-title {
-    font-size: 18pt !important;
-    font-weight: 700 !important;
-    color: black !important;
+    font-size: 22pt !important;
+    font-weight: 800 !important;
+    color: #1e3a5f !important;
     text-align: center !important;
+    letter-spacing: -0.02em !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .calendar-header-left {
@@ -717,32 +723,41 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
     text-align: center;
   }
 
-  /* Calendar grid: fill page width */
+  /* ---- Calendar grid ---- */
   .calendar-grid {
     box-shadow: none !important;
-    border: 2px solid #333 !important;
-    border-radius: 0 !important;
+    border: 2px solid #1e3a5f !important;
+    border-radius: 4pt !important;
     overflow: visible !important;
     width: 100% !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
+  /* Day-of-week header bar — blue */
   .calendar-day-headers {
-    background: #333 !important;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%) !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .day-header {
     color: white !important;
-    font-size: 8pt !important;
-    padding: 6pt 4pt !important;
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    padding: 8pt 4pt !important;
+    letter-spacing: 0.06em !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .calendar-week {
-    border-bottom: 1px solid #ccc !important;
+    border-bottom: 1px solid #cbd5e1 !important;
     min-width: 0 !important;
+  }
+
+  .calendar-week:last-child {
+    border-bottom: none !important;
   }
 
   .calendar-day-headers,
@@ -750,78 +765,159 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
     min-width: 0 !important;
   }
 
+  /* ---- Day cells ---- */
   .calendar-cell {
-    min-height: 60pt !important;
-    padding: 4pt !important;
-    border-right: 1px solid #ccc !important;
+    min-height: 66pt !important;
+    padding: 5pt 4pt !important;
+    border-right: 1px solid #cbd5e1 !important;
     background: white !important;
     page-break-inside: avoid;
   }
 
+  .calendar-cell:last-child {
+    border-right: none !important;
+  }
+
   .calendar-cell.empty {
-    background: #f5f5f5 !important;
+    background: #f8fafc !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
+  /* Weekend cells — light blue wash */
   .calendar-cell.weekend {
-    background: #f0f7ff !important;
+    background: #eff6ff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
+  /* Today — bold blue outline */
   .calendar-cell.today {
     box-shadow: none !important;
-    background: #e8f0fe !important;
-    border: 2px solid #2563eb !important;
+    background: #dbeafe !important;
+    border: 2.5pt solid #2563eb !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .calendar-cell.today::before {
-    font-size: 5pt !important;
-    color: #2563eb !important;
+    font-size: 5.5pt !important;
+    font-weight: 800 !important;
+    color: #1d4ed8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
+  /* Day number */
   .cell-day {
-    font-size: 9pt !important;
+    font-size: 10pt !important;
     font-weight: 700 !important;
-    color: #333 !important;
-    margin-bottom: 3pt !important;
+    color: #1e293b !important;
+    margin-bottom: 4pt !important;
   }
 
+  .calendar-cell.weekend .cell-day {
+    color: #1e40af !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .calendar-cell.today .cell-day {
+    color: #1d4ed8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ---- Provider name badges ---- */
   .cell-providers {
-    gap: 2pt !important;
+    gap: 3pt !important;
   }
 
   .provider-name {
-    font-size: 7pt !important;
-    padding: 2pt 4pt !important;
-    border-left: 2pt solid #2563eb !important;
-    background: #f0f0f0 !important;
-    color: #222 !important;
-    border-radius: 0 !important;
+    font-size: 7.5pt !important;
+    font-weight: 600 !important;
+    padding: 3pt 5pt !important;
+    border-left: 3pt solid transparent !important;
+    border-radius: 2pt !important;
     cursor: default !important;
     opacity: 1 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  .provider-name.selected {
-    background: #f0f0f0 !important;
-    color: #222 !important;
+  /* Color-code by shift position: Top = blue, Middle = teal, Bottom = indigo */
+  .provider-name:nth-child(1) {
+    background: #dbeafe !important;
     border-left-color: #2563eb !important;
+    color: #1e40af !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .provider-name:nth-child(2) {
+    background: #ccfbf1 !important;
+    border-left-color: #14b8a6 !important;
+    color: #0f766e !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .provider-name:nth-child(3) {
+    background: #e0e7ff !important;
+    border-left-color: #6366f1 !important;
+    color: #4338ca !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Reset selection/dimming for print */
+  .provider-name.selected {
     box-shadow: none !important;
+  }
+
+  .provider-name.selected:nth-child(1) {
+    background: #dbeafe !important;
+    border-left-color: #2563eb !important;
+    color: #1e40af !important;
+  }
+
+  .provider-name.selected:nth-child(2) {
+    background: #ccfbf1 !important;
+    border-left-color: #14b8a6 !important;
+    color: #0f766e !important;
+  }
+
+  .provider-name.selected:nth-child(3) {
+    background: #e0e7ff !important;
+    border-left-color: #6366f1 !important;
+    color: #4338ca !important;
   }
 
   .provider-name.dimmed {
     opacity: 1 !important;
   }
 
-  .calendar-cell.weekend .provider-name {
-    background: #e6f0fa !important;
-    border-left-color: #0ea5e9 !important;
-    color: #0c4a6e !important;
+  /* Weekend provider overrides — slightly deeper tints */
+  .calendar-cell.weekend .provider-name:nth-child(1) {
+    background: #bfdbfe !important;
+    border-left-color: #2563eb !important;
+    color: #1e3a8a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .calendar-cell.weekend .provider-name:nth-child(2) {
+    background: #99f6e4 !important;
+    border-left-color: #14b8a6 !important;
+    color: #065f46 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .calendar-cell.weekend .provider-name:nth-child(3) {
+    background: #c7d2fe !important;
+    border-left-color: #6366f1 !important;
+    color: #3730a3 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -829,6 +925,6 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
   /* Page setup */
   @page {
     size: landscape;
-    margin: 0.4in;
+    margin: 0.35in 0.4in;
   }
 }

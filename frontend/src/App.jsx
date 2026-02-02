@@ -335,7 +335,13 @@ function App() {
         <div className="header-content">
           <div className="header-title-group">
             <h1><img src="/gvmh-logo.png" alt="GVMH" className="header-logo" /> ED Provider Dashboard</h1>
-            <div className="provider-name-subtitle">{providerName}</div>
+            <div className="provider-name-subtitle">{(() => {
+              if (!providerName) return ''
+              if (providerName.includes('NP')) return providerName
+              if (providerName.startsWith('Dr.')) return providerName
+              const parts = providerName.trim().split(/\s+/)
+              return `Dr. ${parts[parts.length - 1]}`
+            })()}</div>
           </div>
           <button className="hamburger-btn" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
             <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>

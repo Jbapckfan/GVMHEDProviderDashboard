@@ -188,9 +188,14 @@ function ScheduleCalendar() {
               </span>
             )}
           </div>
-          <button onClick={fetchSchedule} className="refresh-btn" disabled={loading}>
-            {loading ? '...' : '↻'} Refresh
-          </button>
+          <div className="calendar-header-actions">
+            <button onClick={() => window.print()} className="print-btn" title="Print schedule">
+              🖨️ Print
+            </button>
+            <button onClick={fetchSchedule} className="refresh-btn" disabled={loading}>
+              {loading ? '...' : '↻'} Refresh
+            </button>
+          </div>
         </div>
 
         {loading && (

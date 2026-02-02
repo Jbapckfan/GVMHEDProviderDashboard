@@ -156,6 +156,42 @@ html.dark-mode .data-stats {
   color: var(--gray-500);
 }
 
+.calendar-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.print-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  transition: all var(--transition);
+}
+
+.print-btn:hover {
+  background: var(--gray-200);
+  border-color: var(--gray-300);
+}
+
+html.dark-mode .print-btn {
+  background: var(--gray-200);
+  border-color: var(--gray-300);
+  color: var(--gray-700);
+}
+
+html.dark-mode .print-btn:hover {
+  background: var(--gray-300);
+}
+
 .refresh-btn {
   display: flex;
   align-items: center;
@@ -609,5 +645,190 @@ html.dark-mode .calendar-cell.weekend .provider-name:hover {
 
   .provider-name {
     font-size: 0.625rem;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  /* Hide everything except the schedule calendar */
+  body > *:not(#root),
+  nav, header, footer,
+  .sidebar, .nav-bar, .navbar, .top-bar,
+  .app-header,
+  .whos-on-card, .kpi-card, .message-board-card,
+  .phone-directory-card, .hospitalist-pager-card,
+  .pager-card, .qr-code-section {
+    display: none !important;
+  }
+
+  /* Let the dashboard grid show only the schedule card */
+  .dashboard-section:not(:has(.schedule-calendar-card)) {
+    display: none !important;
+  }
+
+  .main-content, .dashboard-grid, .dashboard-section {
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    gap: 0 !important;
+  }
+
+  /* Hide calendar chrome */
+  .schedule-calendar-card .card-header,
+  .calendar-header-actions,
+  .refresh-btn,
+  .print-btn,
+  .live-indicator,
+  .month-tabs,
+  .selected-provider-stats,
+  .clear-selection {
+    display: none !important;
+  }
+
+  /* Reset card container for full-page print */
+  .schedule-calendar-card {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    background: white !important;
+  }
+
+  .calendar-container {
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  /* Print header: show month/year title prominently */
+  .calendar-header {
+    margin-bottom: 12pt !important;
+  }
+
+  .calendar-title {
+    font-size: 18pt !important;
+    font-weight: 700 !important;
+    color: black !important;
+    text-align: center !important;
+  }
+
+  .calendar-header-left {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Calendar grid: fill page width */
+  .calendar-grid {
+    box-shadow: none !important;
+    border: 2px solid #333 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  .calendar-day-headers {
+    background: #333 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .day-header {
+    color: white !important;
+    font-size: 8pt !important;
+    padding: 6pt 4pt !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .calendar-week {
+    border-bottom: 1px solid #ccc !important;
+    min-width: 0 !important;
+  }
+
+  .calendar-day-headers,
+  .calendar-body {
+    min-width: 0 !important;
+  }
+
+  .calendar-cell {
+    min-height: 60pt !important;
+    padding: 4pt !important;
+    border-right: 1px solid #ccc !important;
+    background: white !important;
+    page-break-inside: avoid;
+  }
+
+  .calendar-cell.empty {
+    background: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .calendar-cell.weekend {
+    background: #f0f7ff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .calendar-cell.today {
+    box-shadow: none !important;
+    background: #e8f0fe !important;
+    border: 2px solid #2563eb !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .calendar-cell.today::before {
+    font-size: 5pt !important;
+    color: #2563eb !important;
+  }
+
+  .cell-day {
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    color: #333 !important;
+    margin-bottom: 3pt !important;
+  }
+
+  .cell-providers {
+    gap: 2pt !important;
+  }
+
+  .provider-name {
+    font-size: 7pt !important;
+    padding: 2pt 4pt !important;
+    border-left: 2pt solid #2563eb !important;
+    background: #f0f0f0 !important;
+    color: #222 !important;
+    border-radius: 0 !important;
+    cursor: default !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .provider-name.selected {
+    background: #f0f0f0 !important;
+    color: #222 !important;
+    border-left-color: #2563eb !important;
+    box-shadow: none !important;
+  }
+
+  .provider-name.dimmed {
+    opacity: 1 !important;
+  }
+
+  .calendar-cell.weekend .provider-name {
+    background: #e6f0fa !important;
+    border-left-color: #0ea5e9 !important;
+    color: #0c4a6e !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Page setup */
+  @page {
+    size: landscape;
+    margin: 0.4in;
   }
 }

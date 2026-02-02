@@ -47,6 +47,14 @@ const MAX_CHARS = 240
 function HospitalistPager() {
   const [selectedBeds, setSelectedBeds] = useState(new Set())
   const [senderName, setSenderName] = useState(() => {
+    // Auto-select the logged-in provider if they match the dropdown list
+    try {
+      const auth = JSON.parse(sessionStorage.getItem('providerAuth'))
+      if (auth?.providerName && PROVIDERS.includes(auth.providerName)) {
+        return auth.providerName
+      }
+    } catch {}
+    // Fall back to last-used name from localStorage
     return localStorage.getItem('pager-sender-name') || ''
   })
   const [diagnosis, setDiagnosis] = useState('')

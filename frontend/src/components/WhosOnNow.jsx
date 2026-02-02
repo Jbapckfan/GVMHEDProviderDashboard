@@ -3,6 +3,12 @@ import axios from 'axios'
 import { API_BASE } from '../utils/api'
 import './WhosOnNow.css'
 
+const SHIFT_LABELS = [
+  { label: 'Day', time: '7a\u20137p' },
+  { label: 'NP', time: '10a\u201310p' },
+  { label: 'Night', time: '7p\u20137a' },
+]
+
 function WhosOnNow() {
   const [todayProviders, setTodayProviders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -62,9 +68,15 @@ function WhosOnNow() {
         </div>
         <div className="whos-on-providers">
           {todayProviders.length > 0 ? (
-            todayProviders.map((name, idx) => (
-              <span key={idx} className="on-shift-badge">{name}</span>
-            ))
+            todayProviders.map((name, idx) => {
+              const shift = SHIFT_LABELS[idx]
+              return (
+                <span key={idx} className="on-shift-badge">
+                  {shift && <span className="shift-time">{shift.time}</span>}
+                  {name}
+                </span>
+              )
+            })
           ) : (
             <span className="no-shift-data">No schedule data for today</span>
           )}

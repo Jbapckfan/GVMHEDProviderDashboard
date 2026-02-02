@@ -333,7 +333,10 @@ function App() {
     <div className="app">
       <header className="header">
         <div className="header-content">
-          <h1><img src="/gvmh-logo.png" alt="GVMH" className="header-logo" /> ED Provider Dashboard</h1>
+          <div className="header-title-group">
+            <h1><img src="/gvmh-logo.png" alt="GVMH" className="header-logo" /> ED Provider Dashboard</h1>
+            <div className="provider-name-subtitle">{providerName}</div>
+          </div>
           <button className="hamburger-btn" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
             <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>
             <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>

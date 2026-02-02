@@ -64,7 +64,9 @@ html.dark-mode .whos-on-card {
 }
 
 .on-shift-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.375rem 0.875rem;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
@@ -74,6 +76,15 @@ html.dark-mode .whos-on-card {
   font-weight: 600;
   white-space: nowrap;
   transition: all 0.2s ease;
+}
+
+.shift-time {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  opacity: 0.7;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 0.125rem 0.4rem;
+  border-radius: 8px;
 }
 
 .on-shift-badge:hover {

@@ -3,7 +3,7 @@ import axios from 'axios'
 import { API_BASE } from '../utils/api'
 import './ScheduleCalendar.css'
 
-function ScheduleCalendar() {
+function ScheduleCalendar({ limitToCurrentAndNext = false }) {
   const [scheduleData, setScheduleData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -22,11 +22,24 @@ function ScheduleCalendar() {
     const fetchMonths = async () => {
       try {
         const response = await axios.get(`${API_BASE}/schedule-months`)
-        const months = response.data.months.map(m => ({
+        let months = response.data.months.map(m => ({
           month: monthNames.indexOf(m.month),
           year: m.year,
           label: `${m.month.substring(0, 3)} '${String(m.year).slice(-2)}`
         }))
+
+        if (limitToCurrentAndNext) {
+          const now = new Date()
+          const curM = now.getMonth()
+          const curY = now.getFullYear()
+          const nextM = curM === 11 ? 0 : curM + 1
+          const nextY = curM === 11 ? curY + 1 : curY
+          months = months.filter(m =>
+            (m.month === curM && m.year === curY) ||
+            (m.month === nextM && m.year === nextY)
+          )
+        }
+
         setAvailableMonths(months)
 
         // Set current selection to current month if available, otherwise first available

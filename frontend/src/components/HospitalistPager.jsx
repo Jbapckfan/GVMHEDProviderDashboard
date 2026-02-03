@@ -50,8 +50,20 @@ function HospitalistPager() {
     // Auto-select the logged-in provider if they match the dropdown list
     try {
       const auth = JSON.parse(sessionStorage.getItem('providerAuth'))
-      if (auth?.providerName && PROVIDERS.includes(auth.providerName)) {
-        return auth.providerName
+      if (auth?.providerName) {
+        // Try exact match first
+        if (PROVIDERS.includes(auth.providerName)) {
+          return auth.providerName
+        }
+        // Fall back to last-name match (schedule may store just "Alford" but dropdown has "Dr. Alford")
+        const needle = auth.providerName.trim().split(/\s+/).pop().toLowerCase()
+        const match = PROVIDERS.find(p => {
+          // Strip trailing ", NP" or similar suffixes before extracting last name
+          const clean = p.replace(/,\s*NP$/i, '').trim()
+          const last = clean.split(/\s+/).pop().toLowerCase()
+          return last === needle
+        })
+        if (match) return match
       }
     } catch {}
     // Fall back to last-used name from localStorage

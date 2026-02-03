@@ -36,7 +36,7 @@ function SchedulePage() {
       </header>
 
       <main className="schedule-page-main">
-        <ScheduleCalendar />
+        <ScheduleCalendar limitToCurrentAndNext />
       </main>
 
       <section className="schedule-qr-section">

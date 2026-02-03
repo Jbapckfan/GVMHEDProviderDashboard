@@ -183,6 +183,17 @@ async function initializeDatabase() {
     )
   `);
 
+  // Message replies table
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS message_replies (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      message_id INTEGER NOT NULL,
+      message TEXT NOT NULL,
+      author TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // KPI Document Annotations table
   await db.execute(`
     CREATE TABLE IF NOT EXISTS kpi_document_annotations (
@@ -484,8 +495,35 @@ const updateMessage = async (id, data) => {
 };
 
 const deleteMessage = async (id) => {
+  // Delete replies first, then the message
+  await db.execute({
+    sql: 'DELETE FROM message_replies WHERE message_id=?',
+    args: [id]
+  });
   return await db.execute({
     sql: 'DELETE FROM messages WHERE id=?',
+    args: [id]
+  });
+};
+
+const getReplies = async (messageId) => {
+  const result = await db.execute({
+    sql: 'SELECT * FROM message_replies WHERE message_id=? ORDER BY created_at ASC',
+    args: [messageId]
+  });
+  return result.rows;
+};
+
+const addReply = async (messageId, data) => {
+  return await db.execute({
+    sql: 'INSERT INTO message_replies (message_id, message, author) VALUES (?, ?, ?)',
+    args: [messageId, data.message, data.author || 'Anonymous']
+  });
+};
+
+const deleteReply = async (id) => {
+  return await db.execute({
+    sql: 'DELETE FROM message_replies WHERE id=?',
     args: [id]
   });
 };
@@ -634,6 +672,9 @@ module.exports = {
   addMessage,
   updateMessage,
   deleteMessage,
+  getReplies,
+  addReply,
+  deleteReply,
   saveFile,
   getFile,
   deleteFile,

@@ -843,11 +843,18 @@ app.delete('/api/admin/kpi-goals/:id', async (req, res) => {
   }
 });
 
-// Get messages
+// Get messages with replies
 app.get('/api/messages', async (req, res) => {
   try {
     const messages = await db.getMessages();
-    res.json(messages);
+    // Attach replies to each message
+    const messagesWithReplies = await Promise.all(
+      messages.map(async (msg) => {
+        const replies = await db.getReplies(msg.id);
+        return { ...msg, replies };
+      })
+    );
+    res.json(messagesWithReplies);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -879,6 +886,28 @@ app.delete('/api/messages/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await db.deleteMessage(id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add reply to a message
+app.post('/api/messages/:id/replies', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await db.addReply(id, req.body);
+    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete a reply
+app.delete('/api/replies/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.deleteReply(id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });

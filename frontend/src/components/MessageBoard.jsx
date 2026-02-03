@@ -5,10 +5,25 @@ import { API_BASE } from '../utils/api'
 import { useToast } from './Toast'
 import ConfirmModal from './ConfirmModal'
 
+function getLoggedInAuthor() {
+  try {
+    const auth = JSON.parse(sessionStorage.getItem('providerAuth'))
+    if (!auth?.providerName) return ''
+    const name = auth.providerName.trim()
+    if (name.includes('NP')) return name
+    if (name.startsWith('Dr.')) return name
+    const parts = name.split(/\s+/)
+    return `Dr. ${parts[parts.length - 1]}`
+  } catch { return '' }
+}
+
 function MessageBoard() {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
   const [editingMessage, setEditingMessage] = useState(null)
+  const [replyingTo, setReplyingTo] = useState(null)
+  const [replyText, setReplyText] = useState('')
+  const [replyAuthor, setReplyAuthor] = useState('')
   const [confirmAction, setConfirmAction] = useState(null)
   const toast = useToast()
 
@@ -31,7 +46,7 @@ function MessageBoard() {
     setEditingMessage({
       id: null,
       message: '',
-      author: ''
+      author: getLoggedInAuthor()
     })
   }
 
@@ -59,7 +74,7 @@ function MessageBoard() {
     if (!editingMessage.id) return
     setConfirmAction({
       title: 'Delete Message',
-      message: 'Are you sure you want to delete this message?',
+      message: 'Are you sure you want to delete this message? All replies will also be removed.',
       onConfirm: async () => {
         setConfirmAction(null)
         try {
@@ -69,6 +84,50 @@ function MessageBoard() {
           fetchMessages()
         } catch (error) {
           toast.error('Failed to delete message: ' + error.message)
+        }
+      }
+    })
+  }
+
+  const handleStartReply = (messageId) => {
+    setReplyingTo(messageId)
+    setReplyText('')
+    setReplyAuthor(getLoggedInAuthor())
+  }
+
+  const handleCancelReply = () => {
+    setReplyingTo(null)
+    setReplyText('')
+    setReplyAuthor('')
+  }
+
+  const handleSubmitReply = async (messageId) => {
+    if (!replyText.trim() || !replyAuthor.trim()) return
+    try {
+      await axios.post(`${API_BASE}/messages/${messageId}/replies`, {
+        message: replyText.trim(),
+        author: replyAuthor.trim()
+      })
+      toast.success('Reply posted.')
+      handleCancelReply()
+      fetchMessages()
+    } catch (error) {
+      toast.error('Failed to post reply: ' + error.message)
+    }
+  }
+
+  const handleDeleteReply = (replyId) => {
+    setConfirmAction({
+      title: 'Delete Reply',
+      message: 'Are you sure you want to delete this reply?',
+      onConfirm: async () => {
+        setConfirmAction(null)
+        try {
+          await axios.delete(`${API_BASE}/replies/${replyId}`)
+          toast.success('Reply deleted.')
+          fetchMessages()
+        } catch (error) {
+          toast.error('Failed to delete reply: ' + error.message)
         }
       }
     })
@@ -126,6 +185,68 @@ function MessageBoard() {
               </button>
             </div>
             <p className="message-content">{message.message}</p>
+
+            {/* Replies */}
+            {message.replies && message.replies.length > 0 && (
+              <div className="replies-section">
+                {message.replies.map((reply) => (
+                  <div key={reply.id} className="reply-item">
+                    <div className="reply-header">
+                      <div className="reply-author-info">
+                        <span className="reply-author">{reply.author}</span>
+                        <span className="reply-time">{getTimeAgo(reply.created_at)}</span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteReply(reply.id)}
+                        className="reply-delete-btn"
+                        title="Delete reply"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                    <p className="reply-content">{reply.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Reply button / inline form */}
+            {replyingTo === message.id ? (
+              <div className="reply-form">
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={replyAuthor}
+                  onChange={(e) => setReplyAuthor(e.target.value)}
+                  className="reply-author-input"
+                />
+                <textarea
+                  placeholder="Write a reply..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  className="reply-text-input"
+                  rows={2}
+                  autoFocus
+                />
+                <div className="reply-form-actions">
+                  <button onClick={handleCancelReply} className="reply-cancel-btn">Cancel</button>
+                  <button
+                    onClick={() => handleSubmitReply(message.id)}
+                    className="reply-submit-btn"
+                    disabled={!replyText.trim() || !replyAuthor.trim()}
+                  >
+                    Reply
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleStartReply(message.id)}
+                className="reply-trigger-btn"
+              >
+                Reply{message.replies && message.replies.length > 0 ? ` (${message.replies.length})` : ''}
+              </button>
+            )}
           </div>
         ))}
 

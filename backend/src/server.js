@@ -54,18 +54,10 @@ const scheduleStorage = multer.diskStorage({
   }
 });
 
-// Separate storage for KPI documents - uses unique filenames to avoid collisions
-const kpiDocStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `kpi-doc-${uniqueSuffix}${ext}`);
-  }
-});
+// KPI documents use memory storage - file goes straight to DB as base64, no disk needed
+const uploadKPIDoc = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 const uploadKPI = multer({ storage: kpiStorage, limits: { fileSize: 10 * 1024 * 1024 } });
-const uploadKPIDoc = multer({ storage: kpiDocStorage, limits: { fileSize: 10 * 1024 * 1024 } });
 const uploadSchedule = multer({ storage: scheduleStorage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // Middleware
@@ -248,10 +240,8 @@ app.post('/api/kpi-documents', uploadKPIDoc.single('file'), async (req, res) => 
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Read file and convert to base64
-    const filePath = path.join(uploadsDir, req.file.filename);
-    const fileData = fs.readFileSync(filePath);
-    const base64Data = fileData.toString('base64');
+    // Convert buffer to base64 (memory storage provides req.file.buffer directly)
+    const base64Data = req.file.buffer.toString('base64');
 
     // Use custom title if provided, otherwise use original filename without extension
     const title = req.body.title || req.file.originalname.replace(/\.[^/.]+$/, '');
@@ -264,9 +254,6 @@ app.post('/api/kpi-documents', uploadKPIDoc.single('file'), async (req, res) => 
       base64Data,
       req.file.size
     );
-
-    // Clean up temp file
-    fs.unlinkSync(filePath);
 
     res.json({
       success: true,

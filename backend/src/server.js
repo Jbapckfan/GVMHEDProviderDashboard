@@ -54,7 +54,18 @@ const scheduleStorage = multer.diskStorage({
   }
 });
 
+// Separate storage for KPI documents - uses unique filenames to avoid collisions
+const kpiDocStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `kpi-doc-${uniqueSuffix}${ext}`);
+  }
+});
+
 const uploadKPI = multer({ storage: kpiStorage, limits: { fileSize: 10 * 1024 * 1024 } });
+const uploadKPIDoc = multer({ storage: kpiDocStorage, limits: { fileSize: 10 * 1024 * 1024 } });
 const uploadSchedule = multer({ storage: scheduleStorage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // Middleware
@@ -231,7 +242,7 @@ app.get('/api/kpi-documents', async (req, res) => {
 });
 
 // Upload new KPI document
-app.post('/api/kpi-documents', uploadKPI.single('file'), async (req, res) => {
+app.post('/api/kpi-documents', uploadKPIDoc.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -259,7 +270,7 @@ app.post('/api/kpi-documents', uploadKPI.single('file'), async (req, res) => {
 
     res.json({
       success: true,
-      id: result?.lastInsertRowid || result?.lastInsertRowId || null,
+      id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null,
       title: title,
       filename: req.file.originalname,
       uploadedAt: new Date().toISOString()
@@ -376,7 +387,7 @@ app.post('/api/kpi-documents/:docId/annotations', async (req, res) => {
       author: author || 'Anonymous',
       annotation_type: annotation_type || 'comment'
     });
-    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
+    res.json({ success: true, id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -480,7 +491,7 @@ app.get('/api/phone-directory', async (req, res) => {
 app.post('/api/admin/phone-directory', async (req, res) => {
   try {
     const result = await db.addPhoneNumber(req.body);
-    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
+    res.json({ success: true, id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -635,7 +646,7 @@ app.get('/api/news', async (req, res) => {
 app.post('/api/admin/news', async (req, res) => {
   try {
     const result = await db.addNews(req.body);
-    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
+    res.json({ success: true, id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -677,7 +688,7 @@ app.get('/api/order-set-suggestions', async (req, res) => {
 app.post('/api/order-set-suggestions', async (req, res) => {
   try {
     const result = await db.createOrderSetSuggestion(req.body);
-    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
+    res.json({ success: true, id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -727,7 +738,7 @@ app.get('/api/provider-charts/trends', async (req, res) => {
 app.post('/api/admin/provider-charts', async (req, res) => {
   try {
     const result = await db.addProviderChart(req.body);
-    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
+    res.json({ success: true, id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -815,7 +826,7 @@ app.get('/api/kpi-goals', async (req, res) => {
 app.post('/api/admin/kpi-goals', async (req, res) => {
   try {
     const result = await db.addKPIGoal(req.body);
-    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
+    res.json({ success: true, id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -864,7 +875,7 @@ app.get('/api/messages', async (req, res) => {
 app.post('/api/messages', async (req, res) => {
   try {
     const result = await db.addMessage(req.body);
-    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
+    res.json({ success: true, id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -897,7 +908,7 @@ app.post('/api/messages/:id/replies', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.addReply(id, req.body);
-    res.json({ success: true, id: result?.lastInsertRowid || result?.lastInsertRowId || null });
+    res.json({ success: true, id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

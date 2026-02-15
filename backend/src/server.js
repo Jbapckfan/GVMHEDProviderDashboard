@@ -531,88 +531,70 @@ app.post('/api/auth/provider-login', async (req, res) => {
 
     const needle = lastName.trim().toLowerCase();
 
-    // Collect all provider names from all cached schedule months + fetch current month
-    const allProviders = new Set();
+    const matchProvider = (providers) => {
+      return Array.from(providers).find(name => {
+        const parts = name.trim().split(/\s+/);
+        const last = parts[parts.length - 1].toLowerCase();
+        return last === needle;
+      });
+    };
 
-    // 1) Pull from schedule cache (already fetched months)
-    for (const [, entry] of scheduleCache) {
-      if (entry && entry.data && entry.data.calendar) {
-        Object.values(entry.data.calendar).forEach(day => {
-          (day.providers || []).forEach(p => allProviders.add(p));
-        });
-      }
-    }
-
-    // 2) Fetch current month if not already cached
-    try {
-      const tabs = await fetchSheetTabs();
-      const now = new Date();
-      const monthNames = ['January','February','March','April','May','June',
-                          'July','August','September','October','November','December'];
-      const currentKey = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-      const gid = tabs[currentKey];
-
-      if (gid) {
-        const cached = scheduleCache.get(currentKey);
-        let data;
-        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-          data = cached.data;
-        } else {
-          const csv = await fetchSheetData(gid);
-          data = parseScheduleCSV(csv, monthNames[now.getMonth()], now.getFullYear());
-          if (data) scheduleCache.set(currentKey, { data, timestamp: Date.now() });
-        }
-        if (data && data.calendar) {
-          Object.values(data.calendar).forEach(day => {
-            (day.providers || []).forEach(p => allProviders.add(p));
-          });
-        }
-      }
-
-      // Also fetch next month in case we're near month boundary
-      const nextDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      const nextKey = `${monthNames[nextDate.getMonth()]} ${nextDate.getFullYear()}`;
-      const nextGid = tabs[nextKey];
-      if (nextGid) {
-        const cachedNext = scheduleCache.get(nextKey);
-        let nextData;
-        if (cachedNext && Date.now() - cachedNext.timestamp < CACHE_DURATION) {
-          nextData = cachedNext.data;
-        } else {
-          const csv = await fetchSheetData(nextGid);
-          nextData = parseScheduleCSV(csv, monthNames[nextDate.getMonth()], nextDate.getFullYear());
-          if (nextData) scheduleCache.set(nextKey, { data: nextData, timestamp: Date.now() });
-        }
-        if (nextData && nextData.calendar) {
-          Object.values(nextData.calendar).forEach(day => {
-            (day.providers || []).forEach(p => allProviders.add(p));
-          });
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching schedule for provider login:', err.message);
-    }
-
-    // 3) Also check providers table in DB
+    // 1) Check DB providers first (fast, ~10ms)
     try {
       const dbProviders = await db.getProviders();
-      dbProviders.forEach(p => allProviders.add(p.name));
+      const dbMatch = matchProvider(dbProviders.map(p => p.name));
+      if (dbMatch) {
+        return res.json({ success: true, providerName: dbMatch });
+      }
     } catch (err) {
       console.error('Error fetching DB providers:', err.message);
     }
 
-    // Extract last names and match
-    const match = Array.from(allProviders).find(name => {
-      const parts = name.trim().split(/\s+/);
-      const last = parts[parts.length - 1].toLowerCase();
-      return last === needle;
-    });
-
-    if (match) {
-      res.json({ success: true, providerName: match });
-    } else {
-      res.status(401).json({ success: false, error: 'Last name not found' });
+    // 2) Check already-warm schedule cache (no network calls)
+    const cachedProviders = new Set();
+    for (const [, entry] of scheduleCache) {
+      if (entry && entry.data && entry.data.calendar) {
+        Object.values(entry.data.calendar).forEach(day => {
+          (day.providers || []).forEach(p => cachedProviders.add(p));
+        });
+      }
     }
+    const cacheMatch = matchProvider(cachedProviders);
+    if (cacheMatch) {
+      return res.json({ success: true, providerName: cacheMatch });
+    }
+
+    // 3) Only if no match yet and tabs are already cached, check schedule data
+    //    (avoids slow cold fetchSheetTabs which fetches pubhtml + each tab)
+    if (sheetTabsCache) {
+      try {
+        const now = new Date();
+        const monthNames = ['January','February','March','April','May','June',
+                            'July','August','September','October','November','December'];
+        const currentKey = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+        const gid = sheetTabsCache[currentKey];
+
+        if (gid && !scheduleCache.get(currentKey)) {
+          const csv = await fetchSheetData(gid);
+          const data = parseScheduleCSV(csv, monthNames[now.getMonth()], now.getFullYear());
+          if (data) {
+            scheduleCache.set(currentKey, { data, timestamp: Date.now() });
+            const freshProviders = new Set();
+            Object.values(data.calendar).forEach(day => {
+              (day.providers || []).forEach(p => freshProviders.add(p));
+            });
+            const freshMatch = matchProvider(freshProviders);
+            if (freshMatch) {
+              return res.json({ success: true, providerName: freshMatch });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching schedule for provider login:', err.message);
+      }
+    }
+
+    res.status(401).json({ success: false, error: 'Last name not found' });
   } catch (error) {
     console.error('Provider login error:', error);
     res.status(500).json({ success: false, error: 'Login failed' });

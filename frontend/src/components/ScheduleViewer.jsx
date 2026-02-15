@@ -210,7 +210,7 @@ function ScheduleViewer() {
     setCurrentYear(new Date().getFullYear())
   }
 
-  // Get visible months: 1 previous + current + 3 future
+  // Get visible months: 1 previous + current + 1 future
   const getVisibleMonths = () => {
     const today = new Date()
     const todayMonth = today.getMonth()
@@ -218,7 +218,7 @@ function ScheduleViewer() {
     const months = []
 
     // Start from 1 month before current
-    for (let i = -1; i <= 3; i++) {
+    for (let i = -1; i <= 1; i++) {
       let targetMonth = todayMonth + i
       let targetYear = todayYear
 

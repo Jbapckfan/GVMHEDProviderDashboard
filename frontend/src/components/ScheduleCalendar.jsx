@@ -32,9 +32,12 @@ function ScheduleCalendar({ limitToCurrentAndNext = false }) {
           const now = new Date()
           const curM = now.getMonth()
           const curY = now.getFullYear()
+          const prevM = curM === 0 ? 11 : curM - 1
+          const prevY = curM === 0 ? curY - 1 : curY
           const nextM = curM === 11 ? 0 : curM + 1
           const nextY = curM === 11 ? curY + 1 : curY
           months = months.filter(m =>
+            (m.month === prevM && m.year === prevY) ||
             (m.month === curM && m.year === curY) ||
             (m.month === nextM && m.year === nextY)
           )

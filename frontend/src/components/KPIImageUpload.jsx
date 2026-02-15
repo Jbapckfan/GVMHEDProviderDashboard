@@ -62,7 +62,7 @@ function KPIImageUpload() {
     if (activeDocId && !excelData[activeDocId]) {
       loadDocumentContent(activeDocId)
     }
-  }, [activeDocId])
+  }, [activeDocId, documents])
 
   // Fetch annotations when active document changes
   useEffect(() => {
@@ -322,11 +322,19 @@ function KPIImageUpload() {
       })
 
       if (response.data.success) {
+        const newDocId = response.data.id
         await fetchDocuments()
         // Set the new document as active
-        if (response.data.id) {
-          setActiveDocId(response.data.id)
+        if (newDocId) {
+          setActiveDocId(newDocId)
+          // Clear any cached content so it reloads fresh
+          setExcelData(prev => {
+            const newData = { ...prev }
+            delete newData[newDocId]
+            return newData
+          })
         }
+        toast.success(`"${response.data.title || fileToUpload.name}" uploaded successfully`)
       }
     } catch (error) {
       console.error('Upload error:', error)

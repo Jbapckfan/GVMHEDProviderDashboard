@@ -243,6 +243,17 @@ app.post('/api/kpi-documents', uploadKPIDoc.single('file'), async (req, res) => 
     // Convert buffer to base64 (memory storage provides req.file.buffer directly)
     const base64Data = req.file.buffer.toString('base64');
 
+    // Normalize MIME type for Excel files (some clients send application/octet-stream)
+    let mimetype = req.file.mimetype;
+    const ext = req.file.originalname.toLowerCase().split('.').pop();
+    if (ext === 'xlsx' && (!mimetype || mimetype === 'application/octet-stream')) {
+      mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    } else if (ext === 'xls' && (!mimetype || mimetype === 'application/octet-stream')) {
+      mimetype = 'application/vnd.ms-excel';
+    } else if (ext === 'pdf' && (!mimetype || mimetype === 'application/octet-stream')) {
+      mimetype = 'application/pdf';
+    }
+
     // Use custom title if provided, otherwise use original filename without extension
     const title = req.body.title || req.file.originalname.replace(/\.[^/.]+$/, '');
 
@@ -250,14 +261,18 @@ app.post('/api/kpi-documents', uploadKPIDoc.single('file'), async (req, res) => 
     const result = await db.addKPIDocument(
       title,
       req.file.originalname,
-      req.file.mimetype,
+      mimetype,
       base64Data,
       req.file.size
     );
 
+    // Extract insert ID robustly (libsql can return BigInt)
+    const insertId = result?.lastInsertRowid ?? result?.lastInsertRowId;
+    const docId = insertId != null ? Number(insertId) : null;
+
     res.json({
       success: true,
-      id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null,
+      id: docId,
       title: title,
       filename: req.file.originalname,
       uploadedAt: new Date().toISOString()
@@ -301,8 +316,24 @@ app.get('/api/kpi-documents/:id/download', async (req, res) => {
     // Convert base64 back to buffer
     const buffer = Buffer.from(doc.data, 'base64');
 
+    // Determine correct content type (fix for older uploads with wrong MIME)
+    let contentType = doc.mimetype || 'application/octet-stream';
+    if (contentType === 'application/octet-stream' && doc.filename) {
+      const ext = doc.filename.toLowerCase().split('.').pop();
+      const mimeMap = {
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        xls: 'application/vnd.ms-excel',
+        pdf: 'application/pdf',
+        png: 'image/png',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        gif: 'image/gif',
+      };
+      contentType = mimeMap[ext] || contentType;
+    }
+
     // Set appropriate headers
-    res.setHeader('Content-Type', doc.mimetype || 'application/octet-stream');
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `inline; filename="${doc.filename}"`);
     res.setHeader('Content-Length', buffer.length);
 

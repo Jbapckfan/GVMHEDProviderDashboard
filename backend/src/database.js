@@ -637,6 +637,23 @@ const deleteAnnotation = async (id) => {
   });
 };
 
+const getStorageStats = async () => {
+  const kpiDocs = await db.execute('SELECT COUNT(*) as count, COALESCE(SUM(size), 0) as totalSize, COALESCE(SUM(LENGTH(data)), 0) as totalBase64Size FROM kpi_documents');
+  const uploadedFiles = await db.execute('SELECT COUNT(*) as count, COALESCE(SUM(size), 0) as totalSize, COALESCE(SUM(LENGTH(data)), 0) as totalBase64Size FROM uploaded_files');
+  return {
+    kpiDocuments: {
+      count: Number(kpiDocs.rows[0].count),
+      originalSize: Number(kpiDocs.rows[0].totalSize),
+      base64Size: Number(kpiDocs.rows[0].totalBase64Size),
+    },
+    uploadedFiles: {
+      count: Number(uploadedFiles.rows[0].count),
+      originalSize: Number(uploadedFiles.rows[0].totalSize),
+      base64Size: Number(uploadedFiles.rows[0].totalBase64Size),
+    },
+  };
+};
+
 module.exports = {
   initializeDatabase,
   getProviders,
@@ -687,5 +704,6 @@ module.exports = {
   getAnnotations,
   addAnnotation,
   updateAnnotation,
-  deleteAnnotation
+  deleteAnnotation,
+  getStorageStats
 };

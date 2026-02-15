@@ -30,6 +30,7 @@ import HospitalistPager from './components/HospitalistPager'
 import WhosOnNow from './components/WhosOnNow'
 import ClinicalResources from './components/ClinicalResources'
 import SchedulePage from './pages/SchedulePage'
+import AdminSettings from './components/AdminSettings'
 import LoginPage from './pages/LoginPage'
 
 // --- Section configuration ---
@@ -211,6 +212,10 @@ function App() {
   })
   const [showQR, setShowQR] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+
+  // Admin check: only show settings gear for "Alford"
+  const isAdmin = providerName && providerName.trim().split(/\s+/).pop().toLowerCase() === 'alford'
 
   // Section order + collapsed + sizes state (persisted to localStorage)
   const [sectionOrder, setSectionOrder] = useState(getInitialOrder)
@@ -365,6 +370,11 @@ function App() {
             <button onClick={handleRefresh} className="refresh-btn">
               {'\u21BB'} Refresh
             </button>
+            {isAdmin && (
+              <button onClick={() => setShowSettings(true)} className="refresh-btn" title="Admin Settings">
+                {'\u2699\uFE0F'} Settings
+              </button>
+            )}
             <button onClick={handleLogout} className="refresh-btn" title="Sign out">
               Sign Out
             </button>
@@ -429,6 +439,8 @@ function App() {
       <footer className="footer">
         <p>GVM Health ED Provider Dashboard v1.0 | For authorized use only</p>
       </footer>
+
+      {showSettings && <AdminSettings onClose={() => setShowSettings(false)} />}
     </div>
       ) : (
         <LoginPage onLogin={handleLogin} />

@@ -552,6 +552,16 @@ app.post('/api/admin/verify', (req, res) => {
   }
 });
 
+// Admin: Get storage stats
+app.get('/api/admin/storage-stats', async (req, res) => {
+  try {
+    const stats = await db.getStorageStats();
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Provider login: verify last name against schedule providers
 app.post('/api/auth/provider-login', async (req, res) => {
   try {

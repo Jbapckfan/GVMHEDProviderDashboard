@@ -982,19 +982,25 @@ async function fetchSheetTabs() {
         const tabs = {};
         const monthPattern = /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/;
 
-        // Check each gid to find month tabs
-        for (const gid of gids) {
+        // Check all gids in parallel for faster startup
+        const results = await Promise.all(gids.map(async (gid) => {
           try {
             const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
             const firstLine = await fetchFirstLine(csvUrl);
             const match = firstLine.match(monthPattern);
             if (match) {
-              const monthName = `${match[1]} ${match[2]}`;
-              tabs[monthName] = gid;
-              console.log(`Found sheet tab: ${monthName} (gid: ${gid})`);
+              return { monthName: `${match[1]} ${match[2]}`, gid };
             }
           } catch (e) {
             // Skip invalid gids
+          }
+          return null;
+        }));
+
+        for (const result of results) {
+          if (result) {
+            tabs[result.monthName] = result.gid;
+            console.log(`Found sheet tab: ${result.monthName} (gid: ${result.gid})`);
           }
         }
 
@@ -1415,4 +1421,18 @@ app.listen(PORT, '0.0.0.0', () => {
   fetchSheetTabs()
     .then(tabs => console.log(`Sheet tabs preloaded: ${Object.keys(tabs).length} months available`))
     .catch(err => console.error('Failed to preload sheet tabs:', err.message));
+
+  // Keep-alive: ping own external URL every 14 minutes to prevent Render free tier sleep
+  if (process.env.RENDER_EXTERNAL_URL) {
+    const keepAliveUrl = `${process.env.RENDER_EXTERNAL_URL}/api/health`;
+    console.log(`Keep-alive enabled: pinging ${keepAliveUrl} every 14 minutes`);
+    setInterval(() => {
+      https.get(keepAliveUrl, (res) => {
+        res.resume(); // drain response
+        console.log(`Keep-alive ping: ${res.statusCode}`);
+      }).on('error', (err) => {
+        console.error('Keep-alive ping failed:', err.message);
+      });
+    }, 14 * 60 * 1000);
+  }
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { API_BASE } from '../utils/api'
@@ -8,6 +8,11 @@ function LoginPage({ onLogin }) {
   const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Wake the backend immediately so it's warm by the time the user submits
+  useEffect(() => {
+    fetch(`${API_BASE}/health`).catch(() => {})
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

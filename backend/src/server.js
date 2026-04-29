@@ -537,6 +537,43 @@ app.delete('/api/admin/phone-directory/:id', async (req, res) => {
   }
 });
 
+// Public schedule request board
+app.get('/api/schedule-requests', async (req, res) => {
+  try {
+    const requests = await db.getScheduleRequests();
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/schedule-requests', async (req, res) => {
+  try {
+    const result = await db.addScheduleRequest(req.body);
+    res.json({ success: true, id: Number(result?.lastInsertRowid ?? result?.lastInsertRowId ?? 0) || null });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/schedule-requests/:id', async (req, res) => {
+  try {
+    await db.updateScheduleRequest(req.params.id, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/schedule-requests/:id', async (req, res) => {
+  try {
+    await db.deleteScheduleRequest(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Admin: Verify password
 app.post('/api/admin/verify', (req, res) => {
   try {

@@ -88,6 +88,23 @@ async function initializeDatabase() {
     )
   `);
 
+  // Schedule requests and shift swap board
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS schedule_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL DEFAULT 'cover',
+      provider_name TEXT NOT NULL,
+      date TEXT NOT NULL,
+      shift TEXT DEFAULT '',
+      swap_date TEXT DEFAULT '',
+      target_provider TEXT DEFAULT '',
+      note TEXT DEFAULT '',
+      status TEXT DEFAULT 'open',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // News table
   await db.execute(`
     CREATE TABLE IF NOT EXISTS news (
@@ -279,6 +296,17 @@ const getPhoneDirectory = async () => {
   return result.rows;
 };
 
+const getScheduleRequests = async () => {
+  const result = await db.execute(`
+    SELECT * FROM schedule_requests
+    ORDER BY
+      CASE status WHEN 'open' THEN 0 WHEN 'claimed' THEN 1 ELSE 2 END,
+      date,
+      created_at DESC
+  `);
+  return result.rows;
+};
+
 const getNews = async () => {
   const result = await db.execute("SELECT * FROM news WHERE expires_at IS NULL OR expires_at > datetime('now') ORDER BY created_at DESC");
   return result.rows;
@@ -334,6 +362,54 @@ const updatePhoneNumber = async (id, data) => {
 const deletePhoneNumber = async (id) => {
   return await db.execute({
     sql: 'DELETE FROM phone_directory WHERE id=?',
+    args: [id]
+  });
+};
+
+const addScheduleRequest = async (data) => {
+  return await db.execute({
+    sql: `
+      INSERT INTO schedule_requests
+        (type, provider_name, date, shift, swap_date, target_provider, note, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    args: [
+      data.type || 'cover',
+      data.provider_name || data.providerName || '',
+      data.date || '',
+      data.shift || '',
+      data.swap_date || data.swapDate || '',
+      data.target_provider || data.targetProvider || '',
+      data.note || '',
+      data.status || 'open',
+    ]
+  });
+};
+
+const updateScheduleRequest = async (id, data) => {
+  return await db.execute({
+    sql: `
+      UPDATE schedule_requests
+      SET type=?, provider_name=?, date=?, shift=?, swap_date=?, target_provider=?, note=?, status=?, updated_at=CURRENT_TIMESTAMP
+      WHERE id=?
+    `,
+    args: [
+      data.type || 'cover',
+      data.provider_name || data.providerName || '',
+      data.date || '',
+      data.shift || '',
+      data.swap_date || data.swapDate || '',
+      data.target_provider || data.targetProvider || '',
+      data.note || '',
+      data.status || 'open',
+      id,
+    ]
+  });
+};
+
+const deleteScheduleRequest = async (id) => {
+  return await db.execute({
+    sql: 'DELETE FROM schedule_requests WHERE id=?',
     args: [id]
   });
 };
@@ -670,6 +746,10 @@ module.exports = {
   addPhoneNumber,
   updatePhoneNumber,
   deletePhoneNumber,
+  getScheduleRequests,
+  addScheduleRequest,
+  updateScheduleRequest,
+  deleteScheduleRequest,
   addNews,
   updateNews,
   deleteNews,

@@ -223,6 +223,30 @@ async function initializeDatabase() {
     )
   `);
 
+  // Day notes table — operator-authored notes attached to a calendar day
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS day_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      body TEXT NOT NULL,
+      author TEXT DEFAULT 'Admin',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_day_notes_date ON day_notes(date)`);
+
+  // Published schedules — snapshot per (month, year) per publish
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS published_schedules (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      month INTEGER NOT NULL,
+      year INTEGER NOT NULL,
+      published_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      snapshot_json TEXT NOT NULL
+    )
+  `);
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_published_my ON published_schedules(year, month, published_at DESC)`);
+
   // Seed initial data if tables are empty
   await seedData();
 }
@@ -730,9 +754,64 @@ const getStorageStats = async () => {
   };
 };
 
+// Day notes
+const getDayNotes = async ({ from, to } = {}) => {
+  if (from && to) {
+    const result = await db.execute({
+      sql: 'SELECT * FROM day_notes WHERE date >= ? AND date <= ? ORDER BY date, created_at',
+      args: [from, to],
+    });
+    return result.rows;
+  }
+  const result = await db.execute('SELECT * FROM day_notes ORDER BY date, created_at');
+  return result.rows;
+};
+
+const addDayNote = async ({ date, body, author }) => {
+  const result = await db.execute({
+    sql: 'INSERT INTO day_notes (date, body, author) VALUES (?, ?, ?)',
+    args: [date, body, author || 'Admin'],
+  });
+  return Number(result.lastInsertRowid);
+};
+
+const updateDayNote = async (id, { body }) => {
+  await db.execute({
+    sql: 'UPDATE day_notes SET body = ? WHERE id = ?',
+    args: [body, id],
+  });
+};
+
+const deleteDayNote = async (id) => {
+  await db.execute({ sql: 'DELETE FROM day_notes WHERE id = ?', args: [id] });
+};
+
+// Published schedules
+const getLatestPublishedSchedule = async (month, year) => {
+  const result = await db.execute({
+    sql: 'SELECT * FROM published_schedules WHERE month = ? AND year = ? ORDER BY published_at DESC LIMIT 1',
+    args: [month, year],
+  });
+  return result.rows[0] || null;
+};
+
+const insertPublishedSchedule = async ({ month, year, snapshotJson }) => {
+  const result = await db.execute({
+    sql: 'INSERT INTO published_schedules (month, year, snapshot_json) VALUES (?, ?, ?)',
+    args: [month, year, snapshotJson],
+  });
+  return Number(result.lastInsertRowid);
+};
+
 module.exports = {
   initializeDatabase,
   getProviders,
+  getDayNotes,
+  addDayNote,
+  updateDayNote,
+  deleteDayNote,
+  getLatestPublishedSchedule,
+  insertPublishedSchedule,
   getShifts,
   getKPIMetrics,
   getQuickLinks,

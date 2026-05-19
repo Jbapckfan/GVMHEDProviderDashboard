@@ -1335,6 +1335,235 @@ app.get('/api/schedule-data', async (req, res) => {
 });
 
 // ============================================
+// Day notes
+// ============================================
+
+app.get('/api/day-notes', async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const notes = await db.getDayNotes({ from, to });
+    res.json(notes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/day-notes', async (req, res) => {
+  try {
+    const { date, body, author } = req.body || {};
+    if (!date || !body) return res.status(400).json({ error: 'date and body are required' });
+    const id = await db.addDayNote({ date, body, author });
+    res.json({ id });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/admin/day-notes/:id', async (req, res) => {
+  try {
+    const { body } = req.body || {};
+    if (!body) return res.status(400).json({ error: 'body is required' });
+    await db.updateDayNote(req.params.id, { body });
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/admin/day-notes/:id', async (req, res) => {
+  try {
+    await db.deleteDayNote(req.params.id);
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// Publish + notifications
+// ============================================
+
+const { sendEmail, escapeHtml } = require('./notifier');
+
+function requireAdminPassword(req, res, next) {
+  const provided = req.header('x-admin-password') || (req.body && req.body.adminPassword);
+  const expected = process.env.ADMIN_PASSWORD || 'admin123';
+  if (provided !== expected) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}
+
+async function fetchMonthCalendar(monthName, year) {
+  const tabs = await fetchSheetTabs();
+  const key = `${monthName} ${year}`;
+  const gid = tabs[key];
+  if (!gid) return null;
+  const cached = scheduleCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) return cached.data;
+  const csv = await fetchSheetData(gid);
+  const data = parseScheduleCSV(csv, monthName, parseInt(year));
+  if (data) scheduleCache.set(key, { data, timestamp: Date.now() });
+  return data;
+}
+
+function diffSchedules(prev, current) {
+  const prevCal = (prev && prev.calendar) || {};
+  const currCal = (current && current.calendar) || {};
+  const allDays = new Set([...Object.keys(prevCal), ...Object.keys(currCal)]);
+  const changesByProvider = new Map();
+
+  const ensure = (name) => {
+    if (!changesByProvider.has(name)) {
+      changesByProvider.set(name, { added: [], removed: [] });
+    }
+    return changesByProvider.get(name);
+  };
+
+  for (const dayStr of allDays) {
+    const day = Number(dayStr);
+    const prevProviders = new Set((prevCal[dayStr]?.providers) || []);
+    const currProviders = new Set((currCal[dayStr]?.providers) || []);
+    for (const name of currProviders) {
+      if (!prevProviders.has(name)) ensure(name).added.push(day);
+    }
+    for (const name of prevProviders) {
+      if (!currProviders.has(name)) ensure(name).removed.push(day);
+    }
+  }
+
+  return Array.from(changesByProvider.entries()).map(([name, diff]) => ({
+    name,
+    added: diff.added.sort((a, b) => a - b),
+    removed: diff.removed.sort((a, b) => a - b),
+  }));
+}
+
+async function buildPublishPlan({ month, year }) {
+  const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthName = monthOrder[Number(month)];
+  if (!monthName) throw new Error('Invalid month');
+  const yearNum = Number(year);
+
+  const current = await fetchMonthCalendar(monthName, yearNum);
+  if (!current) throw new Error('Month not available in source sheet');
+
+  const priorRow = await db.getLatestPublishedSchedule(Number(month), yearNum);
+  const prior = priorRow ? JSON.parse(priorRow.snapshot_json) : null;
+  const firstPublish = !priorRow;
+
+  const providers = await db.getProviders();
+  const emailByName = new Map();
+  for (const provider of providers) {
+    if (provider.email) emailByName.set(provider.name, provider.email);
+  }
+
+  let recipients = [];
+  const missingEmails = [];
+
+  if (firstPublish) {
+    const namesInMonth = new Set();
+    for (const day of Object.values(current.calendar || {})) {
+      for (const name of day.providers || []) namesInMonth.add(name);
+    }
+    for (const name of namesInMonth) {
+      const email = emailByName.get(name);
+      if (email) recipients.push({ name, email, kind: 'month-posted' });
+      else missingEmails.push(name);
+    }
+  } else {
+    const diffs = diffSchedules(prior, current);
+    for (const diff of diffs) {
+      if (diff.added.length === 0 && diff.removed.length === 0) continue;
+      const email = emailByName.get(diff.name);
+      if (email) recipients.push({ name: diff.name, email, kind: 'shift-changed', added: diff.added, removed: diff.removed });
+      else missingEmails.push(diff.name);
+    }
+  }
+
+  return { monthName, yearNum, firstPublish, current, recipients, missingEmails };
+}
+
+app.post('/api/admin/publish/preview', requireAdminPassword, async (req, res) => {
+  try {
+    const { month, year } = req.body || {};
+    if (month === undefined || year === undefined) {
+      return res.status(400).json({ error: 'month and year are required' });
+    }
+    const plan = await buildPublishPlan({ month, year });
+    res.json({
+      monthName: plan.monthName,
+      year: plan.yearNum,
+      firstPublish: plan.firstPublish,
+      recipients: plan.recipients.map(({ name, email, kind, added, removed }) => ({ name, email, kind, added, removed })),
+      missingEmails: plan.missingEmails,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/publish/commit', requireAdminPassword, async (req, res) => {
+  try {
+    const { month, year } = req.body || {};
+    if (month === undefined || year === undefined) {
+      return res.status(400).json({ error: 'month and year are required' });
+    }
+    const plan = await buildPublishPlan({ month, year });
+
+    const sent = [];
+    const failed = [];
+    for (const recipient of plan.recipients) {
+      try {
+        const subject = recipient.kind === 'month-posted'
+          ? `${plan.monthName} ${plan.yearNum} schedule posted`
+          : `Your ${plan.monthName} ${plan.yearNum} shifts changed`;
+        let html;
+        let text;
+        if (recipient.kind === 'month-posted') {
+          html = `<p>Hi ${escapeHtml(recipient.name)},</p>
+            <p>The ${escapeHtml(plan.monthName)} ${plan.yearNum} schedule is now posted.</p>
+            <p><a href="https://gvmh-schedule-automator.vercel.app">View schedule</a></p>`;
+          text = `Hi ${recipient.name},\nThe ${plan.monthName} ${plan.yearNum} schedule is now posted.\nhttps://gvmh-schedule-automator.vercel.app`;
+        } else {
+          const added = recipient.added.length ? `Added: ${recipient.added.join(', ')}` : '';
+          const removed = recipient.removed.length ? `Removed: ${recipient.removed.join(', ')}` : '';
+          html = `<p>Hi ${escapeHtml(recipient.name)},</p>
+            <p>Your shifts for ${escapeHtml(plan.monthName)} ${plan.yearNum} have been updated:</p>
+            <ul>
+              ${recipient.added.length ? `<li><strong>Added:</strong> ${recipient.added.join(', ')}</li>` : ''}
+              ${recipient.removed.length ? `<li><strong>Removed:</strong> ${recipient.removed.join(', ')}</li>` : ''}
+            </ul>
+            <p><a href="https://gvmh-schedule-automator.vercel.app">View schedule</a></p>`;
+          text = `Hi ${recipient.name},\nYour shifts for ${plan.monthName} ${plan.yearNum} changed.\n${added}\n${removed}\nhttps://gvmh-schedule-automator.vercel.app`;
+        }
+        await sendEmail({ to: recipient.email, subject, html, text });
+        sent.push({ name: recipient.name, email: recipient.email });
+      } catch (sendError) {
+        console.error(`Failed to email ${recipient.email}:`, sendError.message);
+        failed.push({ name: recipient.name, email: recipient.email, error: sendError.message });
+      }
+    }
+
+    await db.insertPublishedSchedule({
+      month: Number(month),
+      year: Number(year),
+      snapshotJson: JSON.stringify(plan.current),
+    });
+
+    res.json({
+      monthName: plan.monthName,
+      year: plan.yearNum,
+      firstPublish: plan.firstPublish,
+      sent,
+      failed,
+      missingEmails: plan.missingEmails,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
 // Hospitalist Pager (SNPP)
 // ============================================
 

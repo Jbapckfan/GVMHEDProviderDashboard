@@ -31,6 +31,7 @@ import WhosOnNow from './components/WhosOnNow'
 import ClinicalResources from './components/ClinicalResources'
 import SchedulePage from './pages/SchedulePage'
 import AdminSettings from './components/AdminSettings'
+import AdminScheduleControls from './components/AdminScheduleControls'
 import LoginPage from './pages/LoginPage'
 
 // --- Section configuration ---
@@ -213,6 +214,7 @@ function App() {
   const [showQR, setShowQR] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showScheduleControls, setShowScheduleControls] = useState(false)
 
   // Admin check: only show settings gear for "Alford"
   const isAdmin = providerName && providerName.trim().split(/\s+/).pop().toLowerCase() === 'alford'
@@ -371,6 +373,11 @@ function App() {
               {'\u21BB'} Refresh
             </button>
             {isAdmin && (
+              <button onClick={() => setShowScheduleControls(true)} className="refresh-btn" title="Schedule controls">
+                {'\u{1F4C5}'} Schedule
+              </button>
+            )}
+            {isAdmin && (
               <button onClick={() => setShowSettings(true)} className="refresh-btn" title="Admin Settings">
                 {'\u2699\uFE0F'} Settings
               </button>
@@ -441,6 +448,7 @@ function App() {
       </footer>
 
       {showSettings && <AdminSettings onClose={() => setShowSettings(false)} />}
+      {showScheduleControls && <AdminScheduleControls onClose={() => setShowScheduleControls(false)} />}
     </div>
       ) : (
         <LoginPage onLogin={handleLogin} />

@@ -1,0 +1,184 @@
+.asc-dialog {
+  max-width: 720px;
+  width: 95%;
+}
+
+.asc-close {
+  background: none;
+  border: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+}
+
+.asc-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+html.dark-mode .asc-tabs {
+  border-bottom-color: #334155;
+}
+
+.asc-tabs button {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-weight: 700;
+  color: inherit;
+  font-size: 0.92rem;
+}
+
+.asc-tabs button.active {
+  border-bottom-color: #2563eb;
+  color: #2563eb;
+}
+
+.asc-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.asc-section {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.asc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.asc-field {
+  display: grid;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.asc-field input,
+.asc-field select {
+  font-size: 0.95rem;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: white;
+  color: inherit;
+}
+
+html.dark-mode .asc-field input,
+html.dark-mode .asc-field select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.asc-note-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.asc-note-form textarea {
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: white;
+  font: inherit;
+  color: inherit;
+  resize: vertical;
+}
+
+html.dark-mode .asc-note-form textarea {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.asc-note-form button,
+.asc-primary {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.asc-note-form button:disabled,
+.asc-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.asc-error {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.asc-note-list {
+  display: grid;
+  gap: 6px;
+}
+
+.asc-note {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  font-size: 0.92rem;
+}
+
+.asc-note button {
+  background: none;
+  border: 0;
+  color: #b91c1c;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.asc-muted {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.asc-preview,
+.asc-result {
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.asc-summary {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+}
+
+.asc-recipient-list {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  font-size: 0.85rem;
+  display: grid;
+  gap: 3px;
+}

@@ -1655,7 +1655,7 @@ app.post('/api/page-hospitalist', async (req, res) => {
       });
     }
 
-    const { senderName, message } = req.body;
+    const { senderName, message, beds } = req.body;
 
     if (!senderName || !senderName.trim()) {
       return res.status(400).json({ success: false, error: 'Sender name is required.' });
@@ -1667,13 +1667,65 @@ app.post('/api/page-hospitalist', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Message exceeds 240 character limit.' });
     }
 
-    console.log(`[Pager] Sending page from: ${senderName.trim()} at ${new Date().toISOString()}`);
+    const sentAt = new Date().toISOString();
+    console.log(`[Pager] Sending page from: ${senderName.trim()} at ${sentAt}`);
 
-    const result = await sendSNPP(pagerNumber, message);
-    res.json({ success: true, statusCode: result.statusCode });
+    try {
+      const result = await sendSNPP(pagerNumber, message);
+      const completedAt = new Date().toISOString();
+
+      // Log successful page
+      await db.addPageLog({
+        sender_name: senderName.trim(),
+        message,
+        beds: beds || null,
+        sent_at: sentAt,
+        completed_at: completedAt,
+        status: 'success',
+        error_message: null
+      });
+
+      res.json({ success: true, statusCode: result.statusCode });
+    } catch (snppError) {
+      // Log failed page
+      await db.addPageLog({
+        sender_name: senderName.trim(),
+        message,
+        beds: beds || null,
+        sent_at: sentAt,
+        completed_at: null,
+        status: 'error',
+        error_message: snppError.message
+      });
+
+      console.error('[Pager] Send failed:', snppError.message);
+      res.status(500).json({ success: false, error: snppError.message });
+    }
   } catch (error) {
-    console.error('[Pager] Send failed:', error.message);
+    console.error('[Pager] Request error:', error.message);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get recent page logs (for pager component)
+app.get('/api/page-logs', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 5;
+    const logs = await db.getRecentPageLogs(limit);
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all page logs (for admin view)
+app.get('/api/admin/page-logs', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const logs = await db.getAllPageLogs(limit);
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

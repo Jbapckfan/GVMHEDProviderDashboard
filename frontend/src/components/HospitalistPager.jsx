@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import axios from 'axios'
 import './HospitalistPager.css'
 import { API_BASE } from '../utils/api'
@@ -44,6 +44,13 @@ const PROVIDERS = [
 
 const MAX_CHARS = 240
 
+// Local military time HHMM (e.g. 1403) from a Date or ISO string
+function formatClock(input) {
+  const d = input instanceof Date ? input : new Date(input)
+  if (isNaN(d.getTime())) return ''
+  return `${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}`
+}
+
 function HospitalistPager() {
   const [selectedBeds, setSelectedBeds] = useState(new Set())
   const [senderName, setSenderName] = useState(() => {
@@ -72,13 +79,30 @@ function HospitalistPager() {
   const [diagnosis, setDiagnosis] = useState('')
   const [sendStatus, setSendStatus] = useState(null) // null | 'sending' | 'success' | 'error'
   const [sendError, setSendError] = useState('')
+  const [lastPage, setLastPage] = useState(null) // { sender, time } captured at send
+  const [recentPages, setRecentPages] = useState([])
+  const [showRecent, setShowRecent] = useState(true) // ledger expanded by default
+
+  const fetchRecentPages = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/page-logs?limit=8`)
+      if (Array.isArray(res.data)) setRecentPages(res.data)
+    } catch {
+      // silently fail — the log is non-critical, paging still works
+    }
+  }, [])
+
+  // Fetch the page ledger on mount
+  useEffect(() => {
+    fetchRecentPages()
+  }, [fetchRecentPages])
 
   // Persist sender name to localStorage
   useEffect(() => {
     localStorage.setItem('pager-sender-name', senderName)
   }, [senderName])
 
-  // Auto-clear success banner after 8 seconds
+  // Auto-clear the success banner after 8 seconds (the ledger keeps the record)
   useEffect(() => {
     if (sendStatus === 'success') {
       const timer = setTimeout(() => setSendStatus(null), 8000)
@@ -130,50 +154,66 @@ function HospitalistPager() {
 
   const handleSend = async () => {
     if (!canSend) return
+    const sender = senderName.trim()
+    const time = formatClock(new Date())
     setSendStatus('sending')
     setSendError('')
 
     try {
       const response = await axios.post(`${API_BASE}/page-hospitalist`, {
-        senderName: senderName.trim(),
+        senderName: sender,
         message: messagePreview,
+        beds: sortedBeds.join(', '),
       })
       if (response.data.success) {
+        setLastPage({ sender, time })
         setSendStatus('success')
         setSelectedBeds(new Set())
         setDiagnosis('')
       } else {
+        setLastPage({ sender, time })
         setSendStatus('error')
         setSendError(response.data.error || 'Unknown error')
       }
     } catch (error) {
+      setLastPage({ sender, time })
       setSendStatus('error')
       const msg = error.response?.data?.error || error.message || 'Failed to send page'
       setSendError(msg)
+    } finally {
+      fetchRecentPages()
     }
   }
 
   const handleQuickAdmit = async () => {
     if (!senderName.trim() || sendStatus === 'sending') return
+    const sender = senderName.trim()
+    const time = formatClock(new Date())
     setSendStatus('sending')
     setSendError('')
 
-    const msg = `${senderName.trim()} - I have an admit`
+    const msg = `${sender} - I have an admit`
     try {
       const response = await axios.post(`${API_BASE}/page-hospitalist`, {
-        senderName: senderName.trim(),
+        senderName: sender,
         message: msg,
+        beds: null,
       })
       if (response.data.success) {
+        setLastPage({ sender, time })
         setSendStatus('success')
       } else {
+        setLastPage({ sender, time })
         setSendStatus('error')
         setSendError(response.data.error || 'Unknown error')
       }
     } catch (error) {
+      setLastPage({ sender, time })
       setSendStatus('error')
-      const msg = error.response?.data?.error || error.message || 'Failed to send page'
-      setSendError(msg)
+      const m = error.response?.data?.error || error.message || 'Failed to send page'
+      setSendError(m)
+    } finally {
+      fetchRecentPages()
     }
   }
 
@@ -186,15 +226,23 @@ function HospitalistPager() {
     <div className="pager-container">
       <h2 className="pager-title">{'\u{1F4DF}'} Page Hospitalist</h2>
 
-      {/* Status Banners */}
-      {sendStatus === 'success' && (
-        <div className="pager-status-success">
-          Page sent successfully
+      {/* Confirmation banner — sender + military time */}
+      {sendStatus === 'success' && lastPage && (
+        <div className="pager-confirm ok">
+          <span className="pager-confirm-ck">{'✓'}</span>
+          <span className="pager-confirm-txt">
+            Page sent successfully {'—'} {lastPage.sender} {'—'} {lastPage.time}
+          </span>
         </div>
       )}
       {sendStatus === 'error' && (
-        <div className="pager-status-error">
-          <span>{sendError}</span>
+        <div className="pager-confirm fail">
+          <span className="pager-confirm-ck">{'✗'}</span>
+          <span className="pager-confirm-txt">
+            Page FAILED
+            {lastPage && <> {'—'} {lastPage.sender} {'—'} {lastPage.time}</>}
+            {sendError && <span className="pager-confirm-reason"> {'·'} {sendError}</span>}
+          </span>
           <button className="pager-retry-btn" onClick={handleRetry}>Retry</button>
         </div>
       )}
@@ -285,7 +333,7 @@ function HospitalistPager() {
       <div className="pager-field">
         <label className="pager-label">Message Preview</label>
         <div className={`pager-preview${isOverLimit ? ' over-limit' : ''}`}>
-          {messagePreview || '\u00A0'}
+          {messagePreview || ' '}
         </div>
         <div className={`pager-char-count${isOverLimit ? ' over-limit' : ''}`}>
           {charCount} / {MAX_CHARS}
@@ -308,6 +356,42 @@ function HospitalistPager() {
           <>{'\u{1F4DF}'} Send Page</>
         )}
       </button>
+
+      {/* Recent Pages ledger — visible record of every page + success/fail */}
+      {recentPages.length > 0 && (
+        <div className="pager-log-wrap">
+          <div className="pager-log-head">
+            <button
+              className="pager-log-toggle"
+              onClick={() => setShowRecent(v => !v)}
+              type="button"
+            >
+              <span className="pager-log-eyebrow">Recent Pages</span>
+              <span className="pager-log-cnt">{recentPages.length} {'·'} {showRecent ? 'hide' : 'show'}</span>
+            </button>
+          </div>
+          {showRecent && (
+            <div className="pager-log">
+              {recentPages.map(log => {
+                const ok = log.status === 'success'
+                return (
+                  <div key={log.id} className={`pager-log-row ${ok ? 'ok' : 'fail'}`}>
+                    <span className="pager-log-glyph">{ok ? '✓' : '✗'}</span>
+                    <span className="pager-log-body">
+                      <b>{ok ? 'Page sent successfully' : 'Page FAILED'}</b>
+                      <span className="pager-log-sep"> {'—'} </span>
+                      <span className="pager-log-who">{log.sender_name}</span>
+                      <span className="pager-log-sep"> {'—'} </span>
+                      <span className="pager-log-tm">{formatClock(log.sent_at)}</span>
+                      {log.beds && <span className="pager-log-where"> {'·'} Bed {log.beds}</span>}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

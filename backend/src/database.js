@@ -247,6 +247,20 @@ async function initializeDatabase() {
   `);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_published_my ON published_schedules(year, month, published_at DESC)`);
 
+  // Page logs table (hospitalist pager history)
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS page_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sender_name TEXT NOT NULL,
+      message TEXT NOT NULL,
+      beds TEXT,
+      sent_at DATETIME NOT NULL,
+      completed_at DATETIME,
+      status TEXT NOT NULL,
+      error_message TEXT
+    )
+  `);
+
   // Seed initial data if tables are empty
   await seedData();
 }
@@ -803,6 +817,30 @@ const insertPublishedSchedule = async ({ month, year, snapshotJson }) => {
   return Number(result.lastInsertRowid);
 };
 
+// Page log functions (hospitalist pager history)
+const addPageLog = async (data) => {
+  return await db.execute({
+    sql: 'INSERT INTO page_logs (sender_name, message, beds, sent_at, completed_at, status, error_message) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    args: [data.sender_name, data.message, data.beds || null, data.sent_at, data.completed_at || null, data.status, data.error_message || null]
+  });
+};
+
+const getRecentPageLogs = async (limit = 5) => {
+  const result = await db.execute({
+    sql: 'SELECT * FROM page_logs ORDER BY sent_at DESC LIMIT ?',
+    args: [limit]
+  });
+  return result.rows;
+};
+
+const getAllPageLogs = async (limit = 50) => {
+  const result = await db.execute({
+    sql: 'SELECT * FROM page_logs ORDER BY sent_at DESC LIMIT ?',
+    args: [limit]
+  });
+  return result.rows;
+};
+
 module.exports = {
   initializeDatabase,
   getProviders,
@@ -864,5 +902,8 @@ module.exports = {
   addAnnotation,
   updateAnnotation,
   deleteAnnotation,
-  getStorageStats
+  getStorageStats,
+  addPageLog,
+  getRecentPageLogs,
+  getAllPageLogs
 };

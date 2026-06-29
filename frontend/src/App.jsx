@@ -37,10 +37,10 @@ import LoginPage from './pages/LoginPage'
 // --- Section configuration ---
 const DEFAULT_SECTIONS = [
   { id: 'whos-on', title: "Who's On Now", icon: '\u{1F7E2}' },
-  { id: 'messages', title: 'Provider Message Board', icon: '\u{1F4AC}' },
   { id: 'pager', title: 'Page Hospitalist', icon: '\u{1F4DF}' },
   { id: 'phone', title: 'Quick Reference Numbers', icon: '\u{1F4DE}' },
   { id: 'schedule', title: 'Schedule', icon: '\u{1F4C5}' },
+  { id: 'messages', title: 'Provider Message Board', icon: '\u{1F4AC}' },
   { id: 'charts', title: 'Provider Chart Status', icon: '\u{1F4CA}' },
   { id: 'kpi-docs', title: 'Department KPI Documents', icon: '\u{1F4C1}' },
   { id: 'kpi-goals', title: 'KPI Goals & Targets', icon: '\u{1F3AF}' },

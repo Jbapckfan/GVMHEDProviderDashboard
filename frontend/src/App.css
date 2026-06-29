@@ -886,3 +886,159 @@ html.dark-mode .skeleton {
     padding: 0.75rem 1rem !important;
   }
 }
+
+/* ============================================================
+   EDITORIAL LEDGER THEME  (appended override — wins by cascade)
+   Restyles the shared dashboard chrome to the EL design system.
+   ============================================================ */
+
+/* ---- header ---- */
+.app .header {
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+  box-shadow: none;
+}
+.app .header-content { padding: var(--s-4) var(--s-6) var(--s-3); }
+.app .header h1 {
+  font-family: var(--ff-display);
+  font-weight: 500;
+  font-size: var(--t-xl);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.app .header-logo { border-radius: var(--r-sm); }
+.app .provider-name-subtitle {
+  font-family: var(--ff-ui);
+  font-size: var(--t-xs);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.app .status-dot { background: var(--forest); box-shadow: none; }
+.app .last-updated {
+  font-family: var(--ff-mono);
+  font-size: var(--t-xs);
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+/* ---- header control buttons ---- */
+.app .refresh-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--hair-strong);
+  color: var(--ink-2);
+  font-family: var(--ff-ui);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  box-shadow: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.app .refresh-btn:hover {
+  background: var(--card);
+  border-color: var(--ink);
+  color: var(--ink);
+  transform: none;
+}
+
+/* ---- section card frame ---- */
+.app .dashboard-section {
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  box-shadow: var(--el-shadow);
+}
+.app .dashboard-section.section-dragging {
+  border-color: var(--ink);
+  box-shadow: 0 8px 24px rgba(21, 17, 12, 0.12);
+}
+
+/* ---- section toolbar -> editorial section header ---- */
+.app .section-toolbar {
+  background: transparent;
+  border-bottom: 1px solid var(--ink);
+  padding: var(--s-3) var(--s-5);
+}
+.app .toolbar-title {
+  font-family: var(--ff-display);
+  font-weight: 500;
+  font-size: var(--t-lg);
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.app .drag-handle {
+  color: var(--muted);
+  background: transparent;
+  border: none;
+}
+.app .drag-handle:hover { color: var(--ink); }
+.app .collapse-btn,
+.app .resize-btn,
+.app .expand-btn {
+  background: transparent;
+  border: 1px solid var(--hair-strong);
+  color: var(--ink-2);
+  border-radius: var(--r-sm);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.app .collapse-btn:hover,
+.app .resize-btn:hover,
+.app .expand-btn:hover {
+  background: var(--card);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* ---- collapsed bar ---- */
+.app .collapsed-bar {
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--hair);
+}
+.app .collapsed-title {
+  font-family: var(--ff-display);
+  font-weight: 500;
+  font-size: var(--t-md);
+  color: var(--ink);
+}
+.app .collapsed-icon { filter: none; }
+
+/* ---- footer ---- */
+.app .footer {
+  border-top: 2px solid var(--ink);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--ff-ui);
+  font-size: var(--t-xs);
+  letter-spacing: 0.04em;
+}
+
+/* ---- drag overlay ---- */
+.drag-overlay-card {
+  font-family: var(--ff-display);
+  background: var(--card);
+  border: 1px solid var(--ink);
+  border-radius: var(--r-md);
+  color: var(--ink);
+}
+
+/* ---- qr dropdown ---- */
+.app .qr-dropdown {
+  background: var(--card);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-md);
+}
+.app .qr-text {
+  font-family: var(--ff-ui);
+  color: var(--ink-2);
+  font-size: var(--t-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

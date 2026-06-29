@@ -1,10 +1,16 @@
+/* ============================================================
+   Admin Settings — Editorial Ledger
+   Serif title, mono metrics, ruled ledger rows, flat EL colors.
+   All colors come from the global EL tokens (auto dark mode).
+   ============================================================ */
+
 .admin-settings-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(21, 17, 12, 0.55);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -20,13 +26,14 @@
 }
 
 .admin-settings-dialog {
-  background: white;
-  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
   max-width: 520px;
   width: 90%;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--el-shadow);
   animation: admin-slide-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -35,32 +42,21 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-html.dark-mode .admin-settings-dialog {
-  background: #1e293b;
-  color: #f1f5f9;
-}
-
 .admin-settings-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-html.dark-mode .admin-settings-header {
-  border-bottom-color: #334155;
+  border-bottom: 1px solid var(--ink);
 }
 
 .admin-settings-header h2 {
   margin: 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--gray-800, #1e293b);
-}
-
-html.dark-mode .admin-settings-header h2 {
-  color: #f1f5f9;
+  font-family: var(--ff-display);
+  font-size: var(--t-lg);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--ink);
 }
 
 .admin-settings-close {
@@ -68,25 +64,16 @@ html.dark-mode .admin-settings-header h2 {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: var(--gray-500, #64748b);
+  color: var(--muted);
   padding: 0.25rem;
   line-height: 1;
-  border-radius: 8px;
-  transition: all 0.15s ease;
+  border-radius: var(--r-sm);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .admin-settings-close:hover {
-  background: var(--gray-100, #f1f5f9);
-  color: var(--gray-800, #1e293b);
-}
-
-html.dark-mode .admin-settings-close {
-  color: #94a3b8;
-}
-
-html.dark-mode .admin-settings-close:hover {
-  background: #334155;
-  color: #f1f5f9;
+  background: var(--paper-2);
+  color: var(--ink);
 }
 
 .admin-settings-body {
@@ -97,28 +84,22 @@ html.dark-mode .admin-settings-close:hover {
 .admin-settings-error {
   padding: 2rem;
   text-align: center;
-  color: var(--gray-500, #64748b);
+  font-family: var(--ff-ui);
+  color: var(--muted);
 }
 
 .admin-settings-error {
-  color: #ef4444;
-}
-
-html.dark-mode .admin-settings-loading {
-  color: #94a3b8;
+  color: var(--oxblood);
 }
 
 .admin-settings-section-title {
   margin: 0 0 1rem 0;
-  font-size: 0.8125rem;
+  font-family: var(--ff-ui);
+  font-size: var(--t-xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--gray-500, #64748b);
-}
-
-html.dark-mode .admin-settings-section-title {
-  color: #94a3b8;
+  letter-spacing: 0.13em;
+  color: var(--muted);
 }
 
 /* Storage progress bar */
@@ -128,40 +109,35 @@ html.dark-mode .admin-settings-section-title {
 
 .storage-bar {
   height: 12px;
-  background: var(--gray-100, #f1f5f9);
-  border-radius: 6px;
+  background: var(--paper-2);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
   overflow: hidden;
-}
-
-html.dark-mode .storage-bar {
-  background: #334155;
 }
 
 .storage-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #2563eb);
-  border-radius: 6px;
+  background: var(--forest);
+  border-radius: var(--r-sm);
   transition: width 0.6s ease;
 }
 
 .storage-bar-fill.storage-bar-warning {
-  background: linear-gradient(90deg, #f59e0b, #d97706);
+  background: var(--amber);
 }
 
 .storage-bar-fill.storage-bar-danger {
-  background: linear-gradient(90deg, #ef4444, #dc2626);
+  background: var(--oxblood);
 }
 
 .storage-bar-label {
   display: flex;
   justify-content: space-between;
   margin-top: 0.5rem;
-  font-size: 0.8125rem;
-  color: var(--gray-500, #64748b);
-}
-
-html.dark-mode .storage-bar-label {
-  color: #94a3b8;
+  font-family: var(--ff-mono);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
 }
 
 /* Stats cards */
@@ -177,14 +153,9 @@ html.dark-mode .storage-bar-label {
   align-items: center;
   gap: 0.75rem;
   padding: 0.875rem;
-  background: var(--gray-50, #f8fafc);
-  border-radius: 12px;
-  border: 1px solid var(--gray-200, #e2e8f0);
-}
-
-html.dark-mode .storage-stat-card {
-  background: #0f172a;
-  border-color: #334155;
+  background: var(--paper-2);
+  border-radius: var(--r-md);
+  border: 1px solid var(--hair);
 }
 
 .storage-stat-icon {
@@ -200,39 +171,32 @@ html.dark-mode .storage-stat-card {
 }
 
 .storage-stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--gray-800, #1e293b);
-}
-
-html.dark-mode .storage-stat-value {
-  color: #f1f5f9;
+  font-family: var(--ff-mono);
+  font-size: var(--t-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 .storage-stat-label {
-  font-size: 0.75rem;
-  color: var(--gray-500, #64748b);
-}
-
-html.dark-mode .storage-stat-label {
-  color: #94a3b8;
+  font-family: var(--ff-ui);
+  font-size: var(--t-xs);
+  color: var(--muted);
 }
 
 .storage-stat-size {
-  font-size: 0.8125rem;
+  font-family: var(--ff-mono);
+  font-size: var(--t-xs);
   font-weight: 600;
-  color: #3b82f6;
+  font-variant-numeric: tabular-nums;
+  color: var(--oxblood);
   white-space: nowrap;
 }
 
 /* Detail table */
 .storage-detail-table {
   margin-bottom: 1.5rem;
-  border-top: 1px solid var(--gray-200, #e2e8f0);
-}
-
-html.dark-mode .storage-detail-table {
-  border-top-color: #334155;
+  border-top: 1px solid var(--ink);
 }
 
 .storage-detail-row {
@@ -240,29 +204,20 @@ html.dark-mode .storage-detail-table {
   justify-content: space-between;
   align-items: center;
   padding: 0.625rem 0;
-  border-bottom: 1px solid var(--gray-100, #f1f5f9);
-  font-size: 0.875rem;
-}
-
-html.dark-mode .storage-detail-row {
-  border-bottom-color: #1e293b;
+  border-bottom: 1px solid var(--hair);
+  font-size: var(--t-sm);
 }
 
 .storage-detail-label {
-  color: var(--gray-600, #475569);
-}
-
-html.dark-mode .storage-detail-label {
-  color: #cbd5e1;
+  font-family: var(--ff-ui);
+  color: var(--ink-2);
 }
 
 .storage-detail-value {
+  font-family: var(--ff-mono);
   font-weight: 600;
-  color: var(--gray-800, #1e293b);
-}
-
-html.dark-mode .storage-detail-value {
-  color: #f1f5f9;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 /* Limits section */
@@ -276,39 +231,31 @@ html.dark-mode .storage-detail-value {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.875rem;
+  font-size: var(--t-sm);
 }
 
 .storage-limit-label {
-  color: var(--gray-600, #475569);
-}
-
-html.dark-mode .storage-limit-label {
-  color: #cbd5e1;
+  font-family: var(--ff-ui);
+  color: var(--ink-2);
 }
 
 .storage-limit-value {
+  font-family: var(--ff-mono);
   font-weight: 600;
-  color: var(--gray-800, #1e293b);
-}
-
-html.dark-mode .storage-limit-value {
-  color: #f1f5f9;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 .storage-limit-note {
   margin-top: 0.5rem;
   padding: 0.75rem;
-  background: var(--gray-50, #f8fafc);
-  border-radius: 8px;
-  font-size: 0.8125rem;
-  color: var(--gray-500, #64748b);
+  background: var(--paper-2);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
+  font-family: var(--ff-ui);
+  font-size: var(--t-xs);
+  color: var(--muted);
   line-height: 1.5;
-}
-
-html.dark-mode .storage-limit-note {
-  background: #0f172a;
-  color: #94a3b8;
 }
 
 /* Responsive */

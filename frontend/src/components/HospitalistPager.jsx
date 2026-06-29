@@ -92,6 +92,24 @@ function HospitalistPager() {
     }
   }, [])
 
+  // Toggle the "hospitalist called back" flag + timestamp for a logged page
+  const toggleCallback = useCallback(async (log) => {
+    const willSet = !log.callback_at
+    // optimistic update for snappy feedback
+    setRecentPages(prev => prev.map(p =>
+      p.id === log.id ? { ...p, callback_at: willSet ? new Date().toISOString() : null } : p
+    ))
+    try {
+      if (willSet) {
+        await axios.post(`${API_BASE}/page-logs/${log.id}/callback`)
+      } else {
+        await axios.delete(`${API_BASE}/page-logs/${log.id}/callback`)
+      }
+    } finally {
+      fetchRecentPages() // reconcile with server truth
+    }
+  }, [fetchRecentPages])
+
   // Fetch the page ledger on mount
   useEffect(() => {
     fetchRecentPages()
@@ -375,7 +393,7 @@ function HospitalistPager() {
               {recentPages.map(log => {
                 const ok = log.status === 'success'
                 return (
-                  <div key={log.id} className={`pager-log-row ${ok ? 'ok' : 'fail'}`}>
+                  <div key={log.id} className={`pager-log-row ${ok ? 'ok' : 'fail'}${log.callback_at ? ' called-back' : ''}`}>
                     <span className="pager-log-glyph">{ok ? '✓' : '✗'}</span>
                     <span className="pager-log-body">
                       <b>{ok ? 'Page sent successfully' : 'Page FAILED'}</b>
@@ -385,6 +403,22 @@ function HospitalistPager() {
                       <span className="pager-log-tm">{formatClock(log.sent_at)}</span>
                       {log.beds && <span className="pager-log-where"> {'·'} Bed {log.beds}</span>}
                     </span>
+                    <label
+                      className={`pager-cb${log.callback_at ? ' done' : ''}`}
+                      title={log.callback_at ? 'Hospitalist called back — click to clear' : 'Mark hospitalist called back'}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!!log.callback_at}
+                        onChange={() => toggleCallback(log)}
+                      />
+                      <span className="pager-cb-box" aria-hidden="true">{log.callback_at ? '✓' : ''}</span>
+                      <span className="pager-cb-text">
+                        {log.callback_at
+                          ? <>called back {'·'} {formatClock(log.callback_at)}</>
+                          : 'called back?'}
+                      </span>
+                    </label>
                   </div>
                 )
               })}

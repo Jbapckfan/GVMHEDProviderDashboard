@@ -1,3 +1,9 @@
+/* ============================================================
+   Schedule Viewer — Editorial Ledger
+   Serif headings, mono dates, oxblood/forest/amber status.
+   All colors come from the global EL tokens (auto dark mode).
+   ============================================================ */
+
 .schedule-viewer-card {
   min-height: 400px;
 }
@@ -8,55 +14,68 @@
   gap: 0.75rem;
 }
 
+/* --- Month nav arrows: primary EL button --- */
 .nav-btn {
-  background: var(--primary-color);
-  color: white;
-  border: none;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   cursor: pointer;
+  font-family: var(--ff-ui);
   font-size: 1rem;
-  font-weight: bold;
-  transition: all 0.2s;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .nav-btn:hover {
-  background: #1e40af;
+  background: var(--oxblood);
+  border-color: var(--oxblood);
   transform: scale(1.05);
 }
 
+/* --- Current month/year: tabular mono data --- */
 .current-month {
+  font-family: var(--ff-mono);
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
   font-size: 1.125rem;
-  color: var(--gray-800);
+  color: var(--ink);
   min-width: 180px;
   text-align: center;
 }
 
+/* --- Today: secondary EL button --- */
 .today-btn {
-  background: var(--success-color);
-  color: white;
-  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--hair-strong);
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   cursor: pointer;
+  font-family: var(--ff-ui);
   font-size: 0.875rem;
   font-weight: 600;
-  transition: all 0.2s;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .today-btn:hover {
-  background: #059669;
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
+/* --- Live indicator: forest status pill --- */
 .live-indicator {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  background: #dcfce7;
-  color: #166534;
+  background: var(--forest-soft);
+  color: var(--forest);
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
+  font-family: var(--ff-ui);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -69,44 +88,47 @@
   50% { opacity: 0.7; }
 }
 
-html.dark-mode .live-indicator {
-  background: #166534;
-  color: #dcfce7;
-}
-
+/* --- Refresh: forest action button --- */
 .btn-success {
-  background: #10b981;
-  color: white;
-  border: none;
+  background: var(--forest-soft);
+  color: var(--forest);
+  border: 1px solid var(--forest);
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   cursor: pointer;
+  font-family: var(--ff-ui);
   font-weight: 600;
-  transition: all 0.2s;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.15s, color 0.15s;
 }
 
 .btn-success:hover {
-  background: #059669;
+  background: var(--forest);
+  color: var(--paper);
 }
 
+/* --- Schedule note: amber caution banner --- */
 .schedule-note {
-  background: #fffbeb;
-  border: 1px solid #f59e0b;
-  border-radius: 6px;
+  background: var(--amber-soft);
+  border: 1px solid var(--amber);
+  border-radius: var(--r-sm);
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
+  font-family: var(--ff-ui);
   font-size: 0.875rem;
-  color: var(--gray-700);
+  color: var(--ink-2);
 }
 
 .schedule-image {
   width: 100%;
   height: auto;
   max-height: 700px;
-  border-radius: 8px;
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  box-shadow: var(--el-shadow);
   object-fit: contain;
-  background: white;
+  background: var(--card);
 }
 
 /* Responsive */
@@ -136,24 +158,10 @@ html.dark-mode .live-indicator {
   }
 }
 
-/* Dark Mode */
-html.dark-mode .schedule-note {
-  background: #1e293b;
-  border-color: #fbbf24;
-  color: #cbd5e1;
-}
-
-html.dark-mode .schedule-image {
-  background: #0f172a;
-}
-
+/* Dark Mode — invert external Google Sheets iframe (non-color filter) */
 html.dark-mode iframe {
   filter: invert(0.9) hue-rotate(180deg);
-  border-radius: 8px;
-}
-
-html.dark-mode .current-month {
-  color: #f1f5f9;
+  border-radius: var(--r-md);
 }
 
 /* Month Tabs */
@@ -167,25 +175,27 @@ html.dark-mode .current-month {
 
 .month-tab {
   padding: 0.5rem 1rem;
-  border: 2px solid var(--gray-300);
-  background: white;
-  border-radius: 8px;
+  border: 2px solid var(--hair-strong);
+  background: var(--card);
+  border-radius: var(--r-sm);
   cursor: pointer;
+  font-family: var(--ff-mono);
+  font-variant-numeric: tabular-nums;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--gray-600);
-  transition: all 0.2s;
+  color: var(--ink-2);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
 .month-tab:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .month-tab.active {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
 }
 
 .month-tab.current-month-tab {
@@ -200,25 +210,8 @@ html.dark-mode .current-month {
   transform: translateX(-50%);
   width: 6px;
   height: 6px;
-  background: var(--success-color);
+  background: var(--forest);
   border-radius: 50%;
-}
-
-html.dark-mode .month-tab {
-  background: #1e293b;
-  border-color: #475569;
-  color: #94a3b8;
-}
-
-html.dark-mode .month-tab:hover {
-  border-color: #60a5fa;
-  color: #60a5fa;
-}
-
-html.dark-mode .month-tab.active {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: white;
 }
 
 /* Iframe wrapper to hide Google Sheets tabs */
@@ -226,8 +219,9 @@ html.dark-mode .month-tab.active {
   width: 100%;
   height: 550px;
   overflow: hidden;
-  border-radius: 8px;
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
+  box-shadow: var(--el-shadow);
 }
 
 .iframe-wrapper iframe {
@@ -246,7 +240,7 @@ html.dark-mode .month-tab.active {
   height: 100%;
   min-height: 400px;
   text-align: center;
-  color: var(--gray-600);
+  color: var(--ink-2);
   padding: 2rem;
 }
 
@@ -257,8 +251,10 @@ html.dark-mode .month-tab.active {
 }
 
 .no-schedule-message h3 {
+  font-family: var(--ff-display);
+  font-weight: 500;
   font-size: 1.5rem;
-  color: var(--gray-700);
+  color: var(--ink);
   margin-bottom: 0.5rem;
 }
 
@@ -267,19 +263,8 @@ html.dark-mode .month-tab.active {
 }
 
 .no-schedule-hint {
+  font-family: var(--ff-ui);
   font-size: 0.875rem;
-  color: var(--gray-500);
+  color: var(--muted);
   margin-top: 1rem !important;
-}
-
-html.dark-mode .no-schedule-message {
-  color: #94a3b8;
-}
-
-html.dark-mode .no-schedule-message h3 {
-  color: #e2e8f0;
-}
-
-html.dark-mode .no-schedule-hint {
-  color: #64748b;
 }

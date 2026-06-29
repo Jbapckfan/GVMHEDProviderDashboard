@@ -1744,6 +1744,27 @@ app.get('/api/admin/page-logs', async (req, res) => {
   }
 });
 
+// Mark a page as called back by the hospitalist (records a server-side timestamp)
+app.post('/api/page-logs/:id/callback', async (req, res) => {
+  try {
+    const callbackAt = new Date().toISOString();
+    await db.setPageCallback(req.params.id, callbackAt);
+    res.json({ success: true, callback_at: callbackAt });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Clear the call-back timestamp (uncheck)
+app.delete('/api/page-logs/:id/callback', async (req, res) => {
+  try {
+    await db.clearPageCallback(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`ED Dashboard Backend running on port ${PORT}`);

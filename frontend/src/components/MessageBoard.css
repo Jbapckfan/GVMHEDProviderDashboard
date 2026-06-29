@@ -1,4 +1,10 @@
-/* ===== MESSAGE BOARD CARD ===== */
+/* ============================================================
+   Message Board — Editorial Ledger
+   Ruled message cards, serif modal titles, mono times,
+   oxblood/forest status. All colors from global EL tokens
+   (auto dark mode — no html.dark-mode color overrides needed).
+   ============================================================ */
+
 .message-board-card {
   min-height: 280px;
   max-height: 600px;
@@ -15,18 +21,18 @@
 }
 
 .message-item {
-  background: var(--gray-50);
-  border-left: 3px solid var(--primary-500);
-  border-radius: var(--radius-lg);
+  background: var(--paper-2);
+  border-left: 3px solid var(--ink);
+  border-radius: var(--r-md);
   padding: var(--space-4);
-  transition: all var(--transition);
-  border: 1px solid var(--gray-100);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  border: 1px solid var(--hair);
 }
 
 .message-item:hover {
-  background: white;
-  box-shadow: var(--shadow);
-  border-color: var(--gray-200);
+  background: var(--card);
+  box-shadow: var(--el-shadow);
+  border-color: var(--hair-strong);
 }
 
 .message-header {
@@ -43,19 +49,23 @@
 }
 
 .message-author {
+  font-family: var(--ff-ui);
   font-weight: 600;
-  color: var(--gray-800);
+  color: var(--ink);
   font-size: 0.875rem;
 }
 
 .message-time {
+  font-family: var(--ff-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 0.75rem;
-  color: var(--gray-500);
+  color: var(--muted);
 }
 
 .message-content {
+  font-family: var(--ff-ui);
   font-size: 0.875rem;
-  color: var(--gray-700);
+  color: var(--ink-2);
   line-height: 1.6;
   margin: 0;
   white-space: pre-wrap;
@@ -64,34 +74,41 @@
 /* Edit Buttons */
 .edit-message-btn {
   padding: 8px 16px;
-  background: var(--accent-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
+  font-family: var(--ff-ui);
+  font-weight: 600;
   font-size: 0.8125rem;
-  transition: all var(--transition);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .edit-message-btn:hover {
-  background: var(--accent-600);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
 }
 
 .edit-message-btn-small {
   background: transparent;
   border: none;
+  font-family: var(--ff-ui);
   font-size: 1rem;
+  color: var(--muted);
   cursor: pointer;
   padding: 4px;
-  transition: all var(--transition-fast);
-  opacity: 0.6;
-  border-radius: var(--radius-sm);
+  transition: opacity 0.12s, background 0.12s, color 0.12s;
+  opacity: 0.7;
+  border-radius: var(--r-sm);
 }
 
 .edit-message-btn-small:hover {
   opacity: 1;
-  background: var(--gray-100);
+  background: var(--paper-2);
+  color: var(--ink);
 }
 
 /* Modal */
@@ -101,7 +118,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(21, 17, 12, 0.5);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -112,31 +129,36 @@
 }
 
 .message-edit-form {
-  background: white;
+  background: var(--card);
+  border: 1px solid var(--hair-strong);
   padding: var(--space-6);
-  border-radius: var(--radius-xl);
+  border-radius: var(--r-lg);
   max-width: 560px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-2xl);
+  box-shadow: 0 20px 50px rgba(21, 17, 12, 0.22);
   margin: auto;
 }
 
 .message-edit-form h3 {
   margin-top: 0;
   margin-bottom: var(--space-5);
-  color: var(--gray-800);
+  font-family: var(--ff-display);
+  color: var(--ink);
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .message-edit-form label {
   display: block;
   margin-bottom: 6px;
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--gray-700);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  font-size: var(--t-xs);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .message-edit-form input,
@@ -144,18 +166,25 @@
   width: 100%;
   padding: 10px 12px;
   margin-bottom: var(--space-4);
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
   font-size: 0.875rem;
-  font-family: inherit;
-  transition: border-color var(--transition-fast);
+  font-family: var(--ff-ui);
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.message-edit-form input::placeholder,
+.message-edit-form textarea::placeholder {
+  color: var(--muted);
 }
 
 .message-edit-form input:focus,
 .message-edit-form textarea:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(122, 34, 48, 0.12);
 }
 
 .message-edit-form textarea {
@@ -169,70 +198,84 @@
   justify-content: flex-end;
   margin-top: var(--space-5);
   padding-top: var(--space-4);
-  border-top: 1px solid var(--gray-100);
+  border-top: 1px solid var(--hair);
 }
 
 .btn-save {
   padding: 10px 20px;
-  background: var(--success-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
+  font-family: var(--ff-ui);
+  font-weight: 600;
   font-size: 0.875rem;
-  transition: all var(--transition);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .btn-save:hover {
-  background: var(--success-600);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
 }
 
 .btn-cancel {
   padding: 10px 20px;
-  background: var(--gray-100);
-  color: var(--gray-700);
-  border: none;
-  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
+  font-family: var(--ff-ui);
+  font-weight: 600;
   font-size: 0.875rem;
-  transition: all var(--transition);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .btn-cancel:hover {
-  background: var(--gray-200);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .btn-delete {
   padding: 10px 20px;
-  background: var(--danger-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
+  background: var(--oxblood);
+  color: var(--paper);
+  border: 1px solid var(--oxblood);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
+  font-family: var(--ff-ui);
+  font-weight: 600;
   font-size: 0.875rem;
-  transition: all var(--transition);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s;
   margin-right: auto;
 }
 
 .btn-delete:hover {
-  background: var(--danger-600);
+  background: var(--ink);
+  border-color: var(--ink);
 }
 
 /* States */
 .loading-small {
   text-align: center;
   padding: var(--space-8);
-  color: var(--gray-500);
+  color: var(--muted);
+  font-family: var(--ff-ui);
   font-size: 0.875rem;
 }
 
 .empty-state {
   text-align: center;
   padding: var(--space-8) var(--space-6);
-  color: var(--gray-500);
+  color: var(--muted);
+  font-family: var(--ff-ui);
 }
 
 .empty-state p {
@@ -242,23 +285,24 @@
 
 .empty-hint {
   font-size: 0.8125rem;
-  color: var(--gray-400);
+  color: var(--muted);
 }
 
 /* ===== REPLIES ===== */
 .replies-section {
   margin-top: var(--space-3);
   padding-top: var(--space-3);
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid var(--hair);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 
 .reply-item {
-  background: white;
-  border-left: 2px solid var(--accent-400);
-  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-left: 2px solid var(--hair-strong);
+  border-radius: var(--r-sm);
   padding: var(--space-3);
   margin-left: var(--space-4);
 }
@@ -277,19 +321,23 @@
 }
 
 .reply-author {
+  font-family: var(--ff-ui);
   font-weight: 600;
   font-size: 0.8125rem;
-  color: var(--gray-700);
+  color: var(--ink);
 }
 
 .reply-time {
+  font-family: var(--ff-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 0.6875rem;
-  color: var(--gray-400);
+  color: var(--muted);
 }
 
 .reply-content {
+  font-family: var(--ff-ui);
   font-size: 0.8125rem;
-  color: var(--gray-600);
+  color: var(--ink-2);
   line-height: 1.5;
   margin: 0;
   white-space: pre-wrap;
@@ -299,12 +347,12 @@
   background: transparent;
   border: none;
   font-size: 1rem;
-  color: var(--gray-400);
+  color: var(--muted);
   cursor: pointer;
   padding: 2px 6px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   line-height: 1;
-  transition: all var(--transition-fast);
+  transition: color 0.12s, background 0.12s, opacity 0.12s;
   opacity: 0;
 }
 
@@ -313,8 +361,8 @@
 }
 
 .reply-delete-btn:hover {
-  color: var(--danger-500);
-  background: var(--danger-50);
+  color: var(--oxblood);
+  background: var(--oxblood-soft);
 }
 
 /* Reply trigger button */
@@ -322,16 +370,19 @@
   margin-top: var(--space-2);
   background: transparent;
   border: none;
-  color: var(--gray-500);
+  color: var(--muted);
+  font-family: var(--ff-ui);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
   padding: 4px 0;
-  transition: color var(--transition-fast);
+  transition: color 0.12s;
 }
 
 .reply-trigger-btn:hover {
-  color: var(--primary-500);
+  color: var(--oxblood);
 }
 
 /* Inline reply form */
@@ -339,9 +390,9 @@
   margin-top: var(--space-3);
   margin-left: var(--space-4);
   padding: var(--space-3);
-  background: white;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-sm);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -351,18 +402,25 @@
 .reply-text-input {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
   font-size: 0.8125rem;
-  font-family: inherit;
-  transition: border-color var(--transition-fast);
+  font-family: var(--ff-ui);
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.reply-author-input::placeholder,
+.reply-text-input::placeholder {
+  color: var(--muted);
 }
 
 .reply-author-input:focus,
 .reply-text-input:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.08);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px rgba(122, 34, 48, 0.10);
 }
 
 .reply-text-input {
@@ -378,168 +436,47 @@
 
 .reply-cancel-btn {
   padding: 6px 14px;
-  background: var(--gray-100);
-  color: var(--gray-600);
-  border: none;
-  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
   cursor: pointer;
+  font-family: var(--ff-ui);
   font-size: 0.75rem;
-  font-weight: 500;
-  transition: all var(--transition-fast);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: border-color 0.12s, color 0.12s;
 }
 
 .reply-cancel-btn:hover {
-  background: var(--gray-200);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .reply-submit-btn {
   padding: 6px 14px;
-  background: var(--primary-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: var(--r-sm);
   cursor: pointer;
+  font-family: var(--ff-ui);
   font-size: 0.75rem;
-  font-weight: 500;
-  transition: all var(--transition-fast);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.12s, border-color 0.12s;
 }
 
 .reply-submit-btn:hover:not(:disabled) {
-  background: var(--primary-600);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
 }
 
 .reply-submit-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
-}
-
-/* ===== DARK MODE ===== */
-html.dark-mode .message-item {
-  background: var(--gray-200);
-  border-left-color: var(--primary-400);
-  border-color: var(--gray-300);
-}
-
-html.dark-mode .message-item:hover {
-  background: var(--gray-100);
-  border-color: var(--gray-300);
-}
-
-html.dark-mode .message-author {
-  color: var(--gray-800);
-}
-
-html.dark-mode .message-time {
-  color: var(--gray-500);
-}
-
-html.dark-mode .message-content {
-  color: var(--gray-700);
-}
-
-html.dark-mode .edit-message-btn-small:hover {
-  background: var(--gray-300);
-}
-
-html.dark-mode .message-edit-form {
-  background: var(--gray-100);
-}
-
-html.dark-mode .message-edit-form h3 {
-  color: var(--gray-800);
-}
-
-html.dark-mode .message-edit-form label {
-  color: var(--gray-700);
-}
-
-html.dark-mode .message-edit-form input,
-html.dark-mode .message-edit-form textarea {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
-  color: var(--gray-800);
-}
-
-html.dark-mode .message-edit-form input:focus,
-html.dark-mode .message-edit-form textarea:focus {
-  border-color: var(--primary-400);
-}
-
-html.dark-mode .message-edit-actions {
-  border-top-color: var(--gray-200);
-}
-
-html.dark-mode .btn-cancel {
-  background: var(--gray-300);
-  color: var(--gray-700);
-}
-
-html.dark-mode .btn-cancel:hover {
-  background: var(--gray-400);
-}
-
-html.dark-mode .loading-small,
-html.dark-mode .empty-state {
-  color: var(--gray-600);
-}
-
-html.dark-mode .replies-section {
-  border-top-color: var(--gray-300);
-}
-
-html.dark-mode .reply-item {
-  background: var(--gray-100);
-  border-left-color: var(--accent-400);
-}
-
-html.dark-mode .reply-author {
-  color: var(--gray-700);
-}
-
-html.dark-mode .reply-time {
-  color: var(--gray-500);
-}
-
-html.dark-mode .reply-content {
-  color: var(--gray-600);
-}
-
-html.dark-mode .reply-delete-btn:hover {
-  background: rgba(239, 68, 68, 0.15);
-}
-
-html.dark-mode .reply-trigger-btn {
-  color: var(--gray-500);
-}
-
-html.dark-mode .reply-trigger-btn:hover {
-  color: var(--primary-400);
-}
-
-html.dark-mode .reply-form {
-  background: var(--gray-100);
-  border-color: var(--gray-300);
-}
-
-html.dark-mode .reply-author-input,
-html.dark-mode .reply-text-input {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
-  color: var(--gray-800);
-}
-
-html.dark-mode .reply-author-input:focus,
-html.dark-mode .reply-text-input:focus {
-  border-color: var(--primary-400);
-}
-
-html.dark-mode .reply-cancel-btn {
-  background: var(--gray-300);
-  color: var(--gray-600);
-}
-
-html.dark-mode .reply-cancel-btn:hover {
-  background: var(--gray-400);
 }
 
 /* ===== RESPONSIVE ===== */

@@ -1,4 +1,8 @@
-/* ===== PHONE DIRECTORY CARD ===== */
+/* ============================================================
+   Phone Directory Card — Editorial Ledger
+   Serif title, mono phone numbers/extensions, ruled ledger rows.
+   All colors come from the global EL tokens (auto dark mode).
+   ============================================================ */
 .phone-directory-card {
   min-height: 700px;
 }
@@ -6,7 +10,7 @@
 .phone-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--s-2);
   max-height: 800px;
   overflow-y: auto;
 }
@@ -15,18 +19,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-3) var(--space-4);
-  background: var(--gray-50);
-  border-radius: var(--radius-lg);
-  transition: all var(--transition);
-  border: 1px solid var(--gray-100);
+  padding: var(--s-3) var(--s-4);
+  background: var(--paper-2);
+  border-radius: var(--r-sm);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  border: 1px solid var(--hair);
   cursor: pointer;
 }
 
 .phone-item:hover {
-  background: white;
-  box-shadow: var(--shadow);
-  border-color: var(--gray-200);
+  background: var(--card);
+  box-shadow: var(--el-shadow);
+  border-color: var(--hair-strong);
 }
 
 .phone-item.dragging {
@@ -36,12 +40,12 @@
 
 .drag-handle {
   user-select: none;
-  transition: color var(--transition-fast);
-  color: var(--gray-400);
+  transition: color 0.12s;
+  color: var(--muted);
 }
 
 .phone-item:hover .drag-handle {
-  color: var(--primary-500);
+  color: var(--ink);
 }
 
 .phone-details {
@@ -51,71 +55,84 @@
 }
 
 .phone-label {
+  font-family: var(--ff-ui);
   font-weight: 600;
-  color: var(--gray-800);
-  font-size: 0.875rem;
+  color: var(--ink);
+  font-size: var(--t-sm);
 }
 
 .phone-extension {
-  font-size: 0.75rem;
-  color: var(--gray-500);
+  font-family: var(--ff-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-xs);
+  color: var(--muted);
 }
 
 .phone-number {
+  font-family: var(--ff-mono);
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
-  font-size: 0.9375rem;
-  color: white;
+  font-size: var(--t-sm);
+  color: var(--paper);
   text-decoration: none;
   padding: 8px 16px;
-  background: var(--primary-500);
-  border-radius: var(--radius);
-  transition: all var(--transition);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: var(--r-sm);
+  transition: background 0.15s, border-color 0.15s;
   white-space: nowrap;
 }
 
 .phone-number:hover {
-  background: var(--primary-600);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
 }
 
 /* Edit button */
 .edit-phone-btn {
   padding: 8px 14px;
-  background: var(--accent-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
-  font-size: 0.8125rem;
-  transition: all var(--transition);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  font-size: var(--t-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .edit-phone-btn:hover {
-  background: var(--accent-600);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 /* States */
 .loading-small {
   text-align: center;
-  padding: var(--space-8);
-  color: var(--gray-500);
-  font-size: 0.875rem;
+  padding: var(--s-6);
+  color: var(--muted);
+  font-family: var(--ff-ui);
+  font-size: var(--t-sm);
 }
 
 .empty-state {
   text-align: center;
-  padding: var(--space-8) var(--space-6);
-  color: var(--gray-500);
+  padding: var(--s-6) var(--s-5);
+  color: var(--muted);
+  font-family: var(--ff-ui);
 }
 
 .empty-state p {
-  margin-bottom: var(--space-2);
-  font-size: 0.875rem;
+  margin-bottom: var(--s-2);
+  font-size: var(--t-sm);
 }
 
 .empty-hint {
-  font-size: 0.8125rem;
-  color: var(--gray-400);
+  font-size: var(--t-xs);
+  color: var(--muted);
 }
 
 /* Edit Modal */
@@ -133,174 +150,133 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: var(--space-6);
+  padding: var(--s-5);
 }
 
 .phone-edit-form {
-  background: white;
-  padding: var(--space-6);
-  border-radius: var(--radius-xl);
+  background: var(--card);
+  padding: var(--s-5);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
   max-width: 480px;
   width: 100%;
-  box-shadow: var(--shadow-2xl);
+  box-shadow: var(--el-shadow);
   margin: auto;
 }
 
 .phone-edit-form h3 {
   margin-top: 0;
-  margin-bottom: var(--space-5);
-  color: var(--gray-800);
-  font-size: 1.125rem;
-  font-weight: 600;
+  margin-bottom: var(--s-5);
+  font-family: var(--ff-display);
+  color: var(--ink);
+  font-size: var(--t-lg);
+  font-weight: 500;
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--ink);
 }
 
 .phone-edit-form label {
   display: block;
   margin-bottom: 6px;
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--gray-700);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  font-size: var(--t-xs);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .phone-edit-form input {
   width: 100%;
   padding: 10px 12px;
-  margin-bottom: var(--space-4);
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  transition: border-color var(--transition-fast);
+  margin-bottom: var(--s-4);
+  background: var(--paper);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  font-family: var(--ff-ui);
+  font-size: var(--t-base);
+  color: var(--ink);
+  transition: border-color 0.12s;
+}
+
+.phone-edit-form input::placeholder {
+  color: var(--muted);
 }
 
 .phone-edit-form input:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(122, 34, 48, 0.12);
 }
 
 .phone-edit-actions {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--s-3);
   justify-content: flex-end;
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--gray-100);
+  margin-top: var(--s-5);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--hair);
 }
 
 .btn-save {
   padding: 10px 20px;
-  background: var(--success-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all var(--transition);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .btn-save:hover {
-  background: var(--success-600);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
 }
 
 .btn-cancel {
   padding: 10px 20px;
-  background: var(--gray-100);
-  color: var(--gray-700);
-  border: none;
-  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all var(--transition);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .btn-cancel:hover {
-  background: var(--gray-200);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .btn-delete {
   padding: 10px 20px;
-  background: var(--danger-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
+  background: var(--oxblood-soft);
+  color: var(--oxblood);
+  border: 1px solid var(--oxblood);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all var(--transition);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.15s, color 0.15s;
   margin-right: auto;
 }
 
 .btn-delete:hover {
-  background: var(--danger-600);
-}
-
-/* ===== DARK MODE ===== */
-html.dark-mode .phone-item {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
-}
-
-html.dark-mode .phone-item:hover {
-  background: var(--gray-100);
-  border-color: var(--gray-300);
-}
-
-html.dark-mode .drag-handle {
-  color: var(--gray-500);
-}
-
-html.dark-mode .phone-item:hover .drag-handle {
-  color: var(--primary-400);
-}
-
-html.dark-mode .phone-label {
-  color: var(--gray-800);
-}
-
-html.dark-mode .phone-extension {
-  color: var(--gray-600);
-}
-
-html.dark-mode .loading-small,
-html.dark-mode .empty-state {
-  color: var(--gray-600);
-}
-
-html.dark-mode .phone-edit-form {
-  background: var(--gray-100);
-}
-
-html.dark-mode .phone-edit-form h3 {
-  color: var(--gray-800);
-}
-
-html.dark-mode .phone-edit-form label {
-  color: var(--gray-700);
-}
-
-html.dark-mode .phone-edit-form input {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
-  color: var(--gray-800);
-}
-
-html.dark-mode .phone-edit-form input:focus {
-  border-color: var(--primary-400);
-}
-
-html.dark-mode .phone-edit-actions {
-  border-top-color: var(--gray-200);
-}
-
-html.dark-mode .btn-cancel {
-  background: var(--gray-300);
-  color: var(--gray-700);
-}
-
-html.dark-mode .btn-cancel:hover {
-  background: var(--gray-400);
+  background: var(--oxblood);
+  color: var(--paper);
 }
 
 /* ===== RESPONSIVE ===== */
@@ -308,8 +284,8 @@ html.dark-mode .btn-cancel:hover {
   .phone-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--space-3);
-    padding: var(--space-4);
+    gap: var(--s-3);
+    padding: var(--s-4);
   }
 
   .phone-number {
@@ -319,8 +295,8 @@ html.dark-mode .btn-cancel:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.0625rem;
-    border-radius: var(--radius-lg);
+    font-size: var(--t-md);
+    border-radius: var(--r-sm);
     gap: 0.5rem;
   }
 
@@ -331,6 +307,6 @@ html.dark-mode .btn-cancel:hover {
   }
 
   .phone-edit-form {
-    padding: var(--space-5);
+    padding: var(--s-5);
   }
 }

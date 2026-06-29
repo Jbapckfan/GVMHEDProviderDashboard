@@ -1,3 +1,10 @@
+/* ============================================================
+   Toast — Editorial Ledger
+   Flat status colors (forest/oxblood/amber/ink), ruled cards,
+   mono message text. All colors come from global EL tokens
+   (auto dark mode).
+   ============================================================ */
+
 .toast-container {
   position: fixed;
   top: 1rem;
@@ -15,13 +22,16 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.875rem 1.25rem;
-  border-radius: 12px;
-  color: white;
+  border: 1px solid var(--hair-strong);
+  border-left: 4px solid var(--ink);
+  border-radius: var(--r-md);
+  background: var(--card);
+  color: var(--ink);
+  font-family: var(--ff-ui);
   font-weight: 600;
-  font-size: 0.9rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  font-size: var(--t-sm);
+  box-shadow: var(--el-shadow);
   pointer-events: auto;
-  backdrop-filter: blur(12px);
 }
 
 .toast-enter {
@@ -43,20 +53,31 @@
 }
 
 .toast-success {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: var(--forest-soft);
+  border-color: var(--forest);
+  border-left-color: var(--forest);
+  color: var(--forest);
 }
 
 .toast-error {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: var(--oxblood-soft);
+  border-color: var(--oxblood);
+  border-left-color: var(--oxblood);
+  color: var(--oxblood);
 }
 
 .toast-info {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: var(--paper-2);
+  border-color: var(--hair-strong);
+  border-left-color: var(--ink);
+  color: var(--ink);
 }
 
 .toast-warning {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #1e293b;
+  background: var(--amber-soft);
+  border-color: var(--amber);
+  border-left-color: var(--amber);
+  color: var(--amber);
 }
 
 .toast-icon {
@@ -67,8 +88,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
+  font-weight: 700;
 }
 
 .toast-message {
@@ -80,6 +100,7 @@
   background: transparent;
   border: none;
   color: inherit;
+  font-family: var(--ff-ui);
   font-size: 1.25rem;
   cursor: pointer;
   opacity: 0.7;

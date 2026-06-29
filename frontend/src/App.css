@@ -909,7 +909,9 @@ html.dark-mode .skeleton {
   align-items: center;
   gap: var(--s-3);
 }
-.app .header-logo { border-radius: var(--r-sm); }
+/* Logo: ink monochrome on the paper header (was whitened for the old dark header) */
+.app .header-logo { filter: brightness(0); border-radius: var(--r-sm); }
+html.dark-mode .app .header-logo { filter: brightness(0) invert(1); }
 .app .provider-name-subtitle {
   font-family: var(--ff-ui);
   font-size: var(--t-xs);

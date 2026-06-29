@@ -1,3 +1,9 @@
+/* ============================================================
+   Order Set Suggestions — Editorial Ledger
+   Serif card title, mono meta/times, ruled suggestion ledger.
+   All colors come from the global EL tokens (auto dark mode).
+   ============================================================ */
+
 /* ===== ORDER SET CARD ===== */
 .order-set-card {
   height: 100%;
@@ -10,23 +16,32 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid var(--ink);
+}
+
+.order-set-card .card-title {
+  font-family: var(--ff-display);
+  font-weight: 500;
+  color: var(--ink);
 }
 
 .suggestion-count {
-  font-size: 0.75rem;
-  color: var(--gray-500);
-  background: var(--gray-100);
+  font-family: var(--ff-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-xs);
+  color: var(--muted);
+  background: var(--paper-2);
+  border: 1px solid var(--hair);
   padding: 4px 10px;
-  border-radius: var(--radius-full);
+  border-radius: var(--r-sm);
   font-weight: 500;
 }
 
 /* Form Container */
 .suggestion-form-container {
   padding: var(--space-5);
-  background: var(--gray-50);
-  border-bottom: 1px solid var(--gray-100);
+  background: var(--paper-2);
+  border-bottom: 1px solid var(--hair);
 }
 
 .suggestion-form {
@@ -38,23 +53,24 @@
 .order-set-select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius);
-  font-family: inherit;
-  font-size: 0.875rem;
-  background-color: white;
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  font-family: var(--ff-ui);
+  font-size: var(--t-base);
+  background-color: var(--paper);
+  color: var(--ink);
   cursor: pointer;
-  transition: border-color var(--transition-fast);
+  transition: border-color 0.15s;
 }
 
 .order-set-select:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(122, 34, 48, 0.12);
 }
 
 .order-set-select:disabled {
-  background-color: var(--gray-100);
+  background-color: var(--paper-2);
   cursor: not-allowed;
   opacity: 0.7;
 }
@@ -62,21 +78,25 @@
 .custom-order-set-input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius);
-  font-family: inherit;
-  font-size: 0.875rem;
-  transition: border-color var(--transition-fast);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  font-family: var(--ff-ui);
+  font-size: var(--t-base);
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color 0.15s;
 }
+
+.custom-order-set-input::placeholder { color: var(--muted); }
 
 .custom-order-set-input:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(122, 34, 48, 0.12);
 }
 
 .custom-order-set-input:disabled {
-  background-color: var(--gray-100);
+  background-color: var(--paper-2);
   cursor: not-allowed;
   opacity: 0.7;
 }
@@ -84,23 +104,28 @@
 .suggestion-textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius);
-  font-family: inherit;
-  font-size: 0.875rem;
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  font-family: var(--ff-ui);
+  font-size: var(--t-base);
+  background: var(--paper);
+  color: var(--ink);
   resize: vertical;
   min-height: 80px;
-  transition: border-color var(--transition-fast);
+  line-height: 1.4;
+  transition: border-color 0.15s;
 }
+
+.suggestion-textarea::placeholder { color: var(--muted); }
 
 .suggestion-textarea:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(122, 34, 48, 0.12);
 }
 
 .suggestion-textarea:disabled {
-  background-color: var(--gray-100);
+  background-color: var(--paper-2);
   cursor: not-allowed;
   opacity: 0.7;
 }
@@ -114,20 +139,25 @@
 .author-input {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  transition: border-color var(--transition-fast);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  font-family: var(--ff-ui);
+  font-size: var(--t-base);
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color 0.15s;
 }
+
+.author-input::placeholder { color: var(--muted); }
 
 .author-input:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(122, 34, 48, 0.12);
 }
 
 .author-input:disabled {
-  background-color: var(--gray-100);
+  background-color: var(--paper-2);
   cursor: not-allowed;
   opacity: 0.7;
 }
@@ -141,18 +171,18 @@
 }
 
 .suggestion-item {
-  background: var(--gray-50);
-  border: 1px solid var(--gray-100);
-  border-radius: var(--radius-lg);
+  background: var(--paper);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
   padding: var(--space-4);
   margin-bottom: var(--space-3);
-  transition: all var(--transition);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
 .suggestion-item:hover {
-  background: white;
-  box-shadow: var(--shadow-sm);
-  border-color: var(--gray-200);
+  background: var(--card);
+  box-shadow: var(--el-shadow);
+  border-color: var(--hair-strong);
 }
 
 .suggestion-item:last-child {
@@ -165,7 +195,7 @@
   align-items: center;
   margin-bottom: var(--space-2);
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid var(--hair);
 }
 
 .suggestion-header-right {
@@ -175,34 +205,39 @@
 }
 
 .suggestion-author {
-  font-size: 0.8125rem;
+  font-family: var(--ff-ui);
+  font-size: var(--t-sm);
   font-weight: 600;
-  color: var(--gray-700);
+  color: var(--ink);
 }
 
 .suggestion-time {
-  font-size: 0.6875rem;
-  color: var(--gray-400);
+  font-family: var(--ff-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-xs);
+  color: var(--muted);
 }
 
 .edit-suggestion-btn {
   padding: 4px 8px;
-  background: var(--accent-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-size: 0.6875rem;
-  transition: all var(--transition);
+  font-size: var(--t-xs);
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .edit-suggestion-btn:hover {
-  background: var(--accent-600);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .suggestion-text {
-  font-size: 0.8125rem;
-  color: var(--gray-600);
+  font-family: var(--ff-ui);
+  font-size: var(--t-sm);
+  color: var(--ink-2);
   line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -216,7 +251,8 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-8) var(--space-4);
-  color: var(--gray-500);
+  font-family: var(--ff-ui);
+  color: var(--muted);
   text-align: center;
 }
 
@@ -225,41 +261,46 @@
 }
 
 .empty-state p {
-  font-size: 0.875rem;
+  font-size: var(--t-base);
   margin: 0;
 }
 
 /* Buttons */
 .btn {
   padding: 8px 16px;
-  border: none;
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  font-family: var(--ff-ui);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
   white-space: nowrap;
 }
 
 .btn-primary {
-  background: var(--primary-500);
-  color: white;
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-600);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
 }
 
 .btn-primary:disabled {
-  background: var(--gray-300);
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .spinner-small {
   width: 20px;
   height: 20px;
-  border: 2px solid var(--gray-200);
-  border-top-color: var(--primary-500);
+  border: 2px solid var(--hair);
+  border-top-color: var(--ink);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -277,7 +318,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(21, 17, 12, 0.5);
   backdrop-filter: blur(4px);
   z-index: 1000;
   overflow-y: auto;
@@ -289,29 +330,34 @@
 }
 
 .suggestion-edit-form {
-  background: white;
+  background: var(--card);
+  border: 1px solid var(--hair-strong);
   padding: var(--space-6);
-  border-radius: var(--radius-xl);
+  border-radius: var(--r-lg);
   max-width: 480px;
   width: 100%;
-  box-shadow: var(--shadow-2xl);
+  box-shadow: 0 8px 24px rgba(21, 17, 12, 0.18);
   margin: auto;
 }
 
 .suggestion-edit-form h3 {
   margin-top: 0;
   margin-bottom: var(--space-5);
-  color: var(--gray-800);
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-family: var(--ff-display);
+  color: var(--ink);
+  font-size: var(--t-lg);
+  font-weight: 500;
 }
 
 .suggestion-edit-form label {
   display: block;
   margin-bottom: 6px;
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--gray-700);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  font-size: var(--t-xs);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .suggestion-edit-form input,
@@ -319,18 +365,25 @@
   width: 100%;
   padding: 10px 12px;
   margin-bottom: var(--space-4);
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  font-family: inherit;
-  transition: border-color var(--transition-fast);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  font-size: var(--t-base);
+  font-family: var(--ff-ui);
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color 0.15s;
+}
+
+.suggestion-edit-form input::placeholder,
+.suggestion-edit-form textarea::placeholder {
+  color: var(--muted);
 }
 
 .suggestion-edit-form input:focus,
 .suggestion-edit-form textarea:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(122, 34, 48, 0.12);
 }
 
 .suggestion-edit-form textarea {
@@ -344,167 +397,66 @@
   justify-content: flex-end;
   margin-top: var(--space-5);
   padding-top: var(--space-4);
-  border-top: 1px solid var(--gray-100);
+  border-top: 1px solid var(--hair);
 }
 
 .btn-save {
   padding: 10px 20px;
-  background: var(--success-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all var(--transition);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .btn-save:hover {
-  background: var(--success-600);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
 }
 
 .btn-cancel {
   padding: 10px 20px;
-  background: var(--gray-100);
-  color: var(--gray-700);
-  border: none;
-  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all var(--transition);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .btn-cancel:hover {
-  background: var(--gray-200);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .btn-delete {
   padding: 10px 20px;
-  background: var(--danger-500);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
+  background: var(--oxblood-soft);
+  color: var(--oxblood);
+  border: 1px solid var(--oxblood);
+  border-radius: var(--r-sm);
   cursor: pointer;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all var(--transition);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.15s, color 0.15s;
   margin-right: auto;
 }
 
 .btn-delete:hover {
-  background: var(--danger-600);
-}
-
-/* ===== DARK MODE ===== */
-html.dark-mode .suggestion-form-container {
-  background: var(--gray-50);
-  border-bottom-color: var(--gray-200);
-}
-
-html.dark-mode .order-set-select {
-  background-color: var(--gray-200);
-  border-color: var(--gray-300);
-  color: var(--gray-800);
-}
-
-html.dark-mode .order-set-select:focus {
-  border-color: var(--primary-400);
-}
-
-html.dark-mode .custom-order-set-input {
-  background-color: var(--gray-200);
-  border-color: var(--gray-300);
-  color: var(--gray-800);
-}
-
-html.dark-mode .custom-order-set-input:focus {
-  border-color: var(--primary-400);
-}
-
-html.dark-mode .suggestion-textarea {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
-  color: var(--gray-800);
-}
-
-html.dark-mode .suggestion-textarea:focus {
-  border-color: var(--primary-400);
-}
-
-html.dark-mode .author-input {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
-  color: var(--gray-800);
-}
-
-html.dark-mode .author-input:focus {
-  border-color: var(--primary-400);
-}
-
-html.dark-mode .suggestion-count {
-  background: var(--gray-300);
-  color: var(--gray-600);
-}
-
-html.dark-mode .suggestion-item {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
-}
-
-html.dark-mode .suggestion-item:hover {
-  background: var(--gray-100);
-}
-
-html.dark-mode .suggestion-header {
-  border-bottom-color: var(--gray-300);
-}
-
-html.dark-mode .suggestion-author {
-  color: var(--gray-800);
-}
-
-html.dark-mode .suggestion-time {
-  color: var(--gray-500);
-}
-
-html.dark-mode .suggestion-text {
-  color: var(--gray-700);
-}
-
-html.dark-mode .suggestion-edit-form {
-  background: var(--gray-100);
-}
-
-html.dark-mode .suggestion-edit-form h3 {
-  color: var(--gray-800);
-}
-
-html.dark-mode .suggestion-edit-form label {
-  color: var(--gray-700);
-}
-
-html.dark-mode .suggestion-edit-form input,
-html.dark-mode .suggestion-edit-form textarea {
-  background: var(--gray-200);
-  border-color: var(--gray-300);
-  color: var(--gray-800);
-}
-
-html.dark-mode .suggestion-edit-form input:focus,
-html.dark-mode .suggestion-edit-form textarea:focus {
-  border-color: var(--primary-400);
-}
-
-html.dark-mode .suggestion-edit-actions {
-  border-top-color: var(--gray-200);
-}
-
-html.dark-mode .btn-cancel {
-  background: var(--gray-300);
-  color: var(--gray-700);
-}
-
-html.dark-mode .btn-cancel:hover {
-  background: var(--gray-400);
+  background: var(--oxblood);
+  color: var(--paper);
 }

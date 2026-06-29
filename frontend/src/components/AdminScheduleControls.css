@@ -1,3 +1,9 @@
+/* ============================================================
+   Admin Schedule Controls — Editorial Ledger
+   Tabbed admin dialog: day notes + publish.
+   All colors come from the global EL tokens (auto dark mode).
+   ============================================================ */
+
 .asc-dialog {
   max-width: 720px;
   width: 95%;
@@ -9,17 +15,15 @@
   font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
-  color: inherit;
+  color: var(--ink-2);
+  font-family: var(--ff-ui);
 }
+.asc-close:hover { color: var(--oxblood); }
 
 .asc-tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-html.dark-mode .asc-tabs {
-  border-bottom-color: #334155;
+  border-bottom: 1px solid var(--ink);
 }
 
 .asc-tabs button {
@@ -29,14 +33,20 @@ html.dark-mode .asc-tabs {
   border: 0;
   border-bottom: 2px solid transparent;
   cursor: pointer;
-  font-weight: 700;
-  color: inherit;
-  font-size: 0.92rem;
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-size: var(--t-xs);
+  transition: color 0.15s, border-color 0.15s;
 }
 
+.asc-tabs button:hover { color: var(--ink); }
+
 .asc-tabs button.active {
-  border-bottom-color: #2563eb;
-  color: #2563eb;
+  border-bottom-color: var(--ink);
+  color: var(--ink);
 }
 
 .asc-body {
@@ -58,28 +68,29 @@ html.dark-mode .asc-tabs {
 .asc-field {
   display: grid;
   gap: 4px;
-  font-size: 0.78rem;
-  font-weight: 800;
+  font-family: var(--ff-ui);
+  font-size: var(--t-xs);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #64748b;
+  letter-spacing: 0.13em;
+  color: var(--muted);
 }
 
 .asc-field input,
 .asc-field select {
-  font-size: 0.95rem;
+  font-family: var(--ff-ui);
+  font-size: var(--t-base);
   padding: 8px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: white;
-  color: inherit;
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
 }
 
-html.dark-mode .asc-field input,
-html.dark-mode .asc-field select {
-  background: #0f172a;
-  border-color: #334155;
-  color: #f1f5f9;
+.asc-field input:focus,
+.asc-field select:focus {
+  outline: none;
+  border-color: var(--ink);
 }
 
 .asc-note-form {
@@ -89,46 +100,59 @@ html.dark-mode .asc-field select {
 
 .asc-note-form textarea {
   padding: 8px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: white;
-  font: inherit;
-  color: inherit;
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  font-family: var(--ff-ui);
+  font-size: var(--t-base);
+  color: var(--ink);
   resize: vertical;
 }
 
-html.dark-mode .asc-note-form textarea {
-  background: #0f172a;
-  border-color: #334155;
-  color: #f1f5f9;
+.asc-note-form textarea::placeholder { color: var(--muted); }
+
+.asc-note-form textarea:focus {
+  outline: none;
+  border-color: var(--ink);
 }
 
 .asc-note-form button,
 .asc-primary {
   align-self: flex-start;
   padding: 8px 14px;
-  border: 0;
-  border-radius: 6px;
-  background: #2563eb;
-  color: white;
-  font-weight: 700;
+  border: 1px solid var(--ink);
+  border-radius: var(--r-sm);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--ff-ui);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--t-xs);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.asc-note-form button:hover:not(:disabled),
+.asc-primary:hover:not(:disabled) {
+  background: var(--oxblood);
+  border-color: var(--oxblood);
 }
 
 .asc-note-form button:disabled,
 .asc-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .asc-error {
   padding: 8px 12px;
-  border-radius: 6px;
-  background: rgba(220, 38, 38, 0.1);
-  border: 1px solid rgba(220, 38, 38, 0.3);
-  color: #b91c1c;
-  font-size: 0.85rem;
+  border-radius: var(--r-sm);
+  background: var(--oxblood-soft);
+  border: 1px solid var(--oxblood);
+  color: var(--oxblood);
+  font-family: var(--ff-ui);
+  font-size: var(--t-sm);
 }
 
 .asc-note-list {
@@ -142,43 +166,52 @@ html.dark-mode .asc-note-form textarea {
   align-items: center;
   gap: 0.75rem;
   padding: 8px 12px;
-  border-radius: 6px;
-  background: rgba(37, 99, 235, 0.06);
-  border: 1px solid rgba(37, 99, 235, 0.18);
-  font-size: 0.92rem;
+  border-radius: var(--r-sm);
+  background: var(--paper-2);
+  border: 1px solid var(--hair);
+  font-family: var(--ff-ui);
+  font-size: var(--t-base);
+  color: var(--ink);
 }
 
 .asc-note button {
   background: none;
   border: 0;
-  color: #b91c1c;
+  color: var(--oxblood);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-family: var(--ff-ui);
+  font-size: var(--t-sm);
   font-weight: 600;
 }
 
 .asc-muted {
-  color: #64748b;
-  font-size: 0.85rem;
+  color: var(--muted);
+  font-family: var(--ff-ui);
+  font-size: var(--t-sm);
 }
 
 .asc-preview,
 .asc-result {
   padding: 12px;
-  border-radius: 8px;
-  background: rgba(37, 99, 235, 0.05);
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: var(--r-md);
+  background: var(--paper-2);
+  border: 1px solid var(--hair);
 }
 
 .asc-summary {
   margin: 0 0 8px;
-  font-size: 0.92rem;
+  font-family: var(--ff-ui);
+  font-size: var(--t-base);
+  color: var(--ink);
 }
 
 .asc-recipient-list {
   margin: 0 0 12px;
   padding-left: 18px;
-  font-size: 0.85rem;
+  font-family: var(--ff-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-sm);
+  color: var(--ink-2);
   display: grid;
   gap: 3px;
 }

@@ -261,6 +261,13 @@ async function initializeDatabase() {
     )
   `);
 
+  // Migration: hospitalist call-back timestamp on a page (ignored if it already exists)
+  try {
+    await db.execute(`ALTER TABLE page_logs ADD COLUMN callback_at DATETIME`);
+  } catch (e) {
+    // column already exists — safe to ignore
+  }
+
   // Seed initial data if tables are empty
   await seedData();
 }
@@ -841,6 +848,21 @@ const getAllPageLogs = async (limit = 50) => {
   return result.rows;
 };
 
+// Mark / clear the hospitalist call-back timestamp on a page
+const setPageCallback = async (id, callbackAt) => {
+  await db.execute({
+    sql: 'UPDATE page_logs SET callback_at = ? WHERE id = ?',
+    args: [callbackAt, id]
+  });
+};
+
+const clearPageCallback = async (id) => {
+  await db.execute({
+    sql: 'UPDATE page_logs SET callback_at = NULL WHERE id = ?',
+    args: [id]
+  });
+};
+
 module.exports = {
   initializeDatabase,
   getProviders,
@@ -905,5 +927,7 @@ module.exports = {
   getStorageStats,
   addPageLog,
   getRecentPageLogs,
-  getAllPageLogs
+  getAllPageLogs,
+  setPageCallback,
+  clearPageCallback
 };

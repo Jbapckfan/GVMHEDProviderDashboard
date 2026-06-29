@@ -1,10 +1,16 @@
+/* ============================================================
+   ConfirmModal — Editorial Ledger
+   Paper dialog, serif title, oxblood-confirm action.
+   All colors come from the global EL tokens (auto dark mode).
+   ============================================================ */
+
 .confirm-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(20, 18, 15, 0.55);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -20,12 +26,14 @@
 }
 
 .confirm-dialog {
-  background: white;
+  background: var(--card);
+  color: var(--ink);
   padding: 2rem;
-  border-radius: 16px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-md);
   max-width: 420px;
   width: 90%;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--el-shadow);
   animation: confirm-slide-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -34,31 +42,21 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-html.dark-mode .confirm-dialog {
-  background: #1e293b;
-  color: #f1f5f9;
-}
-
 .confirm-title {
   margin: 0 0 0.75rem 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--gray-800);
-}
-
-html.dark-mode .confirm-title {
-  color: #f1f5f9;
+  font-family: var(--ff-display);
+  font-size: var(--t-lg);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--ink);
 }
 
 .confirm-message {
   margin: 0 0 1.5rem 0;
-  color: var(--gray-600);
-  font-size: 0.9375rem;
+  font-family: var(--ff-ui);
+  color: var(--ink-2);
+  font-size: var(--t-base);
   line-height: 1.5;
-}
-
-html.dark-mode .confirm-message {
-  color: #94a3b8;
 }
 
 .confirm-actions {
@@ -69,50 +67,46 @@ html.dark-mode .confirm-message {
 
 .confirm-btn {
   padding: 0.625rem 1.25rem;
-  border-radius: 10px;
+  border-radius: var(--r-sm);
+  font-family: var(--ff-ui);
   font-weight: 600;
-  font-size: 0.9rem;
-  border: none;
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .confirm-btn-cancel {
-  background: var(--gray-100);
-  color: var(--gray-700);
+  background: transparent;
+  border-color: var(--hair-strong);
+  color: var(--ink-2);
 }
 
 .confirm-btn-cancel:hover {
-  background: var(--gray-200);
-}
-
-html.dark-mode .confirm-btn-cancel {
-  background: #334155;
-  color: #e2e8f0;
-}
-
-html.dark-mode .confirm-btn-cancel:hover {
-  background: #475569;
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .confirm-btn-danger {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
 }
 
 .confirm-btn-danger:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-  transform: translateY(-1px);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
 }
 
 .confirm-btn-primary {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
 }
 
 .confirm-btn-primary:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-  transform: translateY(-1px);
+  background: var(--oxblood);
+  border-color: var(--oxblood);
 }

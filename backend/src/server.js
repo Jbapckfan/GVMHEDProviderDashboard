@@ -1185,25 +1185,40 @@ function parseScheduleCSV(csv, monthName, year) {
   // Parse calendar data - track current day numbers for each column
   const calendar = {};
   const currentDayByColumn = {}; // Track which day number each column is currently showing
+  // Day numbers of THIS month appear in strict increasing reading order (1..N). The first
+  // grid row can carry the previous month's tail (e.g. 31) and the last rows the next
+  // month's head (e.g. 1,2,3...). Track the next expected this-month day so we accept only
+  // those and ignore adjacent-month cells — otherwise their providers merge onto day 1..6.
+  let expectedDay = 1;
 
   for (let i = headerRowIndex + 1; i < lines.length; i++) {
     const row = lines[i];
 
-    // First pass: find day numbers in this row (they appear in the day columns)
-    Object.keys(dayColumns).forEach(colIndex => {
-      const cell = (row[colIndex] || '').replace(/["\r]/g, '').trim();
-      const dayMatch = cell.match(/^(\d{1,2})$/);
-      if (dayMatch) {
+    // First pass: find day numbers in this row (they appear in the day columns).
+    // Walk columns in reading order (Sunday -> Saturday) and accept only the next
+    // expected day of THIS month. A leading previous-month day (e.g. 31) or a trailing
+    // next-month day (e.g. 1,2,3 in the final week) will not equal expectedDay, so we
+    // detach that column rather than merging its providers onto an existing June day.
+    Object.keys(dayColumns)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .forEach(colIndex => {
+        const cell = (row[colIndex] || '').replace(/["\r]/g, '').trim();
+        const dayMatch = cell.match(/^(\d{1,2})$/);
+        if (!dayMatch) return;
         const dayNum = parseInt(dayMatch[1]);
-        if (dayNum >= 1 && dayNum <= 31) {
+        if (dayNum === expectedDay) {
           currentDayByColumn[colIndex] = dayNum;
           if (!calendar[dayNum]) {
             const dayInfo = dayColumns[colIndex];
             calendar[dayNum] = { dayOfWeek: dayInfo.name, dayIndex: dayInfo.dayIndex, providers: [] };
           }
+          expectedDay++;
+        } else {
+          // Adjacent-month day (previous-month tail or next-month head) — detach the column.
+          currentDayByColumn[colIndex] = null;
         }
-      }
-    });
+      });
 
     // Second pass: find provider names in the same columns (non-numeric text)
     Object.keys(dayColumns).forEach(colIndex => {

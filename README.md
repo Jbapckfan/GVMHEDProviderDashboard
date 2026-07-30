@@ -4,12 +4,12 @@ A comprehensive dashboard for the GVMH Emergency Department providers to track s
 
 ## Live Dashboard
 
-**Production URL:** https://gvmh-ed-frontend.fly.dev
+**Production URL:** https://gvmhed-provider-dashboard.vercel.app
 
 ## Features
 
 - **KPI Metrics Upload** - Upload and display KPI metrics images
-- **Schedule Viewer** - View provider schedules from Google Sheets (November/December 2025)
+- **Schedule Viewer** - View the published schedule from GVMH Schedule Automator
 - **Phone Directory** - Quick reference for important phone numbers (admin-editable with drag-to-reorder)
 - **News Updates** - Post and manage department news and updates (admin-protected)
 - **Provider Chart Status** - Track outstanding and delinquent charts by provider (admin-protected)

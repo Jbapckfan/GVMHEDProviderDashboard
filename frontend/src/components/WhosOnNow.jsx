@@ -4,9 +4,9 @@ import { API_BASE } from '../utils/api'
 import './WhosOnNow.css'
 
 const SHIFT_LABELS = [
-  { position: 'Top', time: '7a\u20137p' },
-  { position: 'Middle', time: '10a\u201310p' },
-  { position: 'Bottom', time: '7p\u20137a' },
+  { shift: '7a-7p', position: 'Top', time: '7a\u20137p' },
+  { shift: '10a-10p', position: 'Middle', time: '10a\u201310p' },
+  { shift: '7p-7a', position: 'Bottom', time: '7p\u20137a' },
 ]
 
 const MONTH_NAMES = [
@@ -15,8 +15,8 @@ const MONTH_NAMES = [
 ]
 
 function WhosOnNow() {
-  const [todayProviders, setTodayProviders] = useState([])
-  const [tomorrowProviders, setTomorrowProviders] = useState([])
+  const [todayShifts, setTodayShifts] = useState([])
+  const [tomorrowShifts, setTomorrowShifts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -26,6 +26,16 @@ function WhosOnNow() {
   }, [])
 
   const fetchSchedule = async () => {
+    const normalizeShifts = (dayData) => {
+      if (Array.isArray(dayData?.shifts) && dayData.shifts.length > 0) {
+        return dayData.shifts
+      }
+      return (dayData?.providers || []).map((provider, index) => ({
+        provider,
+        shift: SHIFT_LABELS[index]?.shift,
+      }))
+    }
+
     try {
       const now = new Date()
       const month = MONTH_NAMES[now.getMonth()]
@@ -39,26 +49,26 @@ function WhosOnNow() {
       const tomorrowDay = tomorrow.getDate()
 
       const todayRes = await axios.get(`${API_BASE}/schedule-data?month=${month}&year=${year}`)
-      const todayData = todayRes.data?.calendar?.[day]?.providers || []
-      setTodayProviders(todayData)
+      const todayData = todayRes.data?.calendar?.[day]
+      setTodayShifts(normalizeShifts(todayData))
 
       if (tomorrowMonth === month && tomorrowYear === year) {
-        const tomorrowData = todayRes.data?.calendar?.[tomorrowDay]?.providers || []
-        setTomorrowProviders(tomorrowData)
+        const tomorrowData = todayRes.data?.calendar?.[tomorrowDay]
+        setTomorrowShifts(normalizeShifts(tomorrowData))
       } else {
         try {
           const tomorrowRes = await axios.get(
             `${API_BASE}/schedule-data?month=${tomorrowMonth}&year=${tomorrowYear}`
           )
-          const tomorrowData = tomorrowRes.data?.calendar?.[tomorrowDay]?.providers || []
-          setTomorrowProviders(tomorrowData)
+          const tomorrowData = tomorrowRes.data?.calendar?.[tomorrowDay]
+          setTomorrowShifts(normalizeShifts(tomorrowData))
         } catch {
-          setTomorrowProviders([])
+          setTomorrowShifts([])
         }
       }
     } catch {
-      setTodayProviders([])
-      setTomorrowProviders([])
+      setTodayShifts([])
+      setTomorrowShifts([])
     } finally {
       setLoading(false)
     }
@@ -71,19 +81,19 @@ function WhosOnNow() {
   const todayLabel = today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
   const tomorrowLabel = tomorrow.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
 
-  const renderProviders = (providers, deckClass) => (
+  const renderProviders = (shifts, deckClass) => (
     <div className="whos-on-providers">
-      {providers.length > 0 ? (
-        providers.map((name, idx) => {
-          const shift = SHIFT_LABELS[idx]
+      {shifts.length > 0 ? (
+        shifts.map(({ provider, shift: shiftCode }, idx) => {
+          const shift = SHIFT_LABELS.find(({ shift: code }) => code === shiftCode) || SHIFT_LABELS[idx]
           return (
-            <div key={idx} className={`on-shift-row ${deckClass || ''}`}>
+            <div key={`${shiftCode || idx}-${provider}`} className={`on-shift-row ${deckClass || ''}`}>
               {shift && (
                 <span className="shift-position">{shift.position}</span>
               )}
               <span className={`on-shift-badge ${deckClass || ''}`}>
                 {shift && <span className="shift-time">{shift.time}</span>}
-                {name}
+                {provider}
               </span>
             </div>
           )
@@ -117,7 +127,7 @@ function WhosOnNow() {
             </div>
             <div className="whos-on-date">{todayLabel}</div>
           </div>
-          {renderProviders(todayProviders)}
+          {renderProviders(todayShifts)}
         </div>
 
         <div className="whos-on-divider" />
@@ -130,7 +140,7 @@ function WhosOnNow() {
             </div>
             <div className="whos-on-date">{tomorrowLabel}</div>
           </div>
-          {renderProviders(tomorrowProviders, 'on-deck')}
+          {renderProviders(tomorrowShifts, 'on-deck')}
         </div>
       </div>
     </div>

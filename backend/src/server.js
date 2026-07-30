@@ -6,6 +6,12 @@ const fs = require('fs');
 const https = require('https');
 const net = require('net');
 const db = require('./database');
+const {
+  buildCalendarMonth,
+  fetchPublishedSchedule,
+  findPublishedMonth,
+  listScheduleMonths
+} = require('./schedule-source');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -642,34 +648,27 @@ app.post('/api/auth/provider-login', async (req, res) => {
       return res.json({ success: true, providerName: cacheMatch });
     }
 
-    // 3) Only if no match yet and tabs are already cached, check schedule data
-    //    (avoids slow cold fetchSheetTabs which fetches pubhtml + each tab)
-    if (sheetTabsCache) {
-      try {
-        const now = new Date();
-        const monthNames = ['January','February','March','April','May','June',
-                            'July','August','September','October','November','December'];
-        const currentKey = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-        const gid = sheetTabsCache[currentKey];
-
-        if (gid && !scheduleCache.get(currentKey)) {
-          const csv = await fetchSheetData(gid);
-          const data = parseScheduleCSV(csv, monthNames[now.getMonth()], now.getFullYear());
-          if (data) {
-            scheduleCache.set(currentKey, { data, timestamp: Date.now() });
-            const freshProviders = new Set();
-            Object.values(data.calendar).forEach(day => {
-              (day.providers || []).forEach(p => freshProviders.add(p));
-            });
-            const freshMatch = matchProvider(freshProviders);
-            if (freshMatch) {
-              return res.json({ success: true, providerName: freshMatch });
-            }
-          }
+    // 3) Check the current published Schedule Automator month.
+    try {
+      const now = new Date();
+      const monthNames = ['January','February','March','April','May','June',
+                          'July','August','September','October','November','December'];
+      const data = await fetchMonthCalendar(
+        monthNames[now.getMonth()],
+        now.getFullYear()
+      );
+      if (data) {
+        const freshProviders = new Set();
+        Object.values(data.calendar).forEach(day => {
+          (day.providers || []).forEach(p => freshProviders.add(p));
+        });
+        const freshMatch = matchProvider(freshProviders);
+        if (freshMatch) {
+          return res.json({ success: true, providerName: freshMatch });
         }
-      } catch (err) {
-        console.error('Error fetching schedule for provider login:', err.message);
       }
+    } catch (err) {
+      console.error('Error fetching schedule for provider login:', err.message);
     }
 
     res.status(401).json({ success: false, error: 'Last name not found' });
@@ -1270,20 +1269,8 @@ function parseScheduleCSV(csv, monthName, year) {
 // API endpoint to get available months
 app.get('/api/schedule-months', async (req, res) => {
   try {
-    const tabs = await fetchSheetTabs();
-    const months = Object.keys(tabs).map(key => {
-      const [month, year] = key.split(' ');
-      return { month, year: parseInt(year), label: key };
-    });
-
-    // Sort by year and month
-    const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June',
-                        'July', 'August', 'September', 'October', 'November', 'December'];
-    months.sort((a, b) => {
-      if (a.year !== b.year) return a.year - b.year;
-      return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month);
-    });
-
+    const feed = await fetchPublishedSchedule();
+    const months = listScheduleMonths(feed);
     res.json({ months });
   } catch (error) {
     console.error('Error fetching months:', error);
@@ -1291,21 +1278,25 @@ app.get('/api/schedule-months', async (req, res) => {
   }
 });
 
-// Debug endpoint to get raw CSV (for verification)
+// Debug endpoint for the published Schedule Automator month
 app.get('/api/schedule-debug', async (req, res) => {
   const { month, year } = req.query;
-  const key = `${month} ${year}`;
 
   try {
-    const tabs = await fetchSheetTabs();
-    const gid = tabs[key];
-
-    if (!gid) {
-      return res.status(404).json({ error: 'Month not available', availableMonths: Object.keys(tabs) });
+    const feed = await fetchPublishedSchedule();
+    const publishedMonth = findPublishedMonth(feed, month, year);
+    if (!publishedMonth) {
+      return res.status(404).json({
+        error: 'Month not available',
+        availableMonths: listScheduleMonths(feed).map(({ label }) => label)
+      });
     }
 
-    const csv = await fetchSheetData(gid);
-    res.type('text/plain').send(csv);
+    res.json({
+      source: 'gvmh-schedule-automator',
+      generatedAt: feed.generatedAt || null,
+      ...publishedMonth
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -1314,34 +1305,21 @@ app.get('/api/schedule-debug', async (req, res) => {
 // API endpoint to get schedule data
 app.get('/api/schedule-data', async (req, res) => {
   const { month, year } = req.query;
-  const key = `${month} ${year}`;
 
   try {
-    const tabs = await fetchSheetTabs();
-    const gid = tabs[key];
-
-    if (!gid) {
-      return res.status(404).json({ error: 'Month not available', availableMonths: Object.keys(tabs) });
+    if (!month || !year) {
+      return res.status(400).json({ error: 'month and year are required' });
     }
 
-    // Check cache
-    const cached = scheduleCache.get(key);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      return res.json(cached.data);
-    }
-
-    console.log(`Fetching schedule data for ${key}...`);
-    const csv = await fetchSheetData(gid);
-    const data = parseScheduleCSV(csv, month, parseInt(year));
-
+    const data = await fetchMonthCalendar(month, year);
     if (!data) {
-      return res.status(500).json({ error: 'Failed to parse schedule data' });
+      const feed = await fetchPublishedSchedule();
+      return res.status(404).json({
+        error: 'Month not available',
+        availableMonths: listScheduleMonths(feed).map(({ label }) => label)
+      });
     }
 
-    // Cache the result
-    scheduleCache.set(key, { data, timestamp: Date.now() });
-
-    console.log(`Schedule data fetched for ${key}`);
     res.json(data);
   } catch (error) {
     console.error('Error fetching schedule:', error);
@@ -1408,14 +1386,12 @@ function requireAdminPassword(req, res, next) {
 }
 
 async function fetchMonthCalendar(monthName, year) {
-  const tabs = await fetchSheetTabs();
   const key = `${monthName} ${year}`;
-  const gid = tabs[key];
-  if (!gid) return null;
   const cached = scheduleCache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) return cached.data;
-  const csv = await fetchSheetData(gid);
-  const data = parseScheduleCSV(csv, monthName, parseInt(year));
+
+  const feed = await fetchPublishedSchedule();
+  const data = buildCalendarMonth(feed, monthName, parseInt(year));
   if (data) scheduleCache.set(key, { data, timestamp: Date.now() });
   return data;
 }
@@ -1770,11 +1746,11 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`ED Dashboard Backend running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
 
-  // Preload sheet tabs cache on startup for faster initial load
-  console.log('Preloading Google Sheets tabs cache...');
-  fetchSheetTabs()
-    .then(tabs => console.log(`Sheet tabs preloaded: ${Object.keys(tabs).length} months available`))
-    .catch(err => console.error('Failed to preload sheet tabs:', err.message));
+  // Preload the published Schedule Automator feed for faster initial load.
+  console.log('Preloading GVMH Schedule Automator feed...');
+  fetchPublishedSchedule()
+    .then(feed => console.log(`Schedule feed preloaded: ${feed.months.length} months available`))
+    .catch(err => console.error('Failed to preload schedule feed:', err.message));
 
   // Keep-alive: ping own external URL every 14 minutes to prevent Render free tier sleep
   if (process.env.RENDER_EXTERNAL_URL) {

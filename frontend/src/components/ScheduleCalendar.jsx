@@ -174,7 +174,7 @@ function ScheduleCalendar({ limitToCurrentAndNext = false }) {
     <div className="card schedule-calendar-card">
       <div className="card-header">
         <h2 className="card-title">📅 Schedule</h2>
-        <span className="live-indicator" title="Data pulled live from Google Sheets">
+        <span className="live-indicator" title="Published schedule from GVMH Schedule Automator">
           🟢 LIVE
         </span>
         <div className="month-tabs">

@@ -45,34 +45,59 @@ function LoginPage({ onLogin }) {
 
   return (
     <div className="login-page">
-      <div className="login-card">
-        <img src="/gvmh-logo.png" alt="GVMH" className="login-logo" />
-        <h1 className="login-title">ED Provider Dashboard</h1>
-        <p className="login-subtitle">Enter your last name to access the dashboard</p>
+      <aside className="login-brand-panel">
+        <div className="login-brand-lockup">
+          <img src="/gvmh-logo.png" alt="Golden Valley Memorial Healthcare" className="login-logo" />
+          <span>Emergency Department</span>
+        </div>
+        <div className="login-brand-copy">
+          <div className="login-kicker">Provider operations</div>
+          <h1>Everything your shift needs, in one place.</h1>
+          <p>See who is on, page the hospitalist, check the published schedule, and find department resources.</p>
+        </div>
+        <div className="login-status-line">
+          <span aria-hidden="true"></span>
+          Published schedule data is live
+        </div>
+      </aside>
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <input
-            type="text"
-            value={lastName}
-            onChange={(e) => { setLastName(e.target.value); setError('') }}
-            placeholder="Last name"
-            className={`login-input${error ? ' login-input-error' : ''}`}
-            autoFocus
-            autoComplete="off"
-          />
-          {error && <p className="login-error">{error}</p>}
-          <button type="submit" className="login-btn" disabled={loading || !lastName.trim()}>
-            {loading ? 'Verifying...' : 'Sign In'}
-          </button>
-        </form>
+      <main className="login-main">
+        <div className="login-card">
+          <div className="login-card-header">
+            <div className="login-kicker">GVMH ED</div>
+            <h2 className="login-title">Provider dashboard</h2>
+            <p className="login-subtitle">Enter your last name to continue.</p>
+          </div>
 
-        <p className="login-hint">
-          Access is restricted to ED providers.
-        </p>
-        <Link to="/schedule" className="login-schedule-link">
-          View Provider Schedule
-        </Link>
-      </div>
+          <form onSubmit={handleSubmit} className="login-form">
+            <label htmlFor="provider-last-name">Provider last name</label>
+            <input
+              id="provider-last-name"
+              type="text"
+              value={lastName}
+              onChange={(e) => { setLastName(e.target.value); setError('') }}
+              placeholder="e.g. Alford"
+              className={`login-input${error ? ' login-input-error' : ''}`}
+              autoFocus
+              autoComplete="family-name"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? 'login-error' : 'login-help'}
+            />
+            {error ? <p id="login-error" className="login-error" role="alert">{error}</p> : null}
+            <p id="login-help" className="login-field-help">Use the same last name listed on the provider schedule.</p>
+            <button type="submit" className="login-btn" disabled={loading || !lastName.trim()}>
+              {loading ? 'Verifying…' : 'Continue'}
+            </button>
+          </form>
+
+          <div className="login-divider"><span>or</span></div>
+          <Link to="/schedule" className="login-schedule-link">
+            View the published provider schedule <span aria-hidden="true">{'\u2192'}</span>
+          </Link>
+
+          <p className="login-hint">Access is restricted to GVMH ED providers.</p>
+        </div>
+      </main>
     </div>
   )
 }

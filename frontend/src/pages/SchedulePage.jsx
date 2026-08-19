@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import ScheduleCalendar from '../components/ScheduleCalendar'
 import './SchedulePage.css'
 
@@ -22,20 +23,35 @@ function SchedulePage() {
     <div className="schedule-page">
       <header className="schedule-page-header">
         <div className="schedule-page-header-content">
-          <h1>
-            <img src="/gvmh-logo.png" alt="GVMH" className="schedule-page-logo" />
-            ED Provider Schedule
-          </h1>
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="schedule-page-toggle"
-          >
-            {darkMode ? '\u2600\uFE0F' : '\u{1F319}'} {darkMode ? 'Light' : 'Dark'}
-          </button>
+          <div className="schedule-page-brand">
+            <img src="/gvmh-logo.png" alt="Golden Valley Memorial Healthcare" className="schedule-page-logo" />
+            <div>
+              <span>Emergency Department</span>
+              <h1>Published provider schedule</h1>
+            </div>
+          </div>
+          <div className="schedule-page-actions">
+            <Link to="/" className="schedule-page-link">Provider sign in</Link>
+            <button
+              type="button"
+              onClick={() => setDarkMode(!darkMode)}
+              className="schedule-page-toggle"
+              aria-label={`Use ${darkMode ? 'light' : 'dark'} theme`}
+            >
+              {darkMode ? '\u2600' : '\u263E'} <span>{darkMode ? 'Light' : 'Dark'}</span>
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="schedule-page-main">
+        <div className="schedule-page-intro">
+          <div>
+            <span className="schedule-page-kicker">Live published schedule</span>
+            <h2>ED coverage at a glance</h2>
+          </div>
+          <p>Only published months from the GVMH Schedule Automator appear here.</p>
+        </div>
         <ScheduleCalendar limitToCurrentAndNext />
       </main>
 
@@ -48,7 +64,8 @@ function SchedulePage() {
       </section>
 
       <footer className="schedule-page-footer">
-        <p>GVMH ED Provider Schedule | Updated live</p>
+        <p>GVMH Emergency Department · Published provider schedule</p>
+        <span>Updated live</span>
       </footer>
     </div>
   )

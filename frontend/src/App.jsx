@@ -65,6 +65,13 @@ const SECTION_COMPONENTS = {
 
 const VALID_IDS = new Set(DEFAULT_SECTIONS.map(s => s.id))
 const DEFAULT_ORDER = DEFAULT_SECTIONS.map(s => s.id)
+const SECTION_BY_ID = new Map(DEFAULT_SECTIONS.map(section => [section.id, section]))
+
+function formatProviderName(providerName) {
+  if (providerName.includes('NP') || providerName.startsWith('Dr.')) return providerName
+  const parts = providerName.trim().split(/\s+/)
+  return `Dr. ${parts[parts.length - 1]}`
+}
 
 // Sections that must stay full-width (layout breaks otherwise)
 const FULL_WIDTH_ONLY = new Set(['schedule', 'whos-on'])
@@ -144,6 +151,7 @@ function SortableSection({ sectionId, config, Component, isCollapsed, canResize,
   return (
     <div
       ref={setNodeRef}
+      id={`section-${sectionId}`}
       style={style}
       data-section-id={sectionId}
       className={`dashboard-section ${gridClass}${isDragging ? ' section-dragging' : ''}`}
@@ -213,6 +221,9 @@ function App() {
   })
   const [showQR, setShowQR] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('dashboard-sidebar-collapsed') === 'true' } catch { return false }
+  })
   const [showSettings, setShowSettings] = useState(false)
   const [showScheduleControls, setShowScheduleControls] = useState(false)
 
@@ -248,6 +259,10 @@ function App() {
     localStorage.setItem('darkMode', JSON.stringify(darkMode))
   }, [darkMode])
 
+  useEffect(() => {
+    try { localStorage.setItem('dashboard-sidebar-collapsed', String(sidebarCollapsed)) } catch {}
+  }, [sidebarCollapsed])
+
   // Persist section order
   useEffect(() => {
     try { localStorage.setItem('dashboard-section-order', JSON.stringify(sectionOrder)) } catch {}
@@ -267,6 +282,11 @@ function App() {
     setLastUpdated(new Date())
     window.location.reload()
   }
+
+  const scrollToSection = useCallback((sectionId) => {
+    document.getElementById(`section-${sectionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setMenuOpen(false)
+  }, [])
 
   // --- Collapse / Expand ---
   const toggleCollapse = useCallback((id) => {
@@ -330,125 +350,180 @@ function App() {
 
   // Find config for the active drag overlay
   const activeDragConfig = activeDragId
-    ? DEFAULT_SECTIONS.find(s => s.id === activeDragId)
+    ? SECTION_BY_ID.get(activeDragId)
     : null
 
   return (
     <Routes>
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="*" element={providerName ? (
-    <div className="app">
-      <header className="header">
-        <div className="header-content">
-          <div className="header-title-group">
-            <h1><img src="/gvmh-logo.png" alt="GVMH" className="header-logo" /> ED Provider Dashboard</h1>
-            <div className="provider-name-subtitle">{(() => {
-              if (!providerName) return ''
-              if (providerName.includes('NP')) return providerName
-              if (providerName.startsWith('Dr.')) return providerName
-              const parts = providerName.trim().split(/\s+/)
-              return `Dr. ${parts[parts.length - 1]}`
-            })()}</div>
+    <div className={`app app-shell${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
+      <aside className={`app-sidebar${menuOpen ? ' is-open' : ''}`} aria-label="Dashboard navigation">
+        <div className="sidebar-brand">
+          <img src="/gvmh-logo.png" alt="Golden Valley Memorial Healthcare" className="sidebar-logo" />
+          <div className="sidebar-brand-copy">
+            <strong>Emergency Department</strong>
+            <span>Provider operations</span>
           </div>
-          <button className="hamburger-btn" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
-            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>
-            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>
-            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>
+          <button
+            type="button"
+            className="sidebar-collapse-btn"
+            onClick={() => setSidebarCollapsed(value => !value)}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? '\u203A' : '\u2039'}
           </button>
-          <div className={`header-info ${menuOpen ? 'header-info-open' : ''}`}>
-            <span className="status-dot"></span>
-            <span className="last-updated">
-              Last updated: {lastUpdated.toLocaleTimeString()}
-            </span>
-            <button onClick={resetLayout} className="refresh-btn" title="Reset dashboard layout to defaults">
-              {'\u21BA'} Reset Layout
+        </div>
+
+        <nav className="sidebar-nav">
+          <div className="sidebar-nav-label">Dashboard</div>
+          {DEFAULT_SECTIONS.map((section) => (
+            <button
+              type="button"
+              key={section.id}
+              className="sidebar-nav-btn"
+              onClick={() => scrollToSection(section.id)}
+              title={sidebarCollapsed ? section.title : undefined}
+            >
+              <span className="sidebar-nav-icon" aria-hidden="true">{section.icon}</span>
+              <span className="sidebar-nav-text">{section.title}</span>
             </button>
-            <button onClick={() => setShowQR(!showQR)} className="refresh-btn">
-              {'\u{1F4F1}'} QR Code
-            </button>
-            <button onClick={() => setDarkMode(!darkMode)} className="refresh-btn dark-mode-toggle">
-              {darkMode ? '\u2600\uFE0F' : '\u{1F319}'} {darkMode ? 'Light' : 'Dark'}
-            </button>
-            <button onClick={handleRefresh} className="refresh-btn">
-              {'\u21BB'} Refresh
-            </button>
-            {isAdmin && (
-              <button onClick={() => setShowScheduleControls(true)} className="refresh-btn" title="Schedule controls">
-                {'\u{1F4C5}'} Schedule
+          ))}
+
+          {isAdmin ? (
+            <>
+              <div className="sidebar-nav-label">Admin</div>
+              <button type="button" className="sidebar-nav-btn" onClick={() => setShowScheduleControls(true)}>
+                <span className="sidebar-nav-icon" aria-hidden="true">{'\u{1F5D3}'}</span>
+                <span className="sidebar-nav-text">Schedule controls</span>
               </button>
-            )}
-            {isAdmin && (
-              <button onClick={() => setShowSettings(true)} className="refresh-btn" title="Admin Settings">
-                {'\u2699\uFE0F'} Settings
+              <button type="button" className="sidebar-nav-btn" onClick={() => setShowSettings(true)}>
+                <span className="sidebar-nav-icon" aria-hidden="true">{'\u2699'}</span>
+                <span className="sidebar-nav-text">Dashboard settings</span>
               </button>
-            )}
-            <button onClick={handleLogout} className="refresh-btn" title="Sign out">
-              Sign Out
+            </>
+          ) : null}
+        </nav>
+
+        <div className="sidebar-tools">
+          <button type="button" onClick={() => setShowQR(value => !value)} title="Show dashboard QR code">
+            <span aria-hidden="true">{'\u{1F4F1}'}</span><span>QR code</span>
+          </button>
+          <button type="button" onClick={() => setDarkMode(value => !value)} title={`Use ${darkMode ? 'light' : 'dark'} theme`}>
+            <span aria-hidden="true">{darkMode ? '\u2600' : '\u263E'}</span><span>{darkMode ? 'Light' : 'Dark'} theme</span>
+          </button>
+          <button type="button" onClick={resetLayout} title="Restore the default dashboard layout">
+            <span aria-hidden="true">{'\u21BA'}</span><span>Reset layout</span>
+          </button>
+        </div>
+
+        <div className="sidebar-account">
+          <span className="account-status-dot" aria-hidden="true"></span>
+          <div className="sidebar-account-copy">
+            <strong>{formatProviderName(providerName)}</strong>
+            <span>Signed in</span>
+          </div>
+          <button type="button" className="sidebar-signout" onClick={handleLogout} title="Sign out">Sign out</button>
+        </div>
+      </aside>
+
+      {menuOpen ? <button className="sidebar-backdrop" onClick={() => setMenuOpen(false)} aria-label="Close navigation" /> : null}
+
+      <div className="app-workspace">
+        <header className="workspace-header">
+          <div className="workspace-heading">
+            <button
+              type="button"
+              className="mobile-menu-btn"
+              onClick={() => setMenuOpen(value => !value)}
+              aria-expanded={menuOpen}
+              aria-label={menuOpen ? 'Close dashboard navigation' : 'Open dashboard navigation'}
+            >
+              <span></span><span></span><span></span>
+            </button>
+            <div>
+              <div className="workspace-eyebrow">Golden Valley Memorial Healthcare</div>
+              <h1>ED Provider Dashboard</h1>
+              <p>Live staffing, paging, and department operations</p>
+            </div>
+          </div>
+          <div className="workspace-actions">
+            <div className="workspace-freshness" aria-label={`Last refreshed at ${lastUpdated.toLocaleTimeString()}`}>
+              <span className="status-dot" aria-hidden="true"></span>
+              <span><strong>Live</strong>{lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
+            </div>
+            <button type="button" onClick={handleRefresh} className="topbar-btn">{'\u21BB'} Refresh</button>
+            <button type="button" onClick={() => setDarkMode(value => !value)} className="topbar-btn topbar-theme-btn" aria-label={`Use ${darkMode ? 'light' : 'dark'} theme`}>
+              {darkMode ? '\u2600' : '\u263E'}
             </button>
           </div>
-          {showQR && (
+
+          {showQR ? (
             <div className="qr-dropdown">
-              <img src={qrCodeUrl} alt="QR Code" className="qr-code" />
-              <p className="qr-text">Scan to access dashboard</p>
+              <img src={qrCodeUrl} alt="QR code for this dashboard" className="qr-code" />
+              <p className="qr-text">Scan to open dashboard</p>
+              <button type="button" onClick={() => setShowQR(false)}>Close</button>
             </div>
-          )}
-        </div>
-      </header>
+          ) : null}
+        </header>
 
-      <main className="main-content">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragCancel={handleDragCancel}
-        >
-          <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
-            <div className="dashboard-grid">
-              {sectionOrder.map((sectionId) => {
-                const config = DEFAULT_SECTIONS.find(s => s.id === sectionId)
-                const Component = SECTION_COMPONENTS[sectionId]
-                if (!config || !Component) return null
+        <main className="main-content">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
+              <div className="dashboard-grid">
+                {sectionOrder.map((sectionId) => {
+                  const config = SECTION_BY_ID.get(sectionId)
+                  const Component = SECTION_COMPONENTS[sectionId]
+                  if (!config || !Component) return null
 
-                const isCollapsed = !!collapsedSections[sectionId]
-                const canResize = !FULL_WIDTH_ONLY.has(sectionId)
-                const size = canResize ? (sectionSizes[sectionId] || DEFAULT_HALF_WIDTH[sectionId] || 'full') : 'full'
-                const gridClass = size === 'half' ? 'grid-half' : 'grid-full'
+                  const isCollapsed = !!collapsedSections[sectionId]
+                  const canResize = !FULL_WIDTH_ONLY.has(sectionId)
+                  const size = canResize ? (sectionSizes[sectionId] || DEFAULT_HALF_WIDTH[sectionId] || 'full') : 'full'
+                  const gridClass = size === 'half' ? 'grid-half' : 'grid-full'
 
-                return (
-                  <SortableSection
-                    key={sectionId}
-                    sectionId={sectionId}
-                    config={config}
-                    Component={Component}
-                    isCollapsed={isCollapsed}
-                    canResize={canResize}
-                    size={size}
-                    gridClass={gridClass}
-                    toggleCollapse={toggleCollapse}
-                    toggleSize={toggleSize}
-                  />
-                )
-              })}
-            </div>
-          </SortableContext>
-          <DragOverlay>
-            {activeDragConfig ? (
-              <div className="drag-overlay-card">
-                <span>{activeDragConfig.icon}</span>
-                <span>{activeDragConfig.title}</span>
+                  return (
+                    <SortableSection
+                      key={sectionId}
+                      sectionId={sectionId}
+                      config={config}
+                      Component={Component}
+                      isCollapsed={isCollapsed}
+                      canResize={canResize}
+                      size={size}
+                      gridClass={gridClass}
+                      toggleCollapse={toggleCollapse}
+                      toggleSize={toggleSize}
+                    />
+                  )
+                })}
               </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      </main>
+            </SortableContext>
+            <DragOverlay>
+              {activeDragConfig ? (
+                <div className="drag-overlay-card">
+                  <span>{activeDragConfig.icon}</span>
+                  <span>{activeDragConfig.title}</span>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        </main>
 
-      <footer className="footer">
-        <p>GVM Health ED Provider Dashboard v1.0 | For authorized use only</p>
-      </footer>
+        <footer className="footer">
+          <p>GVMH Emergency Department · Provider operations dashboard</p>
+          <span>Authorized use only</span>
+        </footer>
+      </div>
 
-      {showSettings && <AdminSettings onClose={() => setShowSettings(false)} />}
-      {showScheduleControls && <AdminScheduleControls onClose={() => setShowScheduleControls(false)} />}
+      {showSettings ? <AdminSettings onClose={() => setShowSettings(false)} /> : null}
+      {showScheduleControls ? <AdminScheduleControls onClose={() => setShowScheduleControls(false)} /> : null}
     </div>
       ) : (
         <LoginPage onLogin={handleLogin} />
